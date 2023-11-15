@@ -7,28 +7,28 @@ const openReadUpdate = ref(false)
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
-    viewId: {
-        type: String,
-        required: true,
-    }
+	viewId: {
+		type: String,
+		required: true,
+	}
 })
 
 const handleOutsideClick = (event: any) => {
-    const announcement_container = document.getElementById(`${props.viewId}_announcement_container`)
-    const announcement_card = document.getElementById(`${props.viewId}_announcement_card`)
-    if (announcement_container && announcement_card) {
-        if (openReadUpdate.value && announcement_container.contains(event.target) && !announcement_card.contains(event.target)) {
-            openReadUpdate.value = false
-        }
-    }
+	const announcement_container = document.getElementById(`${props.viewId}_announcement_container`)
+	const announcement_card = document.getElementById(`${props.viewId}_announcement_card`)
+	if (announcement_container && announcement_card) {
+		if (openReadUpdate.value && announcement_container.contains(event.target) && !announcement_card.contains(event.target)) {
+			openReadUpdate.value = false
+		}
+	}
 }
 
 onMounted(() => {
-    window.addEventListener("click", handleOutsideClick)
+	window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() =>{
-    window.removeEventListener("click", handleOutsideClick)
+	window.removeEventListener("click", handleOutsideClick)
 })
 </script>
 

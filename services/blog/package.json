@@ -17,7 +17,7 @@
     "@types/express": "^4.17.18",
     "@types/node": "^20.8.2",
     "dotenv": "^16.3.1",
-    "esbuild": "^0.15.9",
+    "esbuild": "^0.18.20",
     "esno": "^0.17.0"
   }
 }

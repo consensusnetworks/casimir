@@ -24,63 +24,63 @@ const show_setting_modal = ref(false)
 const showUserAddressesModal = ref(false)
 
 async function handleConnectWalletButtonClick() {
-    openWalletsModal.value = true
-    await detectInstalledWalletProviders()
+	openWalletsModal.value = true
+	await detectInstalledWalletProviders()
 }
 
 const handleOutsideClick = (event: any) => {
-    const setting_modal = document.getElementById("setting_modal")
-    const setting_modal_button = document.getElementById("setting_modal_button")
-    if (setting_modal && setting_modal_button) {
-        if (show_setting_modal.value) {
-            if (!setting_modal.contains(event.target)) {
-                show_setting_modal.value = false
-            }
-        } else {
-            if (setting_modal_button.contains(event.target)) {
-                show_setting_modal.value = true
-            }
-        }
-    }
+	const setting_modal = document.getElementById("setting_modal")
+	const setting_modal_button = document.getElementById("setting_modal_button")
+	if (setting_modal && setting_modal_button) {
+		if (show_setting_modal.value) {
+			if (!setting_modal.contains(event.target)) {
+				show_setting_modal.value = false
+			}
+		} else {
+			if (setting_modal_button.contains(event.target)) {
+				show_setting_modal.value = true
+			}
+		}
+	}
 
-    const connect_wallet_container = document.getElementById("connect_wallet_container")
-    const connect_wallet_card = document.getElementById("connect_wallet_card")
-    if (connect_wallet_container && connect_wallet_card) {
-        if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
-            openWalletsModal.value = false
-            authFlowCardNumber.value = 1
-        }
-    }
+	const connect_wallet_container = document.getElementById("connect_wallet_container")
+	const connect_wallet_card = document.getElementById("connect_wallet_card")
+	if (connect_wallet_container && connect_wallet_card) {
+		if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
+			openWalletsModal.value = false
+			authFlowCardNumber.value = 1
+		}
+	}
 
-    const user_addresses_modal = document.getElementById("user_addresses_modal")
-    const connect_wallet_button = document.getElementById("connect_wallet_button")
-    if (user_addresses_modal && connect_wallet_button) {
-        if (showUserAddressesModal.value) {
-            if (!user_addresses_modal.contains(event.target)) {
-                showUserAddressesModal.value = false
-            }
-        } else {
-            if (connect_wallet_button.contains(event.target)) {
-                showUserAddressesModal.value = true
-            }
-        }
-    }
+	const user_addresses_modal = document.getElementById("user_addresses_modal")
+	const connect_wallet_button = document.getElementById("connect_wallet_button")
+	if (user_addresses_modal && connect_wallet_button) {
+		if (showUserAddressesModal.value) {
+			if (!user_addresses_modal.contains(event.target)) {
+				showUserAddressesModal.value = false
+			}
+		} else {
+			if (connect_wallet_button.contains(event.target)) {
+				showUserAddressesModal.value = true
+			}
+		}
+	}
 }
 
 const doesScrollBarExist = ref(true)
 
 onMounted(() => {
-    doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
+	doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
 
-    window.addEventListener("click", handleOutsideClick)
+	window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() => {
-    window.removeEventListener("click", handleOutsideClick)
+	window.removeEventListener("click", handleOutsideClick)
 })
 
 const toggleModal = (showModal: boolean) => {
-    openWalletsModal.value = showModal
+	openWalletsModal.value = showModal
 }
 </script>
 

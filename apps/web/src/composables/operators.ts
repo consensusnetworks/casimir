@@ -32,203 +32,203 @@ const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
 
 export default function useOperators() {
-    const loadingAddOperator = ref(false)
-    const loadingAddOperatorError = ref(false)
-    const loadingRegisteredOperators = ref(false)
-    const loadingRegisteredOperatorsError = ref(false)
+	const loadingAddOperator = ref(false)
+	const loadingAddOperatorError = ref(false)
+	const loadingRegisteredOperators = ref(false)
+	const loadingRegisteredOperatorsError = ref(false)
 
-    const nonregisteredBaseOperators = ref<Operator[]>([])
-    const nonregisteredEigenOperators = ref<Operator[]>([])
-    const registeredBaseOperators = ref<Operator[]>([])
-    const registeredEigenOperators = ref<Operator[]>([])
+	const nonregisteredBaseOperators = ref<Operator[]>([])
+	const nonregisteredEigenOperators = ref<Operator[]>([])
+	const registeredBaseOperators = ref<Operator[]>([])
+	const registeredEigenOperators = ref<Operator[]>([])
 
-    async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
-        try {
-            loadingAddOperator.value = true
-            const requestOptions = {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ address, nodeUrl })
-            }
-            const response = await fetch(`${usersUrl}/user/add-operator`, requestOptions)
-            const { error, message } = await response.json()
-            loadingAddOperator.value = false
-            return { error, message }
-        } catch (error: any) {
-            loadingAddOperatorError.value = true
-            throw new Error(error.message || "Error adding operator")
-        }
-    }
+	async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
+		try {
+			loadingAddOperator.value = true
+			const requestOptions = {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ address, nodeUrl })
+			}
+			const response = await fetch(`${usersUrl}/user/add-operator`, requestOptions)
+			const { error, message } = await response.json()
+			loadingAddOperator.value = false
+			return { error, message }
+		} catch (error: any) {
+			loadingAddOperatorError.value = true
+			throw new Error(error.message || "Error adding operator")
+		}
+	}
 
-    async function getUserOperators(): Promise<void> {
-        const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
+	async function getUserOperators(): Promise<void> {
+		const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
 
-        const scanner = new Scanner({ 
-            ethereumUrl,
-            ssvNetworkAddress,
-            ssvViewsAddress
-        })
+		const scanner = new Scanner({ 
+			ethereumUrl,
+			ssvNetworkAddress,
+			ssvViewsAddress
+		})
 
-        const ssvOperators: Operator[] = []
-        for (const address of userAddresses) {
-            const userOperators = await scanner.getOperators(address)
-            ssvOperators.push(...userOperators)
-        }
+		const ssvOperators: Operator[] = []
+		for (const address of userAddresses) {
+			const userOperators = await scanner.getOperators(address)
+			ssvOperators.push(...userOperators)
+		}
 
-        registeredBaseOperators.value = await _getRegisteredOperators(ssvOperators, "base") as Array<RegisteredOperator>
-        registeredEigenOperators.value = await _getRegisteredOperators(ssvOperators, "eigen") as Array<RegisteredOperator>
+		registeredBaseOperators.value = await _getRegisteredOperators(ssvOperators, "base") as Array<RegisteredOperator>
+		registeredEigenOperators.value = await _getRegisteredOperators(ssvOperators, "eigen") as Array<RegisteredOperator>
         
-        nonregisteredBaseOperators.value = ssvOperators.filter((operator: any) => {
-            const idRegistered = registeredBaseOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
-            return !idRegistered
-        }) as Array<Operator>
-        nonregisteredEigenOperators.value = ssvOperators.filter((operator: any) => {
-            const idRegistered = registeredEigenOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
-            return !idRegistered
-        }) as Array<Operator>
-    }
+		nonregisteredBaseOperators.value = ssvOperators.filter((operator: any) => {
+			const idRegistered = registeredBaseOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
+			return !idRegistered
+		}) as Array<Operator>
+		nonregisteredEigenOperators.value = ssvOperators.filter((operator: any) => {
+			const idRegistered = registeredEigenOperators.value.find((registeredOperator: any) => registeredOperator.id === operator.id)
+			return !idRegistered
+		}) as Array<Operator>
+	}
 
-    async function _getRegisteredOperators(ssvOperators: Operator[], type: "base" | "eigen"): Promise<RegisteredOperator[]> {
-        const casimirOperators: RegisteredOperator[] = []
-        const registry = type === "base" ? baseRegistry : eigenRegistry
-        if (registry.address === ethers.constants.AddressZero) return casimirOperators
-        for (const operator of ssvOperators) {
-            const { active, collateral, poolCount, resharing } = await (registry as CasimirRegistry).getOperator(operator.id)
-            const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
-            if (registered) {
-                const pools = await _getPools(operator.id, type)
-                // TODO: Replace these Public Nodes URLs once we have this working again
-                const operatorStore = {
-                    "208": "http://nodes.casimir.co:4031",
-                    "209": "http://nodes.casimir.co:4032",
-                    "210": "http://nodes.casimir.co:4033",
-                    "211": "http://nodes.casimir.co:4034",
-                    "212": "http://nodes.casimir.co:4035",
-                    "213": "http://nodes.casimir.co:4036",
-                    "214": "http://nodes.casimir.co:4037",
-                    "215": "http://nodes.casimir.co:4038"
-                }
-                const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
-                casimirOperators.push({
-                    ...operator,
-                    active,
-                    collateral: ethers.utils.formatEther(collateral),
-                    poolCount: poolCount.toNumber(),
-                    url,
-                    resharing,
-                    pools
-                })
-            }
-        }
-        return casimirOperators
-    }
+	async function _getRegisteredOperators(ssvOperators: Operator[], type: "base" | "eigen"): Promise<RegisteredOperator[]> {
+		const casimirOperators: RegisteredOperator[] = []
+		const registry = type === "base" ? baseRegistry : eigenRegistry
+		if (registry.address === ethers.constants.AddressZero) return casimirOperators
+		for (const operator of ssvOperators) {
+			const { active, collateral, poolCount, resharing } = await (registry as CasimirRegistry).getOperator(operator.id)
+			const registered = active || collateral.gt(0) || poolCount.gt(0) || resharing
+			if (registered) {
+				const pools = await _getPools(operator.id, type)
+				// TODO: Replace these Public Nodes URLs once we have this working again
+				const operatorStore = {
+					"208": "http://nodes.casimir.co:4031",
+					"209": "http://nodes.casimir.co:4032",
+					"210": "http://nodes.casimir.co:4033",
+					"211": "http://nodes.casimir.co:4034",
+					"212": "http://nodes.casimir.co:4035",
+					"213": "http://nodes.casimir.co:4036",
+					"214": "http://nodes.casimir.co:4037",
+					"215": "http://nodes.casimir.co:4038"
+				}
+				const url = operatorStore[operator.id.toString() as keyof typeof operatorStore]
+				casimirOperators.push({
+					...operator,
+					active,
+					collateral: ethers.utils.formatEther(collateral),
+					poolCount: poolCount.toNumber(),
+					url,
+					resharing,
+					pools
+				})
+			}
+		}
+		return casimirOperators
+	}
 
-    async function _getPools(operatorId: number, type: "base" | "eigen"): Promise<PoolConfig[]> {
-        const pools: PoolConfig[] = []
-        const manager = type === "base" ? baseManager : eigenManager
-        const poolIds = [
-            ...await (manager as CasimirManager).getPendingPoolIds(), ...await (manager as CasimirManager).getStakedPoolIds()
-        ]
-        const views = type === "base" ? baseViews : eigenViews
+	async function _getPools(operatorId: number, type: "base" | "eigen"): Promise<PoolConfig[]> {
+		const pools: PoolConfig[] = []
+		const manager = type === "base" ? baseManager : eigenManager
+		const poolIds = [
+			...await (manager as CasimirManager).getPendingPoolIds(), ...await (manager as CasimirManager).getStakedPoolIds()
+		]
+		const views = type === "base" ? baseViews : eigenViews
     
-        for (const poolId of poolIds) {
-            const poolConfig = await (views as CasimirViews).getPoolConfig(poolId)
-            const pool = {
-                ...poolConfig,
-                operatorIds: poolConfig.operatorIds.map(id => id.toNumber()),
-                reshares: poolConfig.reshares.toNumber()
-            }
-            if (pool.operatorIds.includes(operatorId)) {
-                pools.push(pool)
-            }
-        }
-        return pools
-    }
+		for (const poolId of poolIds) {
+			const poolConfig = await (views as CasimirViews).getPoolConfig(poolId)
+			const pool = {
+				...poolConfig,
+				operatorIds: poolConfig.operatorIds.map(id => id.toNumber()),
+				reshares: poolConfig.reshares.toNumber()
+			}
+			if (pool.operatorIds.includes(operatorId)) {
+				pools.push(pool)
+			}
+		}
+		return pools
+	}
 
-    async function initializeOperatorComposable() {
-        try {
-            /* Get Manager, Views, and Registry */
-            const { baseManager: managerContract, baseRegistry: registryContract, baseViews: viewsContract } = await getContracts()
-            const { eigenManager: eigenManagerContract, eigenRegistry: eigenRegistryContract, eigenViews: eigenViewsContract } = await getContracts()
-            baseManager = managerContract
-            baseRegistry = registryContract
-            baseViews = viewsContract
-            eigenManager = eigenManagerContract
-            eigenRegistry = eigenRegistryContract
-            eigenViews = eigenViewsContract
+	async function initializeOperatorComposable() {
+		try {
+			/* Get Manager, Views, and Registry */
+			const { baseManager: managerContract, baseRegistry: registryContract, baseViews: viewsContract } = await getContracts()
+			const { eigenManager: eigenManagerContract, eigenRegistry: eigenRegistryContract, eigenViews: eigenViewsContract } = await getContracts()
+			baseManager = managerContract
+			baseRegistry = registryContract
+			baseViews = viewsContract
+			eigenManager = eigenManagerContract
+			eigenRegistry = eigenRegistryContract
+			eigenViews = eigenViewsContract
 
-            loadingInitializeOperators.value = true
-            listenForContractEvents()
-            await getUserOperators()
-            loadingInitializeOperators.value = false
-        } catch (error) {
-            loadingInitializeOperatorsError.value = true
-            console.log("Error initializing operators :>> ", error)
-            loadingInitializeOperators.value = false
-        }
-    }
+			loadingInitializeOperators.value = true
+			listenForContractEvents()
+			await getUserOperators()
+			loadingInitializeOperators.value = false
+		} catch (error) {
+			loadingInitializeOperatorsError.value = true
+			console.log("Error initializing operators :>> ", error)
+			loadingInitializeOperators.value = false
+		}
+	}
 
-    function listenForContractEvents() {
-        try {
-            (baseRegistry as CasimirRegistry).on("OperatorRegistered", () => getUserOperators());
-            (eigenRegistry as CasimirRegistry).on("OperatorRegistered", () => getUserOperators())
+	function listenForContractEvents() {
+		try {
+			(baseRegistry as CasimirRegistry).on("OperatorRegistered", () => getUserOperators());
+			(eigenRegistry as CasimirRegistry).on("OperatorRegistered", () => getUserOperators())
 
-            // (registry as CasimirRegistry).on('OperatorDeregistered', getUserOperators)
-            // (registry as CasimirRegistry).on('DeregistrationRequested', getUserOperators)
-        } catch (err) {
-            console.log(`There was an error in listenForContractEvents: ${err}`)
-        }
-    }
+			// (registry as CasimirRegistry).on('OperatorDeregistered', getUserOperators)
+			// (registry as CasimirRegistry).on('DeregistrationRequested', getUserOperators)
+		} catch (err) {
+			console.log(`There was an error in listenForContractEvents: ${err}`)
+		}
+	}
 
-    // TODO: Move this to operators.ts to combine with AddOperator method
-    async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams) {
-        const activeNetwork = await detectActiveNetwork(walletProvider)
-        if (activeNetwork !== 5) {
-            await switchEthersNetwork(walletProvider, "0x5")
-            return window.location.reload()
-        }
-        loadingRegisteredOperators.value = true
-        try {
-            let signer
-            if (browserProvidersList.includes(walletProvider)) {
-                signer = getEthersBrowserSigner(walletProvider)
-            } else if (walletProvider === "WalletConnect") {
-                await getWalletConnectSignerV2()
-            } else if (walletProvider === "Ledger") {
-                getEthersLedgerSigner()
-            } else if (walletProvider === "Trezor") {
-                getEthersTrezorSigner()
-            } else {
-                throw new Error(`Invalid wallet provider: ${walletProvider}`)
-            }
-            const result = await (baseRegistry as CasimirRegistry)
-                .connect(signer as ethers.Signer)
-                .registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral) })
-            // TODO: @shanejearley - How many confirmations do we want to wait?
-            await result?.wait(1)
-            await addOperator({ address, nodeUrl })
-            loadingRegisteredOperators.value = false
-        } catch (err) {
-            loadingRegisteredOperatorsError.value = true
-            console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
-            loadingRegisteredOperators.value = false
-        }
-    }
+	// TODO: Move this to operators.ts to combine with AddOperator method
+	async function registerOperatorWithCasimir({ walletProvider, address, operatorId, collateral, nodeUrl }: RegisterOperatorWithCasimirParams) {
+		const activeNetwork = await detectActiveNetwork(walletProvider)
+		if (activeNetwork !== 5) {
+			await switchEthersNetwork(walletProvider, "0x5")
+			return window.location.reload()
+		}
+		loadingRegisteredOperators.value = true
+		try {
+			let signer
+			if (browserProvidersList.includes(walletProvider)) {
+				signer = getEthersBrowserSigner(walletProvider)
+			} else if (walletProvider === "WalletConnect") {
+				await getWalletConnectSignerV2()
+			} else if (walletProvider === "Ledger") {
+				getEthersLedgerSigner()
+			} else if (walletProvider === "Trezor") {
+				getEthersTrezorSigner()
+			} else {
+				throw new Error(`Invalid wallet provider: ${walletProvider}`)
+			}
+			const result = await (baseRegistry as CasimirRegistry)
+				.connect(signer as ethers.Signer)
+				.registerOperator(operatorId, { from: address, value: ethers.utils.parseEther(collateral) })
+			// TODO: @shanejearley - How many confirmations do we want to wait?
+			await result?.wait(1)
+			await addOperator({ address, nodeUrl })
+			loadingRegisteredOperators.value = false
+		} catch (err) {
+			loadingRegisteredOperatorsError.value = true
+			console.error(`There was an error in registerOperatorWithCasimir function: ${JSON.stringify(err)}`)
+			loadingRegisteredOperators.value = false
+		}
+	}
 
-    return { 
-        nonregisteredBaseOperators: readonly(nonregisteredBaseOperators),
-        nonregisteredEigenOperators: readonly(nonregisteredEigenOperators),
-        registeredBaseOperators: readonly(registeredBaseOperators),
-        registeredEigenOperators: readonly(registeredEigenOperators),
-        loadingAddOperator: readonly(loadingAddOperator),
-        loadingAddOperatorError: readonly(loadingAddOperatorError),
-        loadingInitializeOperators: readonly(loadingInitializeOperators),
-        loadingInitializeOperatorsError: readonly(loadingInitializeOperatorsError),
-        initializeOperatorComposable,
-        registerOperatorWithCasimir,
-    }
+	return { 
+		nonregisteredBaseOperators: readonly(nonregisteredBaseOperators),
+		nonregisteredEigenOperators: readonly(nonregisteredEigenOperators),
+		registeredBaseOperators: readonly(registeredBaseOperators),
+		registeredEigenOperators: readonly(registeredEigenOperators),
+		loadingAddOperator: readonly(loadingAddOperator),
+		loadingAddOperatorError: readonly(loadingAddOperatorError),
+		loadingInitializeOperators: readonly(loadingInitializeOperators),
+		loadingInitializeOperatorsError: readonly(loadingInitializeOperatorsError),
+		initializeOperatorComposable,
+		registerOperatorWithCasimir,
+	}
 }
 
 // async function _getSSVOperators(): Promise<SSVOperator[]> {

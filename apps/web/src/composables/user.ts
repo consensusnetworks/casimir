@@ -10,71 +10,71 @@ const initializeComposable = ref(false)
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
 
 export default function useUser() {
-    // TODO: Move back to ethers composable
-    async function getEthersBalance(address: string): Promise<GLfloat> {
-        const balance = await provider.getBalance(address)
-        return parseFloat(ethers.utils.formatEther(balance))
-    }
+	// TODO: Move back to ethers composable
+	async function getEthersBalance(address: string): Promise<GLfloat> {
+		const balance = await provider.getBalance(address)
+		return parseFloat(ethers.utils.formatEther(balance))
+	}
 
-    // onMounted(async () => {
-    //     if (!initializeComposable.value) {
-    //         initializeComposable.value = true
-    //     }
-    // })
+	// onMounted(async () => {
+	//     if (!initializeComposable.value) {
+	//         initializeComposable.value = true
+	//     }
+	// })
 
-    // onUnmounted(() => {
-    //     initializeComposable.value = false
-    // })
+	// onUnmounted(() => {
+	//     initializeComposable.value = false
+	// })
 
-    async function setUser(
-        newUserValue: UserWithAccountsAndOperators | undefined
-    ) {
-        user.value = newUserValue
-    }
+	async function setUser(
+		newUserValue: UserWithAccountsAndOperators | undefined
+	) {
+		user.value = newUserValue
+	}
 
-    async function setUserAccountBalances() {
-        try {
-            if (user?.value?.accounts) {
-                const { accounts } = user.value
-                const accountsWithBalances = await Promise.all(
-                    accounts.map(async (account: Account) => {
-                        const { address } = account
-                        const balance = await getEthersBalance(address)
-                        return {
-                            ...account,
-                            balance,
-                        }
-                    })
-                )
-                user.value.accounts = accountsWithBalances
-            }
-        } catch (error) {
-            throw new Error("Error setting user account balances")
-        }
-    }
+	async function setUserAccountBalances() {
+		try {
+			if (user?.value?.accounts) {
+				const { accounts } = user.value
+				const accountsWithBalances = await Promise.all(
+					accounts.map(async (account: Account) => {
+						const { address } = account
+						const balance = await getEthersBalance(address)
+						return {
+							...account,
+							balance,
+						}
+					})
+				)
+				user.value.accounts = accountsWithBalances
+			}
+		} catch (error) {
+			throw new Error("Error setting user account balances")
+		}
+	}
 
-    async function updateUserAgreement(agreed: boolean) {
-        const requestOptions = {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ agreed }),
-        }
-        return await fetch(
-            `${usersUrl}/user/update-user-agreement/${user.value?.id}`,
-            requestOptions
-        )
-    }
+	async function updateUserAgreement(agreed: boolean) {
+		const requestOptions = {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ agreed }),
+		}
+		return await fetch(
+			`${usersUrl}/user/update-user-agreement/${user.value?.id}`,
+			requestOptions
+		)
+	}
 
-    watch(user, async () => {
-        if (!user.value) return
-        await setUserAccountBalances()
-    })
+	watch(user, async () => {
+		if (!user.value) return
+		await setUserAccountBalances()
+	})
 
-    return {
-        user: readonly(user),
-        setUser,
-        updateUserAgreement,
-    }
+	return {
+		user: readonly(user),
+		setUser,
+		updateUserAgreement,
+	}
 }

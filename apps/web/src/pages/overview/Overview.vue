@@ -18,22 +18,22 @@ const { loadingInitializeOperators } = useOperators()
 const showSkeleton = ref(true)
 
 onMounted(() => {
-    setTimeout(() => {
-        if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
-            showSkeleton.value = false
-        }
-    }, 500)
+	setTimeout(() => {
+		if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
+			showSkeleton.value = false
+		}
+	}, 500)
 })
 
 watch([loadingSessionLogin,
-    loadingInitializeBreakdownMetrics,
-    loadingInitializeAnalytics,
-    loadingInitializeOperators], () =>{
-    setTimeout(() => {
-        if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
-            showSkeleton.value = false
-        }
-    }, 500)
+	loadingInitializeBreakdownMetrics,
+	loadingInitializeAnalytics,
+	loadingInitializeOperators], () =>{
+	setTimeout(() => {
+		if (loadingSessionLogin || loadingInitializeBreakdownMetrics || loadingInitializeAnalytics || loadingInitializeOperators) {
+			showSkeleton.value = false
+		}
+	}, 500)
 })
 </script>
 

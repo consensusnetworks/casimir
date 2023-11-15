@@ -7,6 +7,6 @@
     "devDependencies": {
         "@types/aws-cloudfront-function": "^1.0.3",
         "@types/node": "^17.0.38",
-        "esbuild": "^0.15.9"
+        "esbuild": "^0.18.20"
     }
 }

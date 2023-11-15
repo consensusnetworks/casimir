@@ -21,7 +21,7 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "indent": ["error", 4],
+        "indent": ["error", "tab"],
         "semi": ["error", "never"],
         "quotes": ["error", "double"],
         "max-len": ["error", { "code": 120, "ignoreStrings": true, "comments": 300, "ignoreTemplateLiterals": true }],

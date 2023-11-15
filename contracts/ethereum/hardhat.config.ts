@@ -53,106 +53,106 @@ process.env.SWAP_ROUTER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_ROUTER_ADD
 process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].WETH_TOKEN_ADDRESS
 
 const compilerSettings = {
-    viaIR: true,
-    optimizer: {
-        enabled: true
-    }
+	viaIR: true,
+	optimizer: {
+		enabled: true
+	}
 }
 const compilerVersions = ["0.8.18"]
 const externalCompilerVersions = ["0.4.22",
-    "0.4.24",
-    "0.6.6",
-    "0.6.11",
-    "0.8.4"]
+	"0.4.24",
+	"0.6.6",
+	"0.6.11",
+	"0.8.4"]
 const compilers = [...compilerVersions, ...externalCompilerVersions]
-    .map(version => ({ version, settings: compilerSettings }))
+	.map(version => ({ version, settings: compilerSettings }))
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
-    etherscan: {
-        apiKey: "XZCVTJSMVTZ78RYAHDAUXDPRSFW8NKIGW9"
-    },
-    mocha: {
-        timeout: 60000
-    },
-    solidity: {
-        compilers,
-    },
-    paths: {
-        tests: "./test",
-        sources: "./src/v1",
-        artifacts: "./build/artifacts",
-        cache: "./build/cache"
-    },
-    abiExporter: {
-        path: "./build/abi",
-        runOnCompile: true,
-        clear: true,
-        flat: true,
-        spacing: 4,
-        format: "fullName"
-    },
-    typechain: {
-        outDir: "./build/@types"
-    },
-    docgen: {
-        exclude: [
-            "dev",
-            "libraries",
-            "mock",
-            "vendor"
-        ],
-        outputDir: process.env.DOCS_OUTPUT_DIR || "./build/docs",
-        templates: process.env.DOCS_TEMPLATE_DIR,
-        pages: () => "solidity-api.md"
-    },
-    networks: {
-        hardhat: {
-            accounts: mnemonic ? hid : undefined,
-            chainId: forkChainId || 1337,
-            forking: forkUrl ? forkConfig : undefined,
-            mining: miningInterval ? mining : { auto: true },
-            allowUnlimitedContractSize: true,
-            gas: "auto",
-            gasPrice: "auto"
-        },
-        mainnet: {
-            accounts: mnemonic ? hid : undefined,
-            url: process.env.ETHEREUM_RPC_URL || "",
-            allowUnlimitedContractSize: true,
-            gas: "auto",
-            gasPrice: "auto"
-        },
-        goerli: {
-            accounts: mnemonic ? hid : undefined,
-            url: process.env.ETHEREUM_RPC_URL || "",
-            allowUnlimitedContractSize: true,
-            gas: "auto",
-            gasPrice: "auto"
-        }
-    }
+	etherscan: {
+		apiKey: "XZCVTJSMVTZ78RYAHDAUXDPRSFW8NKIGW9"
+	},
+	mocha: {
+		timeout: 60000
+	},
+	solidity: {
+		compilers,
+	},
+	paths: {
+		tests: "./test",
+		sources: "./src/v1",
+		artifacts: "./build/artifacts",
+		cache: "./build/cache"
+	},
+	abiExporter: {
+		path: "./build/abi",
+		runOnCompile: true,
+		clear: true,
+		flat: true,
+		spacing: 4,
+		format: "fullName"
+	},
+	typechain: {
+		outDir: "./build/@types"
+	},
+	docgen: {
+		exclude: [
+			"dev",
+			"libraries",
+			"mock",
+			"vendor"
+		],
+		outputDir: process.env.DOCS_OUTPUT_DIR || "./build/docs",
+		templates: process.env.DOCS_TEMPLATE_DIR,
+		pages: () => "solidity-api.md"
+	},
+	networks: {
+		hardhat: {
+			accounts: mnemonic ? hid : undefined,
+			chainId: forkChainId || 1337,
+			forking: forkUrl ? forkConfig : undefined,
+			mining: miningInterval ? mining : { auto: true },
+			allowUnlimitedContractSize: true,
+			gas: "auto",
+			gasPrice: "auto"
+		},
+		mainnet: {
+			accounts: mnemonic ? hid : undefined,
+			url: process.env.ETHEREUM_RPC_URL || "",
+			allowUnlimitedContractSize: true,
+			gas: "auto",
+			gasPrice: "auto"
+		},
+		goerli: {
+			accounts: mnemonic ? hid : undefined,
+			url: process.env.ETHEREUM_RPC_URL || "",
+			allowUnlimitedContractSize: true,
+			gas: "auto",
+			gasPrice: "auto"
+		}
+	}
 }
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
 if (process.env.TUNNEL === "true") {
-    runLocalTunnel()
+	runLocalTunnel()
 }
 
 function runLocalTunnel() {
-    const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
-    const localUrl = `https://${localSubdomain}.loca.lt`
-    localtunnel({ port: 8545, subdomain: localSubdomain }).then(
-        (tunnel: localtunnel.Tunnel) => {
-            if (localUrl === tunnel.url) {
-                console.log("Your default local tunnel url is", localUrl)
-            } else {
-                console.log("Your default local tunnel url is not available, use", tunnel.url, "instead")
-            }
-            process.on("SIGINT", () => {
-                tunnel.close()
-            })
-        }
-    )
+	const localSubdomain = `local-hardhat-${os.userInfo().username.toLowerCase()}`
+	const localUrl = `https://${localSubdomain}.loca.lt`
+	localtunnel({ port: 8545, subdomain: localSubdomain }).then(
+		(tunnel: localtunnel.Tunnel) => {
+			if (localUrl === tunnel.url) {
+				console.log("Your default local tunnel url is", localUrl)
+			} else {
+				console.log("Your default local tunnel url is not available, use", tunnel.url, "instead")
+			}
+			process.on("SIGINT", () => {
+				tunnel.close()
+			})
+		}
+	)
 }
 
 export default config

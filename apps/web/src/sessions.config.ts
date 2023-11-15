@@ -4,10 +4,10 @@ import useEnvironment from "@/composables/environment"
 const { usersUrl } = useEnvironment()
 
 export const SuperTokensWebJSConfig = {
-    appInfo: {
-        apiDomain: usersUrl,
-        appName: "Casimir",
-    // apiBasePath: '/',
-    },
-    recipeList: [Session.init()],
+	appInfo: {
+		apiDomain: usersUrl,
+		appName: "Casimir",
+		// apiBasePath: '/',
+	},
+	recipeList: [Session.init()],
 }

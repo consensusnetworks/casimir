@@ -16,14 +16,14 @@ const { docsUrl } = useEnvironment()
 const { exportFile } = useFiles()
 const { convertString } = useFormat()
 const {
-    initializeOperatorComposable,
-    registerOperatorWithCasimir,
-    nonregisteredBaseOperators,
-    nonregisteredEigenOperators,
-    registeredBaseOperators,
-    registeredEigenOperators,
-    loadingInitializeOperators,
-    loadingAddOperator
+	initializeOperatorComposable,
+	registerOperatorWithCasimir,
+	nonregisteredBaseOperators,
+	nonregisteredEigenOperators,
+	registeredBaseOperators,
+	registeredEigenOperators,
+	loadingInitializeOperators,
+	loadingAddOperator
 } = useOperators()
 const { user } = useUser()
 
@@ -31,9 +31,9 @@ const { user } = useUser()
 const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: "", walletProvider: "" })
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
-    setTimeout(() => {
-        openSelectWalletOptions.value = false
-    }, 200)
+	setTimeout(() => {
+		openSelectWalletOptions.value = false
+	}, 200)
 }
 
 const operatorType = ref<"base" | "eigen">("base")
@@ -42,20 +42,20 @@ const eigenIsToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref("#eee")  // Initial color
 
 function toggleEigenLayerSupport() {
-    eigenIsToggled.value = !eigenIsToggled.value
-    toggleBackgroundColor.value = eigenIsToggled.value ? "green" : "#eee"
-    operatorType.value = eigenIsToggled.value ? "eigen" : "base"
+	eigenIsToggled.value = !eigenIsToggled.value
+	toggleBackgroundColor.value = eigenIsToggled.value ? "green" : "#eee"
+	operatorType.value = eigenIsToggled.value ? "eigen" : "base"
 
-    // Update stakeType
-    // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
+	// Update stakeType
+	// stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
 }
 
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
-    setTimeout(() => {
-        openSelectOperatorID.value = false
-    }, 200)
+	setTimeout(() => {
+		openSelectOperatorID.value = false
+	}, 200)
 }
 
 const availableOperatorIDs = ref([] as string[])
@@ -70,40 +70,40 @@ const searchInput = ref("")
 const selectedHeader = ref("walletProvider")
 const selectedOrientation = ref("ascending")
 const operatorTableHeaders = ref(
-    [
-    // {
-    //   title: '',
-    //   value: 'blank_column'
-    // },
-        {
-            title: "Operator ID",
-            value: "id"
-        },
-        {
-            title: "Wallet Address",
-            value: "walletAddress"
-        },
-        {
-            title: "Collateral",
-            value: "collateral"
-        },
-        {
-            title: "Active Validators",
-            value: "poolCount"
-        },
-        {
-            title: "Node URL",
-            value: "nodeURL"
-        },
-    // {
-    //   title: '',
-    //   value: 'deactivate'
-    // },
-    // {
-    //   title: '',
-    //   value: 'withdraw_collateral'
-    // },
-    ]
+	[
+		// {
+		//   title: '',
+		//   value: 'blank_column'
+		// },
+		{
+			title: "Operator ID",
+			value: "id"
+		},
+		{
+			title: "Wallet Address",
+			value: "walletAddress"
+		},
+		{
+			title: "Collateral",
+			value: "collateral"
+		},
+		{
+			title: "Active Validators",
+			value: "poolCount"
+		},
+		{
+			title: "Node URL",
+			value: "nodeURL"
+		},
+		// {
+		//   title: '',
+		//   value: 'deactivate'
+		// },
+		// {
+		//   title: '',
+		//   value: 'withdraw_collateral'
+		// },
+	]
 )
 
 const allInputsValid = ref(false)
@@ -115,200 +115,200 @@ const loading = ref(false)
 const submitButtonTxt = ref("Submit")
 
 onMounted(async () => {
-    if (user.value) {
-        loading.value = true
-        await initializeOperatorComposable()
+	if (user.value) {
+		loading.value = true
+		await initializeOperatorComposable()
 
-        // Autofill disable
-        const disableAutofill = () => {
-            let inputs = document.getElementsByTagName("input")
-            for (let i = 0; i < inputs.length; i++) {
-                inputs[i].setAttribute("autocomplete", "off")
-            }
-        }
+		// Autofill disable
+		const disableAutofill = () => {
+			let inputs = document.getElementsByTagName("input")
+			for (let i = 0; i < inputs.length; i++) {
+				inputs[i].setAttribute("autocomplete", "off")
+			}
+		}
 
-        document.addEventListener("DOMContentLoaded", disableAutofill)
+		document.addEventListener("DOMContentLoaded", disableAutofill)
 
-        filterData()
-    }
+		filterData()
+	}
 })
 
 watch(user, async () => {
-    if (user.value) {
-        loading.value = true
-        await initializeOperatorComposable()
+	if (user.value) {
+		loading.value = true
+		await initializeOperatorComposable()
 
-        filterData()
-    }
+		filterData()
+	}
 })
 
 watch(selectedWallet, async () => {
-    selectedOperatorID.value = ""
-    selectedPublicNodeURL.value = ""
-    selectedCollateral.value = ""
+	selectedOperatorID.value = ""
+	selectedPublicNodeURL.value = ""
+	selectedCollateral.value = ""
 
-    if (selectedWallet.value.address === "") {
-        availableOperatorIDs.value = []
-    } else if (operatorType.value === "base") {
-        if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
-            availableOperatorIDs.value = [...nonregisteredBaseOperators.value]
-                .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
-                .map((operator: any) => operator.id)
-        } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
-            availableOperatorIDs.value = [...nonregisteredEigenOperators.value]
-                .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
-                .map((operator: any) => operator.id)
-        } else {
-            availableOperatorIDs.value = []
-        }
-    }
+	if (selectedWallet.value.address === "") {
+		availableOperatorIDs.value = []
+	} else if (operatorType.value === "base") {
+		if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
+			availableOperatorIDs.value = [...nonregisteredBaseOperators.value]
+				.filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+				.map((operator: any) => operator.id)
+		} else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
+			availableOperatorIDs.value = [...nonregisteredEigenOperators.value]
+				.filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+				.map((operator: any) => operator.id)
+		} else {
+			availableOperatorIDs.value = []
+		}
+	}
 })
 
 watch([registeredBaseOperators, registeredEigenOperators], () => {
-    loading.value = true
-    openAddOperatorModal.value = false
-    tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
-        return {
-            id: operator.id,
-            walletAddress: operator.ownerAddress,
-            collateral: operator.collateral + " ETH",
-            poolCount: operator.poolCount,
-            nodeURL: operator.url
-        }
-    })
-    filterData()
+	loading.value = true
+	openAddOperatorModal.value = false
+	tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
+		return {
+			id: operator.id,
+			walletAddress: operator.ownerAddress,
+			collateral: operator.collateral + " ETH",
+			poolCount: operator.poolCount,
+			nodeURL: operator.url
+		}
+	})
+	filterData()
 })
 
 watch(openAddOperatorModal, () => {
-    if (openAddOperatorModal.value) {
-        selectedWallet.value = { address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString }
-    }
+	if (openAddOperatorModal.value) {
+		selectedWallet.value = { address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString }
+	}
 })
 
 watch([searchInput,
-    selectedHeader,
-    selectedOrientation,
-    currentPage], () => {
-    filterData()
+	selectedHeader,
+	selectedOrientation,
+	currentPage], () => {
+	filterData()
 })
 
 const openWalletsModal = () => {
-    const el = document.getElementById("connect_wallet_button")
-    if (el) {
-        el.click()
-    }
+	const el = document.getElementById("connect_wallet_button")
+	if (el) {
+		el.click()
+	}
 }
 
 const handleInputChangeCollateral = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, "")
-    const parts = value.split(".")
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+	const value = event.target.value.replace(/[^\d.]/g, "")
+	const parts = value.split(".")
+	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
-    // Limit to two decimal places
-    if (parts[1] && parts[1].length > 2) {
-        parts[1] = parts[1].slice(0, 2)
-    }
+	// Limit to two decimal places
+	if (parts[1] && parts[1].length > 2) {
+		parts[1] = parts[1].slice(0, 2)
+	}
 
-    // Update the model value
-    selectedCollateral.value = parts.join(".")
+	// Update the model value
+	selectedCollateral.value = parts.join(".")
 }
 
 const filterData = () => {
-    loading.value = true
-    let filteredDataArray
+	loading.value = true
+	let filteredDataArray
 
-    if (searchInput.value === "") {
-        filteredDataArray = tableData.value
-    } else {
-        const searchTerm = searchInput.value
-        filteredDataArray = tableData.value.filter((item: any) => {
-            return (
-            // Might need to modify to match types each variable
-            // item.walletProvider?.toLowerCase().includes(searchTerm) 
-                true
-            )
-        })
-    }
+	if (searchInput.value === "") {
+		filteredDataArray = tableData.value
+	} else {
+		const searchTerm = searchInput.value
+		filteredDataArray = tableData.value.filter((item: any) => {
+			return (
+			// Might need to modify to match types each variable
+			// item.walletProvider?.toLowerCase().includes(searchTerm) 
+				true
+			)
+		})
+	}
 
-    if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
-        filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
-            const valA = a[selectedHeader.value]
-            const valB = b[selectedHeader.value]
+	if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
+		filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
+			const valA = a[selectedHeader.value]
+			const valB = b[selectedHeader.value]
 
-            if (selectedOrientation.value === "ascending") {
-                return valA < valB ? -1 : valA > valB ? 1 : 0
-            } else {
-                return valA > valB ? -1 : valA < valB ? 1 : 0
-            }
-        })
-    }
-    totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value) || 1
+			if (selectedOrientation.value === "ascending") {
+				return valA < valB ? -1 : valA > valB ? 1 : 0
+			} else {
+				return valA > valB ? -1 : valA < valB ? 1 : 0
+			}
+		})
+	}
+	totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value) || 1
 
-    const start = (currentPage.value - 1) * itemsPerPage.value
-    const end = start + itemsPerPage.value
-    filteredData.value = filteredDataArray.slice(start, end) as any
-    loading.value = false
+	const start = (currentPage.value - 1) * itemsPerPage.value
+	const end = start + itemsPerPage.value
+	filteredData.value = filteredDataArray.slice(start, end) as any
+	loading.value = false
 }
 
 const removeItemFromCheckedList = (item: any) => {
-    const index = checkedItems.value.indexOf(item)
-    if (index > -1) {
-        checkedItems.value.splice(index, 1)
-    }
+	const index = checkedItems.value.indexOf(item)
+	if (index > -1) {
+		checkedItems.value.splice(index, 1)
+	}
 }
 
 watch([selectedWallet,
-    selectedOperatorID,
-    selectedPublicNodeURL,
-    selectedCollateral], () => {
-    if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
-        allInputsValid.value = true
-    } else {
-        allInputsValid.value = false
-    }
+	selectedOperatorID,
+	selectedPublicNodeURL,
+	selectedCollateral], () => {
+	if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
+		allInputsValid.value = true
+	} else {
+		allInputsValid.value = false
+	}
 })
 
 async function submitRegisterOperatorForm() {
-    const selectedAddress = selectedWallet.value.address
-    const selectedProvider = selectedWallet.value.walletProvider
+	const selectedAddress = selectedWallet.value.address
+	const selectedProvider = selectedWallet.value.walletProvider
 
-    // const activeAddress = await detectActiveWalletAddress(selectedProvider)
-    // if (activeAddress !== selectedAddress) {
-    //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-    // }
+	// const activeAddress = await detectActiveWalletAddress(selectedProvider)
+	// if (activeAddress !== selectedAddress) {
+	//   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+	// }
 
-    try {
-        await registerOperatorWithCasimir({
-            walletProvider: selectedWallet.value.walletProvider as ProviderString,
-            address: selectedWallet.value.address,
-            operatorId: parseInt(selectedOperatorID.value),
-            collateral: selectedCollateral.value,
-            nodeUrl: selectedPublicNodeURL.value
-        })
-        openAddOperatorModal.value = false
-    } catch (error) {
-        console.log("Error in submitRegisterOperatorForm :>> ", error)
-        openAddOperatorModal.value = false
-    }
+	try {
+		await registerOperatorWithCasimir({
+			walletProvider: selectedWallet.value.walletProvider as ProviderString,
+			address: selectedWallet.value.address,
+			operatorId: parseInt(selectedOperatorID.value),
+			collateral: selectedCollateral.value,
+			nodeUrl: selectedPublicNodeURL.value
+		})
+		openAddOperatorModal.value = false
+	} catch (error) {
+		console.log("Error in submitRegisterOperatorForm :>> ", error)
+		openAddOperatorModal.value = false
+	}
 
-    if (selectedWallet.value.address === "") {
-        const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
-        selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
-    }
-    selectedOperatorID.value = ""
-    selectedPublicNodeURL.value = ""
-    selectedCollateral.value = ""
-    availableOperatorIDs.value = []
+	if (selectedWallet.value.address === "") {
+		const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
+		selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
+	}
+	selectedOperatorID.value = ""
+	selectedPublicNodeURL.value = ""
+	selectedCollateral.value = ""
+	availableOperatorIDs.value = []
 }
 
 const showSkeleton = ref(true)
 
 watch([loadingSessionLogin || loadingInitializeOperators], () => {
-    setTimeout(() => {
-        if (loadingSessionLogin || loadingInitializeOperators) {
-            showSkeleton.value = false
-        }
-    }, 500)
+	setTimeout(() => {
+		if (loadingSessionLogin || loadingInitializeOperators) {
+			showSkeleton.value = false
+		}
+	}, 500)
 })
 
 </script>

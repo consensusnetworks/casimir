@@ -6,21 +6,21 @@ import { exec, execSync } from "child_process"
  * @returns A promise that resolves when the command exits
  */
 export async function run(command: string) {
-    const child = exec(command)
-    let data = ""
-    return new Promise((resolve, reject) => {
-        child.on("error", reject)
-        child.stdout?.on("data", chunk => {
-            process.stdout.write(chunk.toString())
-            data += chunk.toString()
-        })
-        child.stderr?.on("data", chunk => {
-            process.stdout.write(chunk.toString())
-        })
-        child.on("exit", () => {
-            resolve(data)
-        })
-    })
+	const child = exec(command)
+	let data = ""
+	return new Promise((resolve, reject) => {
+		child.on("error", reject)
+		child.stdout?.on("data", chunk => {
+			process.stdout.write(chunk.toString())
+			data += chunk.toString()
+		})
+		child.stderr?.on("data", chunk => {
+			process.stdout.write(chunk.toString())
+		})
+		child.on("exit", () => {
+			resolve(data)
+		})
+	})
 }
 
 /**
@@ -30,16 +30,16 @@ export async function run(command: string) {
  * @returns A promise that resolves when the command exits
  */
 export async function runRetry(command: string, retriesLeft: number | undefined = 25): Promise<unknown> {
-    if (retriesLeft === 0) {
-        throw new Error("Command failed after maximum retries")
-    }
-    try {
-        return await run(command)
-    } catch (error) {
-        await new Promise(resolve => setTimeout(resolve, 5000))
-        console.log("Retrying command", command)
-        return await runRetry(command, retriesLeft - 1)
-    }
+	if (retriesLeft === 0) {
+		throw new Error("Command failed after maximum retries")
+	}
+	try {
+		return await run(command)
+	} catch (error) {
+		await new Promise(resolve => setTimeout(resolve, 5000))
+		console.log("Retrying command", command)
+		return await runRetry(command, retriesLeft - 1)
+	}
 }
 
 /**
@@ -48,5 +48,5 @@ export async function runRetry(command: string, retriesLeft: number | undefined 
  * @returns The output of the command
  */
 export function runSync(command: string) {
-    return execSync(command).toString()
+	return execSync(command).toString()
 }

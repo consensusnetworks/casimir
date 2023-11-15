@@ -2,8 +2,8 @@
 /// <reference types="vite-plugin-pages/client" />
 
 import {
-    SendMessagesCommandOutput,
-    UpdateEndpointCommandOutput
+	SendMessagesCommandOutput,
+	UpdateEndpointCommandOutput
 } from "@aws-sdk/client-pinpoint"
 
 declare module "*.vue" {
