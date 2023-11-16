@@ -11,7 +11,7 @@ const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || "http://127.0.0.1
 const ethereumWsUrl = import.meta.env.PUBLIC_ETHEREUM_WS_URL
 const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
 const batchProvider: ethers.providers.JsonRpcBatchProvider = new ethers.providers.JsonRpcBatchProvider(ethereumUrl)
-const wsProvider: ethers.providers.wsProvider | null = ethereumWsUrl !== "undefined" ? new ethers.providers.wsProvider(ethereumWsUrl) : null
+const wsProvider: ethers.providers.WebSocketProvider | null = ethereumWsUrl !== "undefined" ? new ethers.providers.WebSocketProvider(ethereumWsUrl) : null
 
 /* Casimir environment */
 const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
