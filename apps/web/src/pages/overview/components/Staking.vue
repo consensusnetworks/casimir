@@ -12,7 +12,7 @@ import TermsOfService from "@/components/TermsOfService.vue"
 
 const { batchProvider } = useEnvironment()
 const { stakingComposableInitialized, userStakeDetails, deposit, withdraw, getWithdrawableBalance } = useStaking()
-const { convertString, formatEthersCasimir, parseEthersCasimir } = useFormat()
+const { convertString, formatEthersCasimir, formatEthersCasimirStaking, parseEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
 
@@ -28,20 +28,20 @@ const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 const selectedStakingProvider = ref<ProviderString>("")
 const selectedWalletAddress = ref(null as null | string)
 const selectedUserAddressOperatorGroup = ref("")
-const defaultUserStakeDetails = computed(() => userStakeDetails.value.filter((stakeDetail) => stakeDetail.operatorType === "Default"))
+const defaultUserStakeDetails = computed(() => userStakeDetails.value.filter((stakeDetail: StakeDetails) => stakeDetail.operatorType === "Default"))
 // TODO: Re-enable this
 const eigenUserStakeDetails = computed(() => userStakeDetails.value.filter((stakeDetail) => stakeDetail.operatorType === "Eigen"))
 // Comment above and uncomment below to show Eigen Stake Withdrawal UI
 // const eigenUserStakeDetails = ref<Array<StakeDetails>>([
 //     {
 //         address: "0xd557a5745d4560B24D36A68b52351ffF9c86A212".toLocaleLowerCase(),
-//         amountStaked: 10,
+//         amountStaked: 10.00,
 //         operatorType: "Eigen",
 //         availableToWithdraw: 4
 //     },
 //     {
 //         address: "0x728474D29c2F81eb17a669a7582A2C17f1042b57".toLocaleLowerCase(),
-//         amountStaked: 10,
+//         amountStaked: 10.00,
 //         operatorType: "Eigen",
 //         availableToWithdraw: 4
 //     }
@@ -319,7 +319,7 @@ watch(formattedAmountToStakeOrWithdraw, async () => {
     const selectedAddressBalance = parseEthersCasimir(casimirFormattedBalances.value[selectedWalletAddress.value as string] as string)
     const maxAmount = selectedWalletAddress.value ? selectedAddressBalance : 0
 
-    if (floatAmount > maxAmount) {
+    if (stakeOrWithdraw.value === "stake" && floatAmount > maxAmount) {
         errorMessage.value = "Insufficient Funds"
     } else {
         errorMessage.value = null
@@ -482,7 +482,7 @@ onMounted(async () => {
                 :src="`${user?.accounts.filter(account => account.address === stakeDetail.address)[0].walletProvider.toLocaleLowerCase()}.svg`"
                 class="w-[16px] h-[16px] inline-block mr-[8px]"
               > {{ convertString(stakeDetail.address) }}</div>
-            <div class="p-2">Staked: {{ formatEthersCasimir(stakeDetail.amountStaked, 6) }} ETH</div>
+            <div class="p-2">{{ formatEthersCasimirStaking(stakeDetail.amountStaked) }} ETH</div>
           </li>
         </span>
 
@@ -505,14 +505,14 @@ onMounted(async () => {
                 class="w-[16px] h-[16px] inline-block mr-[8px]"
               > 
               {{ convertString(stakeDetail.address) }}</div>
-            <div class="p-2">Amount Staked: {{ formatEthersCasimir(stakeDetail.amountStaked, 6) }} ETH</div>
+            <div class="p-2">{{ formatEthersCasimirStaking(stakeDetail.amountStaked) }} ETH</div>
           </li>
         </span>
       </ul>
     </span>
 
     <!-- Amount to Stake/Withdraw -->
-    <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[22px]">
+    <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[8px]">
       <h6 class="card_title">
         Amount
       </h6>
@@ -568,10 +568,10 @@ onMounted(async () => {
         <h6 style="font-weight: 400;">
           ETH
           <button
-            class="text-[12px] text-blue-500 ml-6 underline"
+            class="text-[12px] text-blue-500 ml-6"
             @click="formattedAmountToStakeOrWithdraw = availableToWithdraw"
           >
-            max
+            Max
           </button>
         </h6>
       </div>
@@ -664,21 +664,25 @@ onMounted(async () => {
     </button>
 
     <!-- Available to Withdraw Note -->
-    <div v-if="stakeOrWithdraw === 'withdraw' && selectedOperatorGroupStakeDetails">
-      <div
-        :class="[
-          'card_message p-2 text-blue-500',
-          { 'card_message_error': withdrawalLimitExceeded }
-        ]"
-      >
-        Available to Withdraw: {{ formatEthersCasimir(availableToWithdraw, 6) }} ETH
+    <div
+      v-if="stakeOrWithdraw === 'withdraw' && selectedOperatorGroupStakeDetails"
+    >
+      <div class="max_withdraw_note_container">
+        <div class="tooltip_container">
+          Withdrawals are currently limited to available balance that is not actively staked on Beacon Chain.
+          <br>
+          We will adding capability to make full withdrawals soon.
+          <div class="tooltip_triangle" />
+        </div>
+        <div
+          :class="[
+            'card_message p-2 text-blue-500 cursor-default',
+            { 'card_message_error': withdrawalLimitExceeded }
+          ]"
+        >
+          Your current withdrawable amount is: {{ formatEthersCasimirStaking(availableToWithdraw) }} ETH
+        </div>
       </div>
-      <!-- <div
-        v-if="withdrawalLimitExceeded"
-        class="card_message card_message_error"
-      >
-        Note: We are currently working on full withdrawals. Please try again with an amount.
-      </div> -->
     </div>
 
     <!-- Submit Button -->
@@ -917,31 +921,6 @@ button:disabled {
   /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
 
-/* .shine_effect {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -150%;
-    width: 200%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.5);
-    transform: rotate(30deg);
-    pointer-events: none;
-    animation: shine 2.5s infinite;
-  }
-
-  @keyframes shine {
-    0% {
-      left: -150%;
-    }
-    50% {
-      left: 150%;
-    }
-    100% {
-      left: 150%;
-    }
-  } */
-
 .toggle_button {
   position: absolute;
   top: 50%;
@@ -1003,16 +982,11 @@ button:disabled {
   /* smooth fade in */
   white-space: nowrap;
   /* prevents the text from wrapping */
-  font-size: 12px;
+  font-size: 14px;
   pointer-events: none;
   /* ensures it doesn't block any interactions */
   z-index: 10;
   /* positions it above other elements */
-}
-
-.eigen-toggle-container:hover .tooltip_container {
-  opacity: 1;
-  /* show on hover */
 }
 
 .tooltip_triangle {
@@ -1029,6 +1003,19 @@ button:disabled {
   border-right: 5px solid transparent;
   border-top: 5px solid #000;
   /* same color as the tooltip background */
+}
+
+.eigen-toggle-container:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
+}
+
+.max_withdraw_note_container {
+  position: relative;
+}
+.max_withdraw_note_container:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
 }
 
 .stake-withdraw-selector {
@@ -1067,7 +1054,7 @@ button:disabled {
 .action-button.active {
   color: rgb(13, 95, 255);
   border: solid 1px rgb(13, 95, 255);
-  background-color: #e8e7e7;
+  background-color: #F3F3F3;
 }
 
 .operator_group_li {
@@ -1081,12 +1068,12 @@ button:disabled {
 }
 
 .operator_group_li:hover {
-  background-color: #e8e7e7;
+  background-color: #F3F3F3;
 }
 
 .selected_operator_group_li {
   /* Border should become blue */
   border: 1px solid rgb(13, 95, 255);
-  background-color: #e8e7e7;
+  background-color: #F3F3F3;
 }
 </style>@/composables/user@/composables/staking

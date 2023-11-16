@@ -27,6 +27,7 @@ export default function useFormat() {
                 Math.abs(inputFloat) >= mag ? [symbol, mag] : [selectedSymbol, selectedMagnitude], ["", 1])
     
         let numDecimals: number
+
         if (customDecimals !== undefined) {
             numDecimals = customDecimals
         } else if (Math.abs(inputFloat) < 1) {
@@ -42,8 +43,18 @@ export default function useFormat() {
         if (numDecimals > 0) {
             formattedFloat = formattedFloat.replace(/\.?0+$/, "")
         }
-        
-        return formattedFloat + siSymbol
+        return siSymbol.length > 0 ? formattedFloat + siSymbol : formattedFloat
+    }
+
+    function formatEthersCasimirStaking(inputFloat: number) {
+        // Ensure the number has 18 decimal places
+        const formattedNumber = inputFloat.toFixed(18)
+        // Split the number into integer and decimal parts
+        const parts = formattedNumber.split(".")
+        // Add commas to the integer part
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        // Rejoin the integer and decimal parts
+        return parts.join(".")
     }
 
     function parseEthersCasimir(inputString: string): number {
@@ -80,6 +91,7 @@ export default function useFormat() {
         convertString, 
         formatDecimalString,
         formatEthersCasimir,
+        formatEthersCasimirStaking,
         parseEthersCasimir,
         trimAndLowercaseAddress,
     }
