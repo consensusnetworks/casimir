@@ -1,18 +1,18 @@
 <script lang="ts" setup>
 import { computed, ref, onMounted, watch } from "vue"
-import { FormattedWalletOption, ProviderString } from "@casimir/types"
+import { FormattedWalletOption, ProviderString, StakeDetails } from "@casimir/types"
 import VueFeather from "vue-feather"
+import useEnvironment from "@/composables/environment"
 import useStaking from "@/composables/staking"
-import useEthers from "@/composables/ethers"
 import useFormat from "@/composables/format"
 import usePrice from "@/composables/price"
 import useUser from "@/composables/user"
-
+import { ethers } from "ethers"
 import TermsOfService from "@/components/TermsOfService.vue"
 
-const { stakingComposableInitialized, deposit, initializeStakingComposable, withdraw, getWithdrawableBalance } = useStaking()
-const { getEthersBalance } = useEthers()
-const { convertString, formatNumber } = useFormat()
+const { batchProvider } = useEnvironment()
+const { stakingComposableInitialized, userStakeDetails, deposit, withdraw, getWithdrawableBalance } = useStaking()
+const { convertString, formatEthersCasimir, formatEthersCasimirStaking, parseEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { user, updateUserAgreement } = useUser()
 
@@ -23,11 +23,30 @@ const stakeType = ref<"default" | "eigen">("default")
 const currentUserStake = ref(0)
 const estimatedFees = ref<number | string>("-")
 const estimatedAPY = ref<string>("4.00")
-const formattedAmountToStakeOrWithdraw = ref("")
+const formattedAmountToStakeOrWithdraw = ref(0)
 const formattedWalletOptions = ref<Array<FormattedWalletOption>>([])
 const selectedStakingProvider = ref<ProviderString>("")
 const selectedWalletAddress = ref(null as null | string)
-const selectedOperatorGroup = ref(null as null | "Default" | "Eigen")
+const selectedUserAddressOperatorGroup = ref("")
+const defaultUserStakeDetails = computed(() => userStakeDetails.value.filter((stakeDetail: StakeDetails) => stakeDetail.operatorType === "Default"))
+// TODO: Re-enable this
+const eigenUserStakeDetails = computed(() => userStakeDetails.value.filter((stakeDetail) => stakeDetail.operatorType === "Eigen"))
+// Comment above and uncomment below to show Eigen Stake Withdrawal UI
+// const eigenUserStakeDetails = ref<Array<StakeDetails>>([
+//     {
+//         address: "0xd557a5745d4560B24D36A68b52351ffF9c86A212".toLocaleLowerCase(),
+//         amountStaked: 10.00,
+//         operatorType: "Eigen",
+//         availableToWithdraw: 4
+//     },
+//     {
+//         address: "0x728474D29c2F81eb17a669a7582A2C17f1042b57".toLocaleLowerCase(),
+//         amountStaked: 10.00,
+//         operatorType: "Eigen",
+//         availableToWithdraw: 4
+//     }
+// ])
+const selectedOperatorGroupStakeDetails = ref<StakeDetails>()
 
 // Wallet Select Refs
 const errorMessage = ref(null as null | string)
@@ -48,34 +67,32 @@ const eigenDisabled = ref(true) // Keeps eigen disabled until Casimir is ready t
 const isShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
 const toggleBackgroundColor = ref("#eee")  // Initial color
+const availableToWithdraw = computed(() => {
+    if (!selectedOperatorGroupStakeDetails.value) return 0
+    let result
+    if (selectedOperatorGroupStakeDetails.value.amountStaked < selectedOperatorGroupStakeDetails.value.availableToWithdraw) {
+        result = selectedOperatorGroupStakeDetails.value.amountStaked
+    } else {
+        result = selectedOperatorGroupStakeDetails.value.availableToWithdraw
+    }
+    return result
+})
+const withdrawalLimitExceeded = ref(false)
 
-const balances = ref<{ [key: string]: string | null }>({})
+const casimirFormattedBalances = ref<{ [key: string]: string | null }>({})
 
-const fetchBalances = async () => {
-    const balancePromises = formattedWalletOptions.value.map(async (walletOption) => {
-        for (const address of walletOption.addresses) {
-            balances.value[address] = formatNumber(await getEthersBalance(address))
-        }
-    })
-
-    await Promise.all(balancePromises)
+async function fetchBalances() {
+    const addresses = formattedWalletOptions.value.map((walletOption) => walletOption.addresses).flat()
+    const balancePromises = addresses.map((address: string) => batchProvider.getBalance(address))
+    const resolvedBalancePromises = await Promise.all(balancePromises)
+    casimirFormattedBalances.value = resolvedBalancePromises.reduce((acc, balance, index) => {
+        const formattedBalance = formatEthersCasimir(parseFloat(ethers.utils.formatEther(balance)), 2)
+        acc[addresses[index]] = formattedBalance
+        return acc
+    }, {} as { [key: string]: string | null })
 }
 
-watch(formattedWalletOptions, async () => {
-    await fetchBalances()
-})
-
-// const walletOptionsWithBalances = computed(() => {
-//   return formattedWalletOptions.value.map(walletOption => ({
-//     ...walletOption,
-//     addresses: walletOption.addresses.map(address => ({
-//       address,
-//       balance: balances.value[address]
-//     }))
-//   }))
-// })
-
-const toggleShineEffect = () => {
+function toggleShineEffect() {
     eigenIsToggled.value = !eigenIsToggled.value
     isShining.value = eigenIsToggled.value
     // toggleEstimatedAPY()
@@ -95,34 +112,20 @@ function toggleEstimatedAPY() {
     }
 }
 
-const handleInputOnAmountToStakeOrWithdraw = (event: any) => {
-    const value = event.target.value.replace(/[^\d.]/g, "")
-    const parts = value.split(".")
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-
-    // Limit to 18 decimal places
-    if (parts[1] && parts[1].length > 18) {
-        parts[1] = parts[1].slice(0, 18)
-    }
-
-    // Update the model value
-    formattedAmountToStakeOrWithdraw.value = parts.join(".")
-}
-
-const selectAmountInput = () => {
+function selectAmountInput() {
     const inputElement = document.getElementById("amount_input") as HTMLInputElement
-  
+
     if (inputElement) {
 
         inputElement.setSelectionRange(0, inputElement.value.length)
-  
+
         // For mobile devices
         inputElement.select()
     }
-  
+
 }
 
-const aggregateAddressesByProvider = () => {
+function aggregateAddressesByProvider() {
     formattedWalletOptions.value = []
     // Iterate over user.value.accounts and aggregate addresses by provider
     if (user.value) {
@@ -137,84 +140,16 @@ const aggregateAddressesByProvider = () => {
             })
         })
     } else {
-    // empty out staking comp
+        // empty out staking comp
         selectedStakingProvider.value = ""
         selectedWalletAddress.value = null
-        formattedAmountToStakeOrWithdraw.value = ""
+        formattedAmountToStakeOrWithdraw.value = 0
         addressBalance.value = null
         currentUserStake.value = 0
     }
 }
 
-watch(formattedAmountToStakeOrWithdraw, async () => {
-    if (formattedAmountToStakeOrWithdraw.value) {
-        const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value?.replace(/,/g, ""))
-        let maxAmount
-        if (selectedWalletAddress.value) {
-            maxAmount = await getEthersBalance(selectedWalletAddress.value)
-        } else {
-            maxAmount = 0
-        }
-
-        if (floatAmount > maxAmount) {
-            errorMessage.value = "Insufficient Funds"
-        } else {
-            errorMessage.value = null
-        }
-    } else {
-        errorMessage.value = null
-    }
-})
-
-watch(selectedWalletAddress, async () => {
-    if (!stakingComposableInitialized.value) return
-    if (selectedWalletAddress.value) {
-        addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + " ETH"
-        isShining.value = true
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
-    } else {
-        addressBalance.value = null
-    // currentUserStake.value = 0
-    }
-})
-
-watch(user, async () => {
-    if (!stakingComposableInitialized.value) return
-    if (user.value?.id) {
-        aggregateAddressesByProvider()
-        termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        selectedWalletAddress.value = user.value?.address as string
-        selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
-    // estimatedFees.value = await getDepositFees()
-    } else {
-        selectedStakingProvider.value = ""
-        selectedWalletAddress.value = null
-        formattedAmountToStakeOrWithdraw.value = ""
-        addressBalance.value = null
-    // currentUserStake.value = 0
-    }
-})
-
-onMounted(async () => {
-    // TODO: @ccali11 - Want to make sure this is non-blocking
-    await initializeStakingComposable()
-    aggregateAddressesByProvider()
-    currentEthPrice.value = Math.round((await getCurrentPrice({ coin: "ETH", currency: "USD" })) * 100) / 100
-    if (user.value?.id) {
-    // estimatedFees.value = await getDepositFees()
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        selectedStakingProvider.value = user.value?.walletProvider as ProviderString
-        selectedWalletAddress.value = user.value?.address as string
-        if (!stakingComposableInitialized.value) return
-        // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
-        isShining.value = true
-    }
-    await fetchBalances()
-})
-
-const handleOutsideClickForWalletInput = (event: any) => {
+function handleOutsideClickForWalletInput(event: any) {
     const selectWalletInputContainer = document.getElementById("selectWalletInputContainer")
     const selectWalletInputButton = document.getElementById("selectWalletInputButton")
 
@@ -223,7 +158,7 @@ const handleOutsideClickForWalletInput = (event: any) => {
     }
 }
 
-const handleOutsideClickForOperatorGroupInput = (event: any) => {
+function handleOutsideClickForOperatorGroupInput(event: any) {
     const selectOperatorGroupInputContainer = document.getElementById("selectOperatorGroupInputContainer")
     const selectOperatorGroupInputButton = document.getElementById("selectOperatorGroupInputButton")
 
@@ -232,7 +167,7 @@ const handleOutsideClickForOperatorGroupInput = (event: any) => {
     }
 }
 
-const handleOutsideClickForTermsOfService = (event: any) => {
+function handleOutsideClickForTermsOfService(event: any) {
     const termsOfServiceContainer = document.getElementById("termsOfServiceContainer")
     const termsOfServiceButton = document.getElementById("termsOfServiceButton")
 
@@ -242,31 +177,48 @@ const handleOutsideClickForTermsOfService = (event: any) => {
     }
 }
 
-watch(openSelectWalletInput, ()=>{
-    if (openSelectWalletInput.value) {
-        window.addEventListener("click", handleOutsideClickForWalletInput)
-    } else {
-        window.removeEventListener("click", handleOutsideClickForWalletInput)
-    }
-})
+function handleToggleStakeOrWithdraw(option: "stake" | "withdraw") {
+    stakeOrWithdraw.value = option
+    formattedAmountToStakeOrWithdraw.value = 0
+    stakeButtonText.value = option === "stake" ? "Stake" : "Withdraw"
+}
 
-watch(openSelectOperatorGroupInput, ()=>{
-    if (openSelectWalletInput.value) {
-        window.addEventListener("click", handleOutsideClickForOperatorGroupInput)
-    } else {
-        window.removeEventListener("click", handleOutsideClickForOperatorGroupInput)
-    }
-})
+function handleSelectOperatorGroup(stakeDetail: StakeDetails) {
+    selectedOperatorGroupStakeDetails.value = stakeDetail
+    selectedUserAddressOperatorGroup.value = stakeDetail.address
+}
 
-watch(openTermsOfService, ()=>{
-    if (openTermsOfService.value) {
-        window.addEventListener("click", handleOutsideClickForTermsOfService)
-    } else {
-        window.removeEventListener("click", handleOutsideClickForTermsOfService)
-    }
-})
+function handleInputOnAmountToStakeOrWithdraw(event: any) {
+    let value = event.target.value.replace(/[^\d.]/g, "")
 
-const handleStake = async () => {
+    // Handling multiple decimal points by keeping only the first one
+    const firstDecimalIndex = value.indexOf(".")
+    if (firstDecimalIndex !== -1) {
+        value = value.slice(0, firstDecimalIndex + 1) + value.slice(firstDecimalIndex).replace(/\./g, "")
+    }
+
+    const parts = value.split(".")
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
+    // Limit to 18 decimal places
+    if (parts[1] && parts[1].length > 18) {
+        parts[1] = parts[1].slice(0, 18)
+    }
+
+    const formattedValue = parts.join(".")
+    const numericValue = parseFloat(formattedValue.replace(/,/g, "")) // Convert back to float for comparison
+
+    if (stakeOrWithdraw.value === "withdraw" && numericValue > availableToWithdraw.value) {
+        withdrawalLimitExceeded.value = true
+    } else {
+        withdrawalLimitExceeded.value = false
+    }
+
+    // Update the model value for display
+    formattedAmountToStakeOrWithdraw.value = formattedValue
+}
+
+async function handleStake() {
     stakeButtonText.value = "Staking..."
 
     // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
@@ -274,38 +226,28 @@ const handleStake = async () => {
     //   formattedAmountToStakeOrWithdraw.value = ''
     //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
     // }
-    const result = await deposit({ 
-        amount: formattedAmountToStakeOrWithdraw.value,
+    eigenIsToggled.value = false
+    const result = await deposit({
+        amount: formattedAmountToStakeOrWithdraw.value.toString(),
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value 
+        type: stakeType.value
     })
 
     if (result === false) stakeButtonText.value = "User Rejected Signature"
     else stakeButtonText.value = "Staked!"
 
-    setTimeout(() =>{
+    setTimeout(() => {
         stakeButtonText.value = "Stake"
-        formattedAmountToStakeOrWithdraw.value = ""
+        formattedAmountToStakeOrWithdraw.value = 0
     }, 1000)
 
-    if (result) {
-        const waitResponse = await result.wait(1)
-        eigenIsToggled.value = false
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        if (waitResponse) {
-            alert("Your Stake Has Been Deposited!")
-        } else {
-            alert("Your Stake Action Has Failed, Please Try Again Later!")
-        }
-        console.log("waitResponse :>> ", waitResponse)
-    }
-
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
+    if (result) alert("Your Stake Has Been Deposited!")
+    else alert("Your Stake Action Has Failed, Please Try Again Later!")
 }
 
-const handleWithdraw = async () => {
+async function handleWithdraw() {
     stakeButtonText.value = "Withdrawing..."
-    selectedOperatorGroup.value = null
+    selectedOperatorGroupStakeDetails.value = undefined
     // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
     // if (activeAddress !== selectedWalletAddress.value) {
     //   formattedAmountToStakeOrWithdraw.value = ''
@@ -316,46 +258,111 @@ const handleWithdraw = async () => {
         walletProvider: selectedStakingProvider.value,
         type: stakeType.value
     })
-  
-    if (parseFloat(withdrawableBalance) < parseFloat(formattedAmountToStakeOrWithdraw.value)) {
+
+    if (parseFloat(withdrawableBalance) < formattedAmountToStakeOrWithdraw.value) {
         stakeButtonText.value = "Withdraw"
-        formattedAmountToStakeOrWithdraw.value = ""
+        formattedAmountToStakeOrWithdraw.value = 0
         return alert(`You can currently withdraw up to ${withdrawableBalance} ETH. Please try again with a smaller amount.`)
     }
 
-    const result = await withdraw({ 
-        amount: formattedAmountToStakeOrWithdraw.value,
+    eigenIsToggled.value = false
+    const confirmation = await withdraw({
+        amount: formattedAmountToStakeOrWithdraw.value.toString(),
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value 
+        type: stakeType.value
     })
 
-    if (!result) stakeButtonText.value = "Failed!"
+    if (!confirmation) stakeButtonText.value = "Failed!"
     else stakeButtonText.value = "Withdrawn!"
 
-    setTimeout(() =>{
+    setTimeout(() => {
         stakeButtonText.value = "Withdraw"
-        formattedAmountToStakeOrWithdraw.value = ""
+        formattedAmountToStakeOrWithdraw.value = 0
     }, 1000)
 
-    if (result) {
-        const waitResponse = await result.wait(1)
-        eigenIsToggled.value = false
-        addressBalance.value = (Math.round(await getEthersBalance(user.value?.address as string) * 100) / 100) + " ETH"
-        if (waitResponse) {
-            alert("Your Stake Has Been Withdrawn!")
-        } else {
-            alert("Your Stake Action Has Failed, Please Try Again Later!")
-        }
+    if (confirmation) alert("Your Stake Has Been Withdrawn!")
+    else alert("Your Stake Action Has Failed, Please Try Again Later!")
+}
+
+watch(formattedWalletOptions, async () => {
+    await fetchBalances()
+})
+
+watch(openSelectWalletInput, () => {
+    if (openSelectWalletInput.value) {
+        window.addEventListener("click", handleOutsideClickForWalletInput)
+    } else {
+        window.removeEventListener("click", handleOutsideClickForWalletInput)
     }
+})
 
-    // currentUserStake.value = await getUserStake(selectedWalletAddress.value as string)
-}
+watch(openSelectOperatorGroupInput, () => {
+    if (openSelectWalletInput.value) {
+        window.addEventListener("click", handleOutsideClickForOperatorGroupInput)
+    } else {
+        window.removeEventListener("click", handleOutsideClickForOperatorGroupInput)
+    }
+})
 
-function setStakeOrWithdraw(option: "stake" | "withdraw") {
-    stakeOrWithdraw.value = option
-    formattedAmountToStakeOrWithdraw.value = ""
-    stakeButtonText.value = option === "stake" ? "Stake" : "Withdraw"
-}
+watch(openTermsOfService, () => {
+    if (openTermsOfService.value) {
+        window.addEventListener("click", handleOutsideClickForTermsOfService)
+    } else {
+        window.removeEventListener("click", handleOutsideClickForTermsOfService)
+    }
+})
+
+watch(formattedAmountToStakeOrWithdraw, async () => {
+    if (formattedAmountToStakeOrWithdraw.value === 0) errorMessage.value = null
+    const floatAmount = parseFloat(formattedAmountToStakeOrWithdraw.value.toString().replace(/,/g, ""))
+
+    const selectedAddressBalance = parseEthersCasimir(casimirFormattedBalances.value[selectedWalletAddress.value as string] as string)
+    const maxAmount = selectedWalletAddress.value ? selectedAddressBalance : 0
+
+    if (stakeOrWithdraw.value === "stake" && floatAmount > maxAmount) {
+        errorMessage.value = "Insufficient Funds"
+    } else {
+        errorMessage.value = null
+    }
+})
+
+watch(selectedWalletAddress, async () => {
+    if (!stakingComposableInitialized.value) return
+    if (selectedWalletAddress.value) {
+    // addressBalance.value = (Math.round(await getEthersBalance(selectedWalletAddress.value) * 100) / 100) + " ETH"
+        isShining.value = true
+    // currentUserStake.value = await getUserStake(selectedWalletAddress.value)
+    } else {
+        addressBalance.value = null
+    // currentUserStake.value = 0
+    }
+})
+
+watch(user, async () => {
+    if (user.value?.id) {
+        aggregateAddressesByProvider()
+        termsOfServiceCheckbox.value = user.value?.agreedToTermsOfService as boolean
+        selectedWalletAddress.value = user.value?.address as string
+        selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+    } else {
+        selectedStakingProvider.value = ""
+        selectedWalletAddress.value = null
+        formattedAmountToStakeOrWithdraw.value = 0
+        addressBalance.value = null
+    }
+})
+
+onMounted(async () => {
+    aggregateAddressesByProvider()
+    currentEthPrice.value = Math.round((await getCurrentPrice({ coin: "ETH", currency: "USD" })) * 100) / 100
+    if (user.value?.id) {
+        // estimatedFees.value = await getDepositFees()
+        selectedStakingProvider.value = user.value?.walletProvider as ProviderString
+        selectedWalletAddress.value = user.value?.address as string
+        if (!stakingComposableInitialized.value) return
+        isShining.value = true
+    }
+})
 </script>
 
 <template>
@@ -364,15 +371,15 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
     <div class="stake-withdraw-selector mt-[12px] mb-[12px]">
       <div
         class="action-button stake"
-        :class="{active: stakeOrWithdraw === 'stake'}"
-        @click="setStakeOrWithdraw('stake')"
+        :class="{ active: stakeOrWithdraw === 'stake' }"
+        @click="handleToggleStakeOrWithdraw('stake')"
       >
         Stake
       </div>
       <div
         class="action-button withdraw"
-        :class="{active: stakeOrWithdraw === 'withdraw'}"
-        @click="setStakeOrWithdraw('withdraw')"
+        :class="{ active: stakeOrWithdraw === 'withdraw' }"
+        @click="handleToggleStakeOrWithdraw('withdraw')"
       >
         Withdraw
       </div>
@@ -385,75 +392,127 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
     <div class="text-[12px] mb-[13px] text-blue-400" />
 
     <!-- Select Wallet Address -->
-    <h6 class="card_title my-[11px]">
-      Wallet
-    </h6>
-    <div class="card_input text-black mb-[22px] relative">
-      <button
-        id="selectWalletInputButton"
-        class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
-        :class="selectedWalletAddress ? 'text-black' : 'text-grey_4'"
-        @click="openSelectWalletInput = !openSelectWalletInput"
-      >
-        <div class="flex justify-between w-full">
-          <div>{{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}</div> 
-          <div class="flex gap-10 font-[400]">
-            {{ addressBalance ? addressBalance : '' }}
-            <vue-feather
-              :type="openSelectWalletInput ? 'chevron-up' : 'chevron-down'"
-              size="36"
-              class="icon w-[20px]"
-            />
-          </div>
-        </div>
-      </button>
-      <div
-        v-show="openSelectWalletInput"
-        id="selectWalletInputContainer"
-        class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
-      >
-        <div
-          v-if="formattedWalletOptions.length === 0"
-          class="flex justify-center items-center text-grey_4 py-[10px]"
+    <span v-if="stakeOrWithdraw === 'stake'">
+      <h6 class="card_title my-[11px]">
+        Wallet
+      </h6>
+      <div class="card_input text-black mb-[22px] relative">
+        <button
+          id="selectWalletInputButton"
+          class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
+          :class="selectedWalletAddress ? 'text-black' : 'text-grey_4'"
+          @click="openSelectWalletInput = !openSelectWalletInput"
         >
-          No wallets connected
-        </div>
-        <div
-          v-for="item in formattedWalletOptions"
-          id="selectWalletOptionsCard"
-          :key="item.provider"
-          class="mt-[5px] mb-[10px]"
-        >
-          <div class="w-full text-[12px] text-grey_6 flex items-center gap-[8px] mb-[10px]">
-            <img
-              :src="`${item.provider.toLocaleLowerCase()}.svg`"
-              :alt="`${item.provider.toLocaleLowerCase()} Icon`"
-              class="w-[16px] h-[16px]"
-            >
-            {{ item.provider }}
+          <div class="flex justify-between w-full">
+            <div>{{ selectedWalletAddress ? convertString(selectedWalletAddress) : 'Select wallet' }}</div>
+            <div class="flex gap-10 font-[400]">
+              {{ addressBalance ? addressBalance : '' }}
+              <vue-feather
+                :type="openSelectWalletInput ? 'chevron-up' : 'chevron-down'"
+                size="36"
+                class="icon w-[20px]"
+              />
+            </div>
           </div>
-
-          <button
-            v-for="address in item.addresses"
-            :key="address"
-            class="w-full text-left rounded-[8px] py-[10px] px-[14px]
-            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-            @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
+        </button>
+        <div
+          v-show="openSelectWalletInput"
+          id="selectWalletInputContainer"
+          class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[14px] max-h-[250px] overflow-auto"
+        >
+          <div
+            v-if="formattedWalletOptions.length === 0"
+            class="flex justify-center items-center text-grey_4 py-[10px]"
           >
-            <span>{{ convertString(address) }}</span>
-            <span>{{ balances[address] !== null ? `~${balances[address]} ETH` : 'Loading...' }}</span>
+            No wallets connected
+          </div>
+          <div
+            v-for="item in formattedWalletOptions"
+            id="selectWalletOptionsCard"
+            :key="item.provider"
+            class="mt-[5px] mb-[10px]"
+          >
+            <div class="w-full text-[12px] text-grey_6 flex items-center gap-[8px] mb-[10px]">
+              <img
+                :src="`${item.provider.toLocaleLowerCase()}.svg`"
+                :alt="`${item.provider.toLocaleLowerCase()} Icon`"
+                class="w-[16px] h-[16px]"
+              >
+              {{ item.provider }}
+            </div>
+
+            <button
+              v-for="address in item.addresses"
+              :key="address"
+              class="w-full text-left rounded-[8px] py-[10px] px-[14px]
+            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
+              @click="selectedWalletAddress = address, openSelectWalletInput = false, selectedStakingProvider = item.provider"
+            >
+              <span>{{ convertString(address) }}</span>
+              <span>{{ casimirFormattedBalances[address] !== null ? `~${casimirFormattedBalances[address]} ETH` : 'Loading...' }}</span>
             <!-- <vue-feather
               type="chevron-right"
               size="36"
               class="icon w-[20px]"
             /> -->
-          </button>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </span>
+
+    <!-- Select Staked Operator Group -->
+    <span v-else>
+      <ul class="max-h-[260px] overflow-scroll">
+        <span v-if="defaultUserStakeDetails.length">
+          <h6 class="card_title">Default Stakes</h6>
+          <li 
+            v-for="(stakeDetail, index) in defaultUserStakeDetails"
+            :key="index"
+            :class="[
+              'operator_group_li', 
+              { 'selected_operator_group_li': 
+                selectedOperatorGroupStakeDetails ? selectedOperatorGroupStakeDetails.operatorType === stakeDetail.operatorType && selectedUserAddressOperatorGroup === stakeDetail.address : false
+              }
+            ]"
+            @click="handleSelectOperatorGroup(stakeDetail)"
+          >
+            <div class="p-2 flex">
+              <img
+                :src="`${user?.accounts.filter(account => account.address === stakeDetail.address)[0].walletProvider.toLocaleLowerCase()}.svg`"
+                class="w-[16px] h-[16px] inline-block mr-[8px]"
+              > {{ convertString(stakeDetail.address) }}</div>
+            <div class="p-2">{{ formatEthersCasimirStaking(stakeDetail.amountStaked) }} ETH</div>
+          </li>
+        </span>
+
+        <span v-if="eigenUserStakeDetails.length">
+          <h6 class="card_title py-8">Eigen Stakes</h6>
+          <li 
+            v-for="(stakeDetail, index) in eigenUserStakeDetails"
+            :key="index"
+            :class="[
+              'operator_group_li', 
+              { 'selected_operator_group_li': 
+                selectedOperatorGroupStakeDetails ? selectedOperatorGroupStakeDetails.operatorType === stakeDetail.operatorType && selectedUserAddressOperatorGroup === stakeDetail.address : false
+              }
+            ]"
+            @click="handleSelectOperatorGroup(stakeDetail)"
+          >
+            <div class="p-2">
+              <img
+                :src="`${user?.accounts.filter(account => account.address === stakeDetail.address)[0].walletProvider.toLocaleLowerCase()}.svg`"
+                class="w-[16px] h-[16px] inline-block mr-[8px]"
+              > 
+              {{ convertString(stakeDetail.address) }}</div>
+            <div class="p-2">{{ formatEthersCasimirStaking(stakeDetail.amountStaked) }} ETH</div>
+          </li>
+        </span>
+      </ul>
+    </span>
 
     <!-- Amount to Stake/Withdraw -->
-    <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[22px]">
+    <div class="flex justify-between items-center gap-[8px] mb-[11px] mt-[8px]">
       <h6 class="card_title">
         Amount
       </h6>
@@ -463,7 +522,9 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
       </span>
     </div>
 
+    <!-- Stake Amount -->
     <button
+      v-if="stakeOrWithdraw === 'stake'"
       class="card_input text-black px-[10px] py-[14px] cursor-text"
       @click="selectAmountInput"
     >
@@ -481,6 +542,37 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
       <div class="flex items-center gap-[4px]">
         <h6 style="font-weight: 400;">
           ETH
+        </h6>
+      </div>
+    </button>
+    
+    <!-- Withdraw Amount -->
+    <button
+      v-if="stakeOrWithdraw === 'withdraw'"
+      class="card_input text-black px-[10px] py-[14px] cursor-text"
+      @click="selectAmountInput"
+    >
+      <div class="flex items-center gap-[8px]">
+        <input
+          id="amount_input"
+          v-model="formattedAmountToStakeOrWithdraw"
+          type="text"
+          pattern="^\d{1,3}(,\d{3})*(\.\d{1,18})?$"
+          placeholder="0.00"
+          class="outline-none"
+          :disabled="!selectedOperatorGroupStakeDetails"
+          @input="handleInputOnAmountToStakeOrWithdraw"
+        >
+      </div>
+      <div class="flex items-center gap-[4px]">
+        <h6 style="font-weight: 400;">
+          ETH
+          <button
+            class="text-[12px] text-blue-500 ml-6"
+            @click="formattedAmountToStakeOrWithdraw = availableToWithdraw"
+          >
+            Max
+          </button>
         </h6>
       </div>
     </button>
@@ -517,79 +609,6 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
         <h6 class="card_analytics_amount">
           {{ estimatedAPY }}%
         </h6>
-      </div>
-    </div>
-
-    <!-- Operator Group Selector (for withdraw only) -->
-    <div
-      v-else
-      class="my-[22px]"
-    >
-      <h6 class="card_title my-[11px]">
-        Operator Group
-      </h6>
-      <div class="card_input text-black mb-[22px] relative">
-        <button
-          id="selectOperatorGroupInputButton"
-          class="flex items-center justify-between gap-[8px] w-full h-full px-[10px] py-[14px]"
-          :class="selectedOperatorGroup ? 'text-black' : 'text-grey_4'"
-          @click="openSelectOperatorGroupInput = !openSelectOperatorGroupInput"
-        >
-          <div class="flex justify-between w-full">
-            <div>{{ selectedOperatorGroup ? selectedOperatorGroup : 'Select Operator Group' }}</div> 
-            <div class="flex gap-10 font-[400]">
-              <!-- {{ addressBalance ? addressBalance : '' }} -->
-              <!-- TODO: This needs to be the amount available to withdraw -->
-              <vue-feather
-                :type="openSelectOperatorGroupInput ? 'chevron-up' : 'chevron-down'"
-                size="36"
-                class="icon w-[20px]"
-              />
-            </div>
-          </div>
-        </button>
-        <div
-          v-show="openSelectOperatorGroupInput"
-          id="selectOperatorGroupInputContainer"
-          class="absolute top-[110%] w-full bg-white rounded-[8px] border border-[#D0D5DD] px-[10px] py-[8px] max-h-[250px] overflow-auto"
-        >
-          <!-- TODO: Update this to only show if user has staked -->
-          <!-- <div
-            class="flex justify-center items-center text-grey_4 py-[10px]"
-          >
-            Nothing to withdraw
-          </div> -->
-          <!-- TODO: Update this to iterate over the contracts user has staked to -->
-          <div
-            id="selectOperatorGroupOptionsCard"
-            class="mt-[5px] mb-[10px]"
-          >
-            <button
-              class="w-full text-left rounded-[8px] py-[10px] px-[14px]
-            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-              @click="selectedOperatorGroup = 'Default', openSelectOperatorGroupInput = false, stakeType='default'"
-            >
-              Default
-              <vue-feather
-                type="chevron-right"
-                size="36"
-                class="icon w-[20px]"
-              />
-            </button>
-            <button
-              class="w-full text-left rounded-[8px] py-[10px] px-[14px]
-            hover:bg-grey_1 flex justify-between items-center text-grey_4 hover:text-grey_6"
-              @click="selectedOperatorGroup = 'Eigen', openSelectOperatorGroupInput = false, stakeType='eigen'"
-            >
-              Eigen
-              <vue-feather
-                type="chevron-right"
-                size="36"
-                class="icon w-[20px]"
-              />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -644,21 +663,41 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
       </div>
     </button>
 
+    <!-- Available to Withdraw Note -->
+    <div
+      v-if="stakeOrWithdraw === 'withdraw' && selectedOperatorGroupStakeDetails"
+    >
+      <div class="max_withdraw_note_container">
+        <div class="tooltip_container">
+          Withdrawals are currently limited to available balance that is not actively staked on Beacon Chain.
+          <br>
+          We will adding capability to make full withdrawals soon.
+          <div class="tooltip_triangle" />
+        </div>
+        <div
+          :class="[
+            'card_message p-2 text-blue-500 cursor-default',
+            { 'card_message_error': withdrawalLimitExceeded }
+          ]"
+        >
+          Your current withdrawable amount is: {{ formatEthersCasimirStaking(availableToWithdraw) }} ETH
+        </div>
+      </div>
+    </div>
+
     <!-- Submit Button -->
     <button
       class="submit-button  h-[37px] w-full"
       :class="success ? 'bg-approve' : failure ? 'bg-decline' : 'bg-primary'"
-      :disabled="
-        !(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage) 
-          || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw') 
-          || parseFloat(formattedAmountToStakeOrWithdraw) <= 0 
-          || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
+      :disabled="!(selectedWalletAddress && formattedAmountToStakeOrWithdraw && !errorMessage)
+        || (stakeButtonText !== 'Stake' && stakeButtonText !== 'Withdraw')
+        || formattedAmountToStakeOrWithdraw <= 0
+        || (stakeOrWithdraw === 'stake' && !termsOfServiceCheckbox)
+        || (stakeOrWithdraw === 'withdraw' && withdrawalLimitExceeded)
       "
       @click="stakeOrWithdraw === 'stake' ? handleStake() : handleWithdraw()"
     >
-      <div
-        class="flex items-center justify-center gap-[5px]"
-      >
+      <div class="flex items-center justify-center gap-[5px]">
         {{ stakeButtonText }}
         <vue-feather
           v-if="success"
@@ -726,7 +765,8 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 
 .addressBalance_amount {
   font-style: normal;
-  font-size: 22px; /* Temporary */
+  font-size: 22px;
+  /* Temporary */
   line-height: 20px;
   letter-spacing: -0.01em;
   color: #344054;
@@ -788,7 +828,11 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
   font-size: 12px;
   line-height: 20px;
   letter-spacing: -0.01em;
-  color: #667085;
+  /* color: #667085; */
+}
+
+.card_message_error {
+  color: #FF0000;
 }
 
 .submit-button {
@@ -807,7 +851,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
   height: 44px;
 }
 
-:disabled {
+button:disabled {
   background: rgba(15, 106, 242, 0.31);
 }
 
@@ -853,53 +897,35 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 10px; /* space from the left edge */
+  padding-left: 10px;
+  /* space from the left edge */
   position: relative;
-  width: 100%; /* takes full width of parent container */
-  height: 44px; /* adjust as needed if required */
+  width: 100%;
+  /* takes full width of parent container */
+  height: 44px;
+  /* adjust as needed if required */
   background-color: rgb(26 12 109);
   /* overflow: hidden; */
   text-align: center;
-  color: #fff; /* or any suitable color for better visibility */
+  color: #fff;
+  /* or any suitable color for better visibility */
   font-size: 14px;
   border-radius: 8px;
-  transition: background-color 0.3s; /* This will animate the color change */
+  transition: background-color 0.3s;
+  /* This will animate the color change */
 }
 
 .eigen-toggle-container:disabled {
-    background-color: rgba(26, 12, 109, 0.5); /* This makes the purple color lighter (grayed out) */
-    /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
+  background-color: rgba(26, 12, 109, 0.5);
+  /* This makes the purple color lighter (grayed out) */
+  /* cursor: not-allowed; This changes the cursor to indicate the button is not clickable */
 }
-
-/* .shine_effect {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -150%;
-  width: 200%;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.5);
-  transform: rotate(30deg);
-  pointer-events: none;
-  animation: shine 2.5s infinite;
-}
-
-@keyframes shine {
-  0% {
-    left: -150%;
-  }
-  50% {
-    left: 150%;
-  }
-  100% {
-    left: 150%;
-  }
-} */
 
 .toggle_button {
   position: absolute;
   top: 50%;
-  right: 10px; /* space from the right edge */
+  right: 10px;
+  /* space from the right edge */
   transform: translateY(-50%);
   width: 50px;
   height: 25px;
@@ -910,7 +936,7 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 }
 
 .card_container .eigen-toggle-container.toggle-on .toggle_button {
-    background-color: green !important;
+  background-color: green !important;
 }
 
 .toggle_circle {
@@ -936,42 +962,67 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 
 .tooltip_container {
   position: absolute;
-  bottom: 100%; /* position it above the button */
-  left: 50%; /* center it horizontally */
-  transform: translateX(-50%); /* shift it back by half its width to truly center it */
-  padding: 8px 12px; /* space around the text */
-  background-color: #000; /* or any desired tooltip color */
-  color: #fff; /* text color */
-  border-radius: 4px; /* round the corners */
-  opacity: 0; /* starts hidden */
-  transition: opacity 0.3s; /* smooth fade in */
-  white-space: nowrap; /* prevents the text from wrapping */
-  font-size: 12px;
-  pointer-events: none; /* ensures it doesn't block any interactions */
-  z-index: 10; /* positions it above other elements */
-}
-
-.eigen-toggle-container:hover .tooltip_container {
-  opacity: 1; /* show on hover */
+  bottom: 100%;
+  /* position it above the button */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
+  padding: 8px 12px;
+  /* space around the text */
+  background-color: #000;
+  /* or any desired tooltip color */
+  color: #fff;
+  /* text color */
+  border-radius: 4px;
+  /* round the corners */
+  opacity: 0;
+  /* starts hidden */
+  transition: opacity 0.3s;
+  /* smooth fade in */
+  white-space: nowrap;
+  /* prevents the text from wrapping */
+  font-size: 14px;
+  pointer-events: none;
+  /* ensures it doesn't block any interactions */
+  z-index: 10;
+  /* positions it above other elements */
 }
 
 .tooltip_triangle {
   position: absolute;
-  bottom: -5px; /* position at the bottom of the tooltip */
-  left: 50%; /* center it horizontally */
-  transform: translateX(-50%); /* shift it back by half its width to truly center it */
+  bottom: -5px;
+  /* position at the bottom of the tooltip */
+  left: 50%;
+  /* center it horizontally */
+  transform: translateX(-50%);
+  /* shift it back by half its width to truly center it */
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid #000; /* same color as the tooltip background */
+  border-top: 5px solid #000;
+  /* same color as the tooltip background */
+}
+
+.eigen-toggle-container:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
+}
+
+.max_withdraw_note_container {
+  position: relative;
+}
+.max_withdraw_note_container:hover .tooltip_container {
+  opacity: 1;
+  /* show on hover */
 }
 
 .stake-withdraw-selector {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
 }
 
 .action-button {
@@ -984,24 +1035,45 @@ function setStakeOrWithdraw(option: "stake" | "withdraw") {
 }
 
 .action-button.stake {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-    border-right: none;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-right: none;
 }
 
 .action-button.withdraw {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    border-left: none;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-left: none;
 }
 
 .action-button:hover {
-    background-color: #ddd;
+  background-color: #ddd;
+  color: rgb(13, 95, 255);
 }
 
 .action-button.active {
-    background-color: rgb(13, 95, 255); /* Assuming this is the blue from the screenshot */
-    color: white; /* Set text color to white for better contrast */
+  color: rgb(13, 95, 255);
+  border: solid 1px rgb(13, 95, 255);
+  background-color: #F3F3F3;
 }
 
+.operator_group_li {
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  color: #6B7280;
+  font-size: 12px;
+  padding: 6px;
+  margin: 6px 0;
+  cursor: pointer;
+}
+
+.operator_group_li:hover {
+  background-color: #F3F3F3;
+}
+
+.selected_operator_group_li {
+  /* Border should become blue */
+  border: 1px solid rgb(13, 95, 255);
+  background-color: #F3F3F3;
+}
 </style>@/composables/user@/composables/staking

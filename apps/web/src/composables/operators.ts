@@ -1,4 +1,4 @@
-import { readonly, ref } from "vue"
+import { readonly, ref, watch } from "vue"
 import { Operator, Scanner } from "@casimir/ssv"
 import { Account, PoolConfig, RegisteredOperator, RegisterOperatorWithCasimirParams } from "@casimir/types"
 import { ethers } from "ethers"
@@ -20,8 +20,16 @@ let eigenManager: CasimirManager
 let eigenRegistry: CasimirRegistry
 let eigenViews: CasimirViews
 
-const { getContracts } = useContracts()
-const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl } = useEnvironment()
+const { 
+    contractsAreInitialized,
+    getBaseManager,
+    getBaseRegistry,
+    getBaseViews,
+    getEigenManager,
+    getEigenRegistry,
+    getEigenViews
+} = useContracts()
+const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl, batchProvider, provider, wsProvider } = useEnvironment()
 const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -31,16 +39,23 @@ const { getWalletConnectSignerV2 } = useWalletConnectV2()
 const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
 
-export default function useOperators() {
-    const loadingAddOperator = ref(false)
-    const loadingAddOperatorError = ref(false)
-    const loadingRegisteredOperators = ref(false)
-    const loadingRegisteredOperatorsError = ref(false)
+const loadingAddOperator = ref(false)
+const loadingAddOperatorError = ref(false)
+const loadingRegisteredOperators = ref(false)
+const loadingRegisteredOperatorsError = ref(false)
 
-    const nonregisteredBaseOperators = ref<Operator[]>([])
-    const nonregisteredEigenOperators = ref<Operator[]>([])
-    const registeredBaseOperators = ref<Operator[]>([])
-    const registeredEigenOperators = ref<Operator[]>([])
+const nonregisteredBaseOperators = ref<Operator[]>([])
+const nonregisteredEigenOperators = ref<Operator[]>([])
+const registeredBaseOperators = ref<Operator[]>([])
+const registeredEigenOperators = ref<Operator[]>([])
+
+export default function useOperators() {
+
+    watch(contractsAreInitialized, async () => {
+        if (contractsAreInitialized.value) {
+            await initializeOperatorComposable()
+        }
+    })
 
     async function addOperator({ address, nodeUrl }: { address: string, nodeUrl: string }) {
         try {
@@ -65,10 +80,13 @@ export default function useOperators() {
     async function getUserOperators(): Promise<void> {
         const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
 
+        const availableProvider = wsProvider || batchProvider || provider 
+
         const scanner = new Scanner({ 
             ethereumUrl,
             ssvNetworkAddress,
-            ssvViewsAddress
+            ssvViewsAddress,
+            provider: availableProvider
         })
 
         const ssvOperators: Operator[] = []
@@ -149,15 +167,12 @@ export default function useOperators() {
 
     async function initializeOperatorComposable() {
         try {
-            /* Get Manager, Views, and Registry */
-            const { baseManager: managerContract, baseRegistry: registryContract, baseViews: viewsContract } = await getContracts()
-            const { eigenManager: eigenManagerContract, eigenRegistry: eigenRegistryContract, eigenViews: eigenViewsContract } = await getContracts()
-            baseManager = managerContract
-            baseRegistry = registryContract
-            baseViews = viewsContract
-            eigenManager = eigenManagerContract
-            eigenRegistry = eigenRegistryContract
-            eigenViews = eigenViewsContract
+            baseManager = getBaseManager()
+            baseRegistry = getBaseRegistry()
+            baseViews = getBaseViews()
+            eigenManager = getEigenManager()
+            eigenRegistry = getEigenRegistry()
+            eigenViews = getEigenViews()
 
             loadingInitializeOperators.value = true
             listenForContractEvents()
@@ -226,7 +241,7 @@ export default function useOperators() {
         loadingAddOperatorError: readonly(loadingAddOperatorError),
         loadingInitializeOperators: readonly(loadingInitializeOperators),
         loadingInitializeOperatorsError: readonly(loadingInitializeOperatorsError),
-        initializeOperatorComposable,
+        // initializeOperatorComposable,
         registerOperatorWithCasimir,
     }
 }

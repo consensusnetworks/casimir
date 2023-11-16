@@ -106,7 +106,7 @@ export default function useWalletConnectV2() {
 
     async function initializeWalletConnect() {
         if (componentIsMounted.value) return
-        if (import.meta.env.MODE === "development") console.log("initializing wallet connect")
+        // if (import.meta.env.MODE === "development") console.log("initializing wallet connect")
         componentIsMounted.value = true
 
         // Check for persisted sessions & Subscribe to provider events

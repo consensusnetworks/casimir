@@ -15,16 +15,11 @@ import {
 } from "@casimir/types"
 
 const { usersUrl } = useEnvironment()
-const { browserProvidersList, detectActiveEthersWalletAddress, loginWithEthers } =
-  useEthers()
+const { browserProvidersList, detectActiveEthersWalletAddress, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const {
-    loginWithWalletConnectV2,
-    initializeWalletConnect,
-    uninitializeWalletConnect,
-} = useWalletConnect()
+const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -101,7 +96,7 @@ export default function useAuth() {
             const response = await fetch(`${usersUrl}/user`, requestOptions)
             const { user: retrievedUser, error } = await response.json()
             if (error) throw new Error(error)
-            await setUser(retrievedUser)
+            setUser(retrievedUser)
         } catch (error: any) {
             throw new Error("Error getting user from API route")
         }
@@ -173,12 +168,9 @@ export default function useAuth() {
                 }
 
                 // Then check if address is being used as a secondary account by another user
-                const { data: accountsIfSecondaryAddress } =
-          await checkIfSecondaryAddress(address)
+                const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
                 console.log("accountsIfSecondaryAddress :>> ", accountsIfSecondaryAddress)
-                if (accountsIfSecondaryAddress.length) {
-                    return "Address already exists as a secondary address on another account"
-                }
+                if (accountsIfSecondaryAddress.length) return "Address already exists as a secondary address on another account"
 
                 // Handle user interaction (do they want to sign in with another account?)
                 // If yes, log out (and/or log them in with the other account)
@@ -288,11 +280,10 @@ export default function useAuth() {
     }
 
     async function logout() {
-    // Loader
         try {
             loadingSessionLogout.value = true
             await Session.signOut()
-            await setUser(undefined)
+            setUser(undefined)
             loadingSessionLogout.value = false
         } catch (error) {
             loadingSessionLogoutError.value = true

@@ -3,9 +3,9 @@ import { onMounted, ref, watch } from "vue"
 import VueFeather from "vue-feather"
 import { ProviderString } from "@casimir/types"
 import useAuth from "@/composables/auth"
+import useContracts from "@/composables/contracts"
 import useEnvironment from "@/composables/environment"
 // import useEthers from '@/composables/ethers'
-import useFiles from "@/composables/files"
 import useFormat from "@/composables/format"
 import useOperators from "@/composables/operators"
 import useUser from "@/composables/user"
@@ -13,10 +13,9 @@ import useUser from "@/composables/user"
 const { loadingSessionLogin } = useAuth()
 const { docsUrl } = useEnvironment()
 // const { detectActiveWalletAddress } = useEthers()
-const { exportFile } = useFiles()
+const { contractsAreInitialized } = useContracts()
 const { convertString } = useFormat()
 const {
-    initializeOperatorComposable,
     registerOperatorWithCasimir,
     nonregisteredBaseOperators,
     nonregisteredEigenOperators,
@@ -117,7 +116,6 @@ const submitButtonTxt = ref("Submit")
 onMounted(async () => {
     if (user.value) {
         loading.value = true
-        await initializeOperatorComposable()
 
         // Autofill disable
         const disableAutofill = () => {
@@ -129,15 +127,23 @@ onMounted(async () => {
 
         document.addEventListener("DOMContentLoaded", disableAutofill)
 
-        filterData()
     }
+
+    tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
+        return {
+            id: operator.id,
+            walletAddress: operator.ownerAddress,
+            collateral: operator.collateral + " ETH",
+            poolCount: operator.poolCount,
+            nodeURL: operator.url
+        }
+    })
+    filterData()
 })
 
 watch(user, async () => {
     if (user.value) {
         loading.value = true
-        await initializeOperatorComposable()
-
         filterData()
     }
 })
@@ -192,6 +198,12 @@ watch([searchInput,
     filterData()
 })
 
+watch(contractsAreInitialized, () => {
+    if (!contractsAreInitialized.value) {
+        loading.value = true
+    }
+})
+
 const openWalletsModal = () => {
     const el = document.getElementById("connect_wallet_button")
     if (el) {
@@ -215,20 +227,20 @@ const handleInputChangeCollateral = (event: any) => {
 
 const filterData = () => {
     loading.value = true
-    let filteredDataArray
+    let filteredDataArray = [...tableData.value]
 
-    if (searchInput.value === "") {
-        filteredDataArray = tableData.value
-    } else {
-        const searchTerm = searchInput.value
-        filteredDataArray = tableData.value.filter((item: any) => {
-            return (
-            // Might need to modify to match types each variable
-            // item.walletProvider?.toLowerCase().includes(searchTerm) 
-                true
-            )
-        })
-    }
+    // if (searchInput.value === "") {
+    //     filteredDataArray = tableData.value
+    // } else {
+    //     const searchTerm = searchInput.value
+    //     filteredDataArray = tableData.value.filter((item: any) => {
+    //         return (
+    //         // Might need to modify to match types each variable
+    //         // item.walletProvider?.toLowerCase().includes(searchTerm) 
+    //             true
+    //         )
+    //     })
+    // }
 
     if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
         filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
@@ -246,6 +258,7 @@ const filterData = () => {
 
     const start = (currentPage.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
+
     filteredData.value = filteredDataArray.slice(start, end) as any
     loading.value = false
 }

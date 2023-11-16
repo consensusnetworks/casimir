@@ -28,7 +28,7 @@ const supportedWalletProviders = [
 const { login, loginWithSecondaryAddress } = useAuth()
 const { requiredNetwork } = useEnvironment()
 const { browserProvidersList, getEthersAddressesWithBalances } = useEthers()
-const { convertString, trimAndLowercaseAddress } = useFormat()
+const { convertString, formatEthersCasimir, trimAndLowercaseAddress } = useFormat()
 const { getLedgerAddress } = useLedger()
 const { getTrezorAddress } = useTrezor()
 const { user } = useUser()
@@ -112,7 +112,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
         errorMassageText.value = "Address selected is already connected to your account."
     } else if (
         response === "Address already exists as a primary address on another account" ||
-    response === "Address already exists as a secondary address on another account"
+        response === "Address already exists as a secondary address on another account"
     ) {
         flowState.value = "confirm_signage_with_existing_secondary"
     } else if (response === "Selected address is not active address in wallet") {
@@ -342,7 +342,7 @@ onUnmounted(() => {
               {{ convertString(act.address) }}
             </div>
             <div>
-              {{ parseFloat(parseFloat(act.balance).toFixed(2)) }} ETH
+              {{ formatEthersCasimir(act.balance) }} ETH
             </div>
           </button>
         </div>
@@ -420,9 +420,11 @@ onUnmounted(() => {
         <h1 class="mb-[15px]">
           Confirm Signage
         </h1>
-        <p class="">
+        <p>
           The current wallet you are trying to connect exists under another primary wallet or is a primary account.
         </p>
+        <br>
+        <p>Would you like to create a new account with this address as the primary wallet address?</p>
       </div>
 
       <div class="mt-15 h-[220px] w-full flex items-center justify-center gap-5">
@@ -440,7 +442,7 @@ onUnmounted(() => {
           class="action_button w-full"
           @click="handleConfirmCreateAccountWithExistingSecondary"
         >
-          Confirm
+          Create Account
         </button>
       </div>
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">

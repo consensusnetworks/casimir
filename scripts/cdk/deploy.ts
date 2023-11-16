@@ -1,5 +1,5 @@
 import { getSecret, loadCredentials } from "@casimir/aws"
-import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from "@casimir/env"
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_WS_URL } from "@casimir/env"
 import { run } from "@casimir/shell"
 
 /**
@@ -23,6 +23,7 @@ void async function () {
 
     const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || "TESTNET"
     process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+    process.env.ETHEREUM_WS_URL = ETHEREUM_WS_URL[networkKey]
     process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
     process.env.SSV_NETWORK_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_NETWORK_ADDRESS
     process.env.SSV_VIEWS_ADDRESS = ETHEREUM_CONTRACTS[networkKey]?.SSV_VIEWS_ADDRESS
@@ -34,6 +35,7 @@ void async function () {
     process.env.PUBLIC_WEBSITE_URL = process.env.WEBSITE_URL
     process.env.PUBLIC_CRYPTO_COMPARE_API_KEY = process.env.CRYPTO_COMPARE_API_KEY
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_ETHEREUM_WS_URL = process.env.ETHEREUM_WS_URL
     process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS

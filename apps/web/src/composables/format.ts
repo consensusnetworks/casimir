@@ -15,35 +15,76 @@ export default function useFormat() {
         return parseFloat(decimalString).toFixed(2)
     }
 
-    function formatNumber(number: number) {
-        const SI_SYMBOL = ["",
-            "K",
-            "M",
-            "B",
-            "T",
-            "P",
-            "E"]
-        const tier = Math.floor(Math.log10(Math.abs(number)) / 3)
-        let scale, scaled, suffix
-        
-        if (number === 0) {
-            return "0.00"
-        } else if (Math.abs(number) < 1) {
-            // Find the position of the first non-zero digit after the decimal point
-            const decimalPlaces = Math.ceil(-Math.log10(Math.abs(number)))
-            // Limit to 6 decimal places
-            const fixedDecimals = Math.min(decimalPlaces, 6)
-            return number.toFixed(fixedDecimals)
-        } else if (tier === 0) {
-            return number.toFixed(2)
-        } else {
-            suffix = SI_SYMBOL[tier]
-            scale = Math.pow(10, tier * 3)
-            scaled = number / scale
-            return scaled.toFixed(2) + suffix
+    function formatEthersCasimir(inputFloat: number, customDecimals?: number): string {
+        const siSymbols: { [key: string]: number } = {
+            "K": 1e3,
+            "M": 1e6,
+            "B": 1e9
         }
-    }
     
+        const [siSymbol, magnitude] = Object.entries(siSymbols)
+            .reduce(([selectedSymbol, selectedMagnitude], [symbol, mag]) =>
+                Math.abs(inputFloat) >= mag ? [symbol, mag] : [selectedSymbol, selectedMagnitude], ["", 1])
+    
+        let numDecimals: number
+
+        if (customDecimals !== undefined) {
+            numDecimals = customDecimals
+        } else if (Math.abs(inputFloat) < 1) {
+            numDecimals = 9
+        } else if (Math.abs(inputFloat) < 5) {
+            numDecimals = 6
+        } else {
+            numDecimals = 2
+        }
+    
+        let formattedFloat = (inputFloat / magnitude).toFixed(numDecimals)
+        
+        if (numDecimals > 0) {
+            formattedFloat = formattedFloat.replace(/\.?0+$/, "")
+        }
+        return siSymbol.length > 0 ? formattedFloat + siSymbol : formattedFloat
+    }
+
+    function formatEthersCasimirStaking(inputFloat: number) {
+        // Ensure the number has 18 decimal places
+        const formattedNumber = inputFloat.toFixed(18)
+
+        // Split the number into integer and decimal parts
+        const parts = formattedNumber.split(".")
+
+        // Add commas to the integer part
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    
+        // Rejoin the integer and decimal parts
+        return parts.join(".")
+    }
+
+    function parseEthersCasimir(inputString: string): number {
+        const siSymbols: { [key: string]: number } = {
+            "K": 1e3,
+            "M": 1e6,
+            "B": 1e9
+        }
+    
+        // Extract the numeric part and the SI symbol
+        const matches = inputString.match(/([0-9.,]+)([KMB])?/)
+        if (!matches) {
+            throw new Error("Invalid input format")
+        }
+    
+        const [ , numericPart, siSymbol] = matches
+    
+        // Replace commas and convert to a float
+        let value = parseFloat(numericPart.replace(/,/g, ""))
+    
+        // Apply the multiplication factor if an SI symbol is present
+        if (siSymbol && siSymbols[siSymbol]) {
+            value *= siSymbols[siSymbol]
+        }
+    
+        return value
+    }
 
     function trimAndLowercaseAddress(address: string) {
         return address.trim().toLowerCase()
@@ -52,7 +93,9 @@ export default function useFormat() {
     return { 
         convertString, 
         formatDecimalString,
-        formatNumber,
+        formatEthersCasimir,
+        formatEthersCasimirStaking,
+        parseEthersCasimir,
         trimAndLowercaseAddress,
     }
 }
