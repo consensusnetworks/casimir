@@ -29,7 +29,7 @@ const {
     getEigenRegistry,
     getEigenViews
 } = useContracts()
-const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl, batchProvider, provider, webSocketProvider } = useEnvironment()
+const { ethereumUrl, ssvNetworkAddress, ssvViewsAddress, usersUrl, batchProvider, provider, wsProvider } = useEnvironment()
 const { browserProvidersList, getEthersBrowserSigner } = useEthers()
 const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
@@ -80,7 +80,7 @@ export default function useOperators() {
     async function getUserOperators(): Promise<void> {
         const userAddresses = user.value?.accounts.map((account: Account) => account.address) as string[]
 
-        const availableProvider = webSocketProvider || batchProvider || provider 
+        const availableProvider = wsProvider || batchProvider || provider 
 
         const scanner = new Scanner({ 
             ethereumUrl,

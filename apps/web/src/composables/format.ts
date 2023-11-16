@@ -49,10 +49,13 @@ export default function useFormat() {
     function formatEthersCasimirStaking(inputFloat: number) {
         // Ensure the number has 18 decimal places
         const formattedNumber = inputFloat.toFixed(18)
+
         // Split the number into integer and decimal parts
         const parts = formattedNumber.split(".")
+
         // Add commas to the integer part
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    
         // Rejoin the integer and decimal parts
         return parts.join(".")
     }

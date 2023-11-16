@@ -6,7 +6,7 @@ import ICasimirManagerAbi from "@casimir/ethereum/build/abi/ICasimirManager.json
 import ICasimirRegistryAbi from "@casimir/ethereum/build/abi/ICasimirRegistry.json"
 import ICasimirViewsAbi from "@casimir/ethereum/build/abi/ICasimirViews.json"
 
-const { webSocketProvider, provider, factory } = useEnvironment()
+const { wsProvider, provider, factory } = useEnvironment()
 const contractsAreInitialized = ref(false)
 
 let baseManager: CasimirManager
@@ -28,7 +28,7 @@ export default function useContracts() {
             return await factory.getManagerConfig(id)
         }))
 
-        const availableProvider = webSocketProvider || provider
+        const availableProvider = wsProvider || provider
 
         baseManager = new ethers.Contract(baseManagerConfig.managerAddress, ICasimirManagerAbi, availableProvider) as CasimirManager
         baseRegistry = new ethers.Contract(baseManagerConfig.registryAddress, ICasimirRegistryAbi, availableProvider) as CasimirRegistry

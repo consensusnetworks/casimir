@@ -10,7 +10,7 @@ import useUser from "@/composables/user"
 import { CasimirManager } from "@casimir/ethereum/build/@types"
 
 const { getBaseManager, getEigenManager, contractsAreInitialized } = useContracts()
-const { batchProvider, provider, webSocketProvider } = useEnvironment()
+const { batchProvider, provider, wsProvider } = useEnvironment()
 const { formatEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
 const { awaitingStakeOrWithdrawConfirmation } = useStaking()
@@ -34,7 +34,7 @@ export default function useBreakdownMetrics() {
         if (import.meta.env.MODE === "development") console.log("blockNumber :>> ", blockNumber)
         
         const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
-        const availableProvider = webSocketProvider || provider
+        const availableProvider = wsProvider || provider
         const block = await availableProvider.getBlockWithTransactions(blockNumber)
         
         const txs = block.transactions.map(async (tx: any) => {
@@ -77,7 +77,7 @@ export default function useBreakdownMetrics() {
 
         try {
             loadingInitializeBreakdownMetrics.value = true
-            const availableProvider = webSocketProvider || provider
+            const availableProvider = wsProvider || provider
             availableProvider.removeAllListeners("block")
             availableProvider.on("block", blockListener as ethers.providers.Listener)
             listenForRebalancedEvents()
@@ -92,7 +92,7 @@ export default function useBreakdownMetrics() {
     }
 
     async function uninitializeBreakdownMetricsComposable() {
-        const availableProvider = webSocketProvider || provider
+        const availableProvider = wsProvider || provider
         availableProvider.removeAllListeners("block")
         stopListeningForContractEvents()
         breakdownMetricsComposableInitialized.value = false
