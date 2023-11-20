@@ -63,7 +63,7 @@ const toggleQuestionItem = (index: number) => {
 </script>
 
 <template>
-  <div>
+  <div class="csm:m-12 overflow-x-hidden">
     <nav class="nav">
       <div class="nav__container">
         <a href="/">
@@ -141,7 +141,7 @@ const toggleQuestionItem = (index: number) => {
       <div class="overview__container">
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/disc.svg"
                 width="17"
@@ -156,7 +156,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/key.svg"
                 width="17"
@@ -172,7 +172,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/disc.svg"
                 width="17"
@@ -188,7 +188,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/flash.svg"
                 width="17"
@@ -203,7 +203,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/credit-card.svg"
                 width="17"
@@ -219,7 +219,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon hidden">
               <img
                 src="/users.svg"
                 width="17"
