@@ -114,6 +114,7 @@ module.exports = {
 
             // Combine smalls
             "csm": { "min": "0px", "max": "719px" },
+            "md-lg": { "min": "720px" },
 
             // Combine smalls & medium
             // 'csm-md': {'min': '0px', 'max': '1023px'},

@@ -112,15 +112,17 @@ const toggleQuestionItem = (index: number) => {
         <div class="cta__container">
           <a
             :href="appUrl"
-            class="btn-primary"
+            class="btn-primary flex justify-center csm:min-w-[161px]"
           >
-            Launch Staking App
+            <span class="csm:hidden">Launch Staking App</span>
+            <span class="md-lg:hidden">Launch App</span>
           </a>
           <a
             href="https://drive.google.com/file/d/1giIojTS-4gf0xWXUirmd2AaqalFmgA72/view"
             class="btn-secondary"
           >
-            Read the Whitepaper
+            <span class="csm:hidden">Read the Whitepaper</span>
+            <span class="md-lg:hidden">Read Whitepaper</span>
           </a>
         </div>
       </div>
@@ -233,8 +235,9 @@ const toggleQuestionItem = (index: number) => {
         </div>
       </div>
     </section>
-
-    <section class="bento">
+    
+    <!-- Hide this section on small screens for now -->
+    <section class="bento csm:hidden">
       <div class="overview__header">
         <h2>
           One place to connect your wallets, <br> stake, withdraw, and see your analytics.
