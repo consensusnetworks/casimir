@@ -240,24 +240,21 @@ const toggleQuestionItem = (index: number) => {
     </section>
     
     <!-- Hide this section on small screens for now -->
-    <section class="bento md-lg:hidden">
+    <section class="bento__mobile md-lg:hidden">
       <div class="overview__header">
-        <h2 class="csm:hidden">
-          One place to connect your wallets, <br> stake, withdraw, and see your analytics.
-        </h2>
         <h2 class="md-lg:hidden">
           One place to connect your wallets, stake, withdraw, and see your analytics.
         </h2>
       </div>
-      <div class="bento__container">
+      <div class="bento__container__mobile">
         <div class="bento__base__card bento__card__1">
           <h2 class="text-6">
-            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
+            Connect any number of wallets at the same time.
           </h2>
-          <div><img src="/analytics-chart.png"></div>
+          <div><img src="/multi-wallet.png"></div>
         </div>
 
-        <div class="bento__base__card bento__card__4">
+        <div class="bento__base__card bento__card__2">
           <h2 class="text-6">
             Natively stake or withdraw ETH.
           </h2>
@@ -266,16 +263,16 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="bento__base__card bento__card__3">
           <h2 class="text-6">
+            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
+          </h2>
+          <div><img src="/analytics-chart.png"></div>
+        </div>
+
+        <div class="bento__base__card bento__card__4">
+          <h2 class="text-6">
             Get your transaction history <br> for any connected address.
           </h2>
           <div><img src="/tx.png"></div>
-        </div>
-
-        <div class="bento__base__card bento__card__2">
-          <h2 class="text-6">
-            Connect any number of wallets at the same time.
-          </h2>
-          <div><img src="/multi-wallet.png"></div>
         </div>
       </div>
     </section>
