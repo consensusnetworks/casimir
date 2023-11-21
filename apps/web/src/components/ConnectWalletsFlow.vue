@@ -342,7 +342,7 @@ onUnmounted(() => {
               {{ convertString(act.address) }}
             </div>
             <div>
-              {{ formatEthersCasimir(act.balance) }} ETH
+              {{ formatEthersCasimir(parseFloat(act.balance)) }} ETH
             </div>
           </button>
         </div>
