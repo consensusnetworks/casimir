@@ -842,11 +842,18 @@ ul li {
   gap: 10px;
 }
 
+.overview__container__mobile {
+  margin-top: 55px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* gap: 20px; */
+}
+
 .overview__container {
   margin-top: 55px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  /* gap: 40px; */
 }
 
 .overview__item {
@@ -879,13 +886,6 @@ ul li {
   justify-content: center;
   align-items: center;
   gap: 20px;
-}
-
-.overview__container {
-  margin-top: 55px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
 }
 
 .overview__item {
