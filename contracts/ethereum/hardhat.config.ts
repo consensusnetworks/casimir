@@ -1,15 +1,15 @@
-import os from 'os'
-import localtunnel from 'localtunnel'
-import { HardhatUserConfig } from 'hardhat/types'
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomicfoundation/hardhat-toolbox'
-import '@openzeppelin/hardhat-upgrades'
-import 'hardhat-abi-exporter'
-import 'hardhat-contract-sizer'
-import 'solidity-docgen'
+import os from "os"
+import localtunnel from "localtunnel"
+import { HardhatUserConfig } from "hardhat/types"
+import "@typechain/hardhat"
+import "@nomiclabs/hardhat-ethers"
+import "@nomicfoundation/hardhat-toolbox"
+import "@openzeppelin/hardhat-upgrades"
+import "hardhat-abi-exporter"
+import "hardhat-contract-sizer"
+import "solidity-docgen"
 // import '@tenderly/hardhat-tenderly'
-import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, ETHEREUM_SIGNERS, HARDHAT_NETWORK_KEY } from '@casimir/env'
+import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL, HARDHAT_NETWORK_KEY } from "@casimir/env"
 
 // Seed is provided
 const mnemonic = process.env.BIP39_SEED as string
@@ -23,13 +23,23 @@ const hardhatNetwork = process.env.HARDHAT_NETWORK as string
 
 // Local network fork rpc url overrides live network
 const forkUrl = process.env.ETHEREUM_FORK_RPC_URL as string
-const forkNetwork = forkUrl?.includes('mainnet') ? 'mainnet' : 'goerli'
+const forkNetwork = forkUrl?.includes("mainnet") ? "mainnet" : "goerli"
 const forkChainId = { mainnet: 1, goerli: 5 }[forkNetwork]
-const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || '0') || undefined }
+const forkConfig = { url: forkUrl, blockNumber: parseInt(process.env.ETHEREUM_FORK_BLOCK || "0") || undefined }
 
 const hardhatKey = hardhatNetwork?.toUpperCase() as keyof typeof HARDHAT_NETWORK_KEY
-const networkKey = HARDHAT_NETWORK_KEY[hardhatKey] || 'TESTNET'
+const networkKey = HARDHAT_NETWORK_KEY[hardhatKey] || "TESTNET"
 
+process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
+process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FACTORY_ADDRESS
+process.env.BEACON_LIBRARY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_LIBRARY_ADDRESS
+process.env.MANAGER_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_BEACON_ADDRESS
+process.env.POOL_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].POOL_BEACON_ADDRESS
+process.env.REGISTRY_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_BEACON_ADDRESS
+process.env.UPKEEP_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].UPKEEP_BEACON_ADDRESS
+process.env.VIEWS_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].VIEWS_BEACON_ADDRESS
+process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
+process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
 process.env.DEPOSIT_CONTRACT_ADDRESS = ETHEREUM_CONTRACTS[networkKey].DEPOSIT_CONTRACT_ADDRESS
 process.env.KEEPER_REGISTRAR_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRAR_ADDRESS
 process.env.KEEPER_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].KEEPER_REGISTRY_ADDRESS
@@ -42,35 +52,25 @@ process.env.SWAP_FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_FACTORY_A
 process.env.SWAP_ROUTER_ADDRESS = ETHEREUM_CONTRACTS[networkKey].SWAP_ROUTER_ADDRESS
 process.env.WETH_TOKEN_ADDRESS = ETHEREUM_CONTRACTS[networkKey].WETH_TOKEN_ADDRESS
 
-if (hardhatNetwork !== 'localhost') {
-    process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
-    process.env.OWNER_ADDRESS = ETHEREUM_SIGNERS[networkKey].OWNER_ADDRESS
-    process.env.DAO_ORACLE_ADDRESS = ETHEREUM_SIGNERS[networkKey].DAO_ORACLE_ADDRESS
-    process.env.BEACON_LIBRARY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].BEACON_LIBRARY_ADDRESS
-    process.env.MANAGER_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].MANAGER_BEACON_ADDRESS
-    process.env.POOL_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].POOL_BEACON_ADDRESS
-    process.env.REGISTRY_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].REGISTRY_BEACON_ADDRESS
-    process.env.UPKEEP_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].UPKEEP_BEACON_ADDRESS
-    process.env.VIEWS_BEACON_ADDRESS = ETHEREUM_CONTRACTS[networkKey].VIEWS_BEACON_ADDRESS
-    process.env.FACTORY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FACTORY_ADDRESS
-    process.env.FUNCTIONS_BILLING_REGISTRY_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_BILLING_REGISTRY_ADDRESS
-    process.env.FUNCTIONS_ORACLE_ADDRESS = ETHEREUM_CONTRACTS[networkKey].FUNCTIONS_ORACLE_ADDRESS
-}
-
 const compilerSettings = {
     viaIR: true,
     optimizer: {
         enabled: true
     }
 }
-const compilerVersions = ['0.8.18']
-const externalCompilerVersions = ['0.4.22', '0.4.24', '0.6.6', '0.6.11', '0.8.4']
-const compilers = [...compilerVersions, ...externalCompilerVersions].map(version => ({ version, settings: compilerSettings }))
+const compilerVersions = ["0.8.18"]
+const externalCompilerVersions = ["0.4.22",
+    "0.4.24",
+    "0.6.6",
+    "0.6.11",
+    "0.8.4"]
+const compilers = [...compilerVersions, ...externalCompilerVersions]
+    .map(version => ({ version, settings: compilerSettings }))
 
 // Go to https://hardhat.org/config/ to learn more
 const config: HardhatUserConfig = {
     etherscan: {
-        apiKey: 'XZCVTJSMVTZ78RYAHDAUXDPRSFW8NKIGW9'
+        apiKey: "XZCVTJSMVTZ78RYAHDAUXDPRSFW8NKIGW9"
     },
     mocha: {
         timeout: 60000
@@ -79,32 +79,32 @@ const config: HardhatUserConfig = {
         compilers,
     },
     paths: {
-        tests: './test',
-        sources: './src/v1',
-        artifacts: './build/artifacts',
-        cache: './build/cache'
+        tests: "./test",
+        sources: "./src/v1",
+        artifacts: "./build/artifacts",
+        cache: "./build/cache"
     },
     abiExporter: {
-        path: './build/abi',
+        path: "./build/abi",
         runOnCompile: true,
         clear: true,
         flat: true,
         spacing: 4,
-        format: 'fullName'
+        format: "fullName"
     },
     typechain: {
-        outDir: './build/@types'
+        outDir: "./build/@types"
     },
     docgen: {
         exclude: [
-            'dev',
-            'libraries',
-            'mock',
-            'vendor'
+            "dev",
+            "libraries",
+            "mock",
+            "vendor"
         ],
-        outputDir: process.env.DOCS_OUTPUT_DIR || './build/docs',
+        outputDir: process.env.DOCS_OUTPUT_DIR || "./build/docs",
         templates: process.env.DOCS_TEMPLATE_DIR,
-        pages: () => 'solidity-api.md'
+        pages: () => "solidity-api.md"
     },
     networks: {
         hardhat: {
@@ -113,28 +113,28 @@ const config: HardhatUserConfig = {
             forking: forkUrl ? forkConfig : undefined,
             mining: miningInterval ? mining : { auto: true },
             allowUnlimitedContractSize: true,
-            gas: 'auto',
-            gasPrice: 'auto'
+            gas: "auto",
+            gasPrice: "auto"
         },
         mainnet: {
             accounts: mnemonic ? hid : undefined,
-            url: process.env.ETHEREUM_RPC_URL || '',
+            url: process.env.ETHEREUM_RPC_URL || "",
             allowUnlimitedContractSize: true,
-            gas: 'auto',
-            gasPrice: 'auto'
+            gas: "auto",
+            gasPrice: "auto"
         },
         goerli: {
             accounts: mnemonic ? hid : undefined,
-            url: process.env.ETHEREUM_RPC_URL || '',
+            url: process.env.ETHEREUM_RPC_URL || "",
             allowUnlimitedContractSize: true,
-            gas: 'auto',
-            gasPrice: 'auto'
+            gas: "auto",
+            gasPrice: "auto"
         }
     }
 }
 
 // Start a local tunnel for using RPC over https (e.g. for Metamask on mobile)
-if (process.env.TUNNEL === 'true') {
+if (process.env.TUNNEL === "true") {
     runLocalTunnel()
 }
 
@@ -144,11 +144,11 @@ function runLocalTunnel() {
     localtunnel({ port: 8545, subdomain: localSubdomain }).then(
         (tunnel: localtunnel.Tunnel) => {
             if (localUrl === tunnel.url) {
-                console.log('Your default local tunnel url is', localUrl)
+                console.log("Your default local tunnel url is", localUrl)
             } else {
-                console.log('Your default local tunnel url is not available, use', tunnel.url, 'instead')
+                console.log("Your default local tunnel url is not available, use", tunnel.url, "instead")
             }
-            process.on('SIGINT', () => {
+            process.on("SIGINT", () => {
                 tunnel.close()
             })
         }

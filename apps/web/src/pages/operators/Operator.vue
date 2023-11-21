@@ -1,100 +1,99 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import { ProviderString } from '@casimir/types'
-import useAuth from '@/composables/auth'
-import useEnvironment from '@/composables/environment'
+import { onMounted, ref, watch } from "vue"
+import VueFeather from "vue-feather"
+import { ProviderString } from "@casimir/types"
+import useAuth from "@/composables/auth"
+import useContracts from "@/composables/contracts"
+import useEnvironment from "@/composables/environment"
 // import useEthers from '@/composables/ethers'
-import useFiles from '@/composables/files'
-import useFormat from '@/composables/format'
-import useOperators from '@/composables/operators'
-import useUser from '@/composables/user'
+import useFormat from "@/composables/format"
+import useOperators from "@/composables/operators"
+import useUser from "@/composables/user"
 
 const { loadingSessionLogin } = useAuth()
 const { docsUrl } = useEnvironment()
 // const { detectActiveWalletAddress } = useEthers()
-const { exportFile } = useFiles()
+const { contractsAreInitialized } = useContracts()
 const { convertString } = useFormat()
 const {
-  initializeOperatorComposable,
-  registerOperatorWithCasimir,
-  nonregisteredBaseOperators,
-  nonregisteredEigenOperators,
-  registeredBaseOperators,
-  registeredEigenOperators,
-  loadingInitializeOperators,
-  loadingAddOperator
+    registerOperatorWithCasimir,
+    nonregisteredBaseOperators,
+    nonregisteredEigenOperators,
+    registeredBaseOperators,
+    registeredEigenOperators,
+    loadingInitializeOperators,
+    loadingAddOperator
 } = useOperators()
 const { user } = useUser()
 
 // Form inputs
-const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: '', walletProvider: '' })
+const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: "", walletProvider: "" })
 const openSelectWalletOptions = ref(false)
 const onSelectWalletBlur = () => {
-  setTimeout(() => {
-    openSelectWalletOptions.value = false
-  }, 200)
+    setTimeout(() => {
+        openSelectWalletOptions.value = false
+    }, 200)
 }
 
-const operatorType = ref<'base' | 'eigen'>('base')
+const operatorType = ref<"base" | "eigen">("base")
 const eigenIsShining = ref(true) // Determines if the shine effect is active
 const eigenIsToggled = ref(false) // Determines the toggle state
-const toggleBackgroundColor = ref('#eee')  // Initial color
+const toggleBackgroundColor = ref("#eee")  // Initial color
 
 function toggleEigenLayerSupport() {
-  eigenIsToggled.value = !eigenIsToggled.value
-  toggleBackgroundColor.value = eigenIsToggled.value ? 'green' : '#eee'
-  operatorType.value = eigenIsToggled.value ? 'eigen' : 'base'
+    eigenIsToggled.value = !eigenIsToggled.value
+    toggleBackgroundColor.value = eigenIsToggled.value ? "green" : "#eee"
+    operatorType.value = eigenIsToggled.value ? "eigen" : "base"
 
-  // Update stakeType
-  // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
+    // Update stakeType
+    // stakeType.value = eigenIsToggled.value ? 'eigen' : 'base'
 }
 
 const selectedOperatorID = ref()
 const openSelectOperatorID = ref(false)
 const onSelectOperatorIDBlur = () => {
-  setTimeout(() => {
-    openSelectOperatorID.value = false
-  }, 200)
+    setTimeout(() => {
+        openSelectOperatorID.value = false
+    }, 200)
 }
 
 const availableOperatorIDs = ref([] as string[])
-const selectedPublicNodeURL = ref('')
+const selectedPublicNodeURL = ref("")
 const selectedCollateral = ref()
 
 const openAddOperatorModal = ref(false)
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalPages = ref(1)
-const searchInput = ref('')
-const selectedHeader = ref('walletProvider')
-const selectedOrientation = ref('ascending')
+const searchInput = ref("")
+const selectedHeader = ref("walletProvider")
+const selectedOrientation = ref("ascending")
 const operatorTableHeaders = ref(
-  [
+    [
     // {
     //   title: '',
     //   value: 'blank_column'
     // },
-    {
-      title: 'Operator ID',
-      value: 'id'
-    },
-    {
-      title: 'Wallet Address',
-      value: 'walletAddress'
-    },
-    {
-      title: 'Collateral',
-      value: 'collateral'
-    },
-    {
-      title: 'Active Validators',
-      value: 'poolCount'
-    },
-    {
-      title: 'Node URL',
-      value: 'nodeURL'
-    },
+        {
+            title: "Operator ID",
+            value: "id"
+        },
+        {
+            title: "Wallet Address",
+            value: "walletAddress"
+        },
+        {
+            title: "Collateral",
+            value: "collateral"
+        },
+        {
+            title: "Active Validators",
+            value: "poolCount"
+        },
+        {
+            title: "Node URL",
+            value: "nodeURL"
+        },
     // {
     //   title: '',
     //   value: 'deactivate'
@@ -103,7 +102,7 @@ const operatorTableHeaders = ref(
     //   title: '',
     //   value: 'withdraw_collateral'
     // },
-  ]
+    ]
 )
 
 const allInputsValid = ref(false)
@@ -112,193 +111,217 @@ const filteredData = ref(tableData.value)
 const checkedItems = ref([] as any)
 
 const loading = ref(false)
-const submitButtonTxt = ref('Submit')
+const submitButtonTxt = ref("Submit")
 
 onMounted(async () => {
-  if (user.value) {
-    loading.value = true
-    await initializeOperatorComposable()
+    if (user.value) {
+        loading.value = true
 
-    // Autofill disable
-    const disableAutofill = () => {
-      let inputs = document.getElementsByTagName('input')
-      for (let i = 0; i < inputs.length; i++) {
-        inputs[i].setAttribute('autocomplete', 'off')
-      }
+        // Autofill disable
+        const disableAutofill = () => {
+            let inputs = document.getElementsByTagName("input")
+            for (let i = 0; i < inputs.length; i++) {
+                inputs[i].setAttribute("autocomplete", "off")
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", disableAutofill)
+
     }
 
-    document.addEventListener('DOMContentLoaded', disableAutofill)
-
+    tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
+        return {
+            id: operator.id,
+            walletAddress: operator.ownerAddress,
+            collateral: operator.collateral + " ETH",
+            poolCount: operator.poolCount,
+            nodeURL: operator.url
+        }
+    })
     filterData()
-  }
 })
 
 watch(user, async () => {
-  if (user.value) {
-    loading.value = true
-    await initializeOperatorComposable()
-
-    filterData()
-  }
+    if (user.value) {
+        loading.value = true
+        filterData()
+    }
 })
 
 watch(selectedWallet, async () => {
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
+    selectedOperatorID.value = ""
+    selectedPublicNodeURL.value = ""
+    selectedCollateral.value = ""
 
-  if (selectedWallet.value.address === '') {
-    availableOperatorIDs.value = []
-  } else if (operatorType.value === 'base') {
-    if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
-      availableOperatorIDs.value = [...nonregisteredBaseOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
-    } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
-      availableOperatorIDs.value = [...nonregisteredEigenOperators.value].filter((operator: any) => operator.ownerAddress === selectedWallet.value.address).map((operator: any) => operator.id)
-    } else {
-      availableOperatorIDs.value = []
+    if (selectedWallet.value.address === "") {
+        availableOperatorIDs.value = []
+    } else if (operatorType.value === "base") {
+        if (nonregisteredBaseOperators.value && nonregisteredBaseOperators.value.length > 0) {
+            availableOperatorIDs.value = [...nonregisteredBaseOperators.value]
+                .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+                .map((operator: any) => operator.id)
+        } else if (nonregisteredEigenOperators.value && nonregisteredEigenOperators.value.length > 0) {
+            availableOperatorIDs.value = [...nonregisteredEigenOperators.value]
+                .filter((operator: any) => operator.ownerAddress === selectedWallet.value.address)
+                .map((operator: any) => operator.id)
+        } else {
+            availableOperatorIDs.value = []
+        }
     }
-  }
 })
 
 watch([registeredBaseOperators, registeredEigenOperators], () => {
-  loading.value = true
-  openAddOperatorModal.value = false
-  tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
-    return {
-      id: operator.id,
-      walletAddress: operator.ownerAddress,
-      collateral: operator.collateral + ' ETH',
-      poolCount: operator.poolCount,
-      nodeURL: operator.url
-    }
-  })
-  filterData()
+    loading.value = true
+    openAddOperatorModal.value = false
+    tableData.value = [...registeredBaseOperators.value, ...registeredEigenOperators.value].map((operator: any) => {
+        return {
+            id: operator.id,
+            walletAddress: operator.ownerAddress,
+            collateral: operator.collateral + " ETH",
+            poolCount: operator.poolCount,
+            nodeURL: operator.url
+        }
+    })
+    filterData()
 })
 
 watch(openAddOperatorModal, () => {
-  if (openAddOperatorModal.value) {
-    selectedWallet.value = { address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString }
-  }
+    if (openAddOperatorModal.value) {
+        selectedWallet.value = { address: user.value?.address as string, walletProvider: user.value?.walletProvider as ProviderString }
+    }
 })
 
-watch([searchInput, selectedHeader, selectedOrientation, currentPage], () => {
-  filterData()
+watch([searchInput,
+    selectedHeader,
+    selectedOrientation,
+    currentPage], () => {
+    filterData()
+})
+
+watch(contractsAreInitialized, () => {
+    if (!contractsAreInitialized.value) {
+        loading.value = true
+    }
 })
 
 const openWalletsModal = () => {
-  const el = document.getElementById('connect_wallet_button')
-  if (el) {
-    el.click()
-  }
+    const el = document.getElementById("connect_wallet_button")
+    if (el) {
+        el.click()
+    }
 }
 
 const handleInputChangeCollateral = (event: any) => {
-  const value = event.target.value.replace(/[^\d.]/g, '')
-  const parts = value.split('.')
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    const value = event.target.value.replace(/[^\d.]/g, "")
+    const parts = value.split(".")
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
-  // Limit to two decimal places
-  if (parts[1] && parts[1].length > 2) {
-    parts[1] = parts[1].slice(0, 2)
-  }
+    // Limit to two decimal places
+    if (parts[1] && parts[1].length > 2) {
+        parts[1] = parts[1].slice(0, 2)
+    }
 
-  // Update the model value
-  selectedCollateral.value = parts.join('.')
+    // Update the model value
+    selectedCollateral.value = parts.join(".")
 }
 
 const filterData = () => {
-  loading.value = true
-  let filteredDataArray
+    loading.value = true
+    let filteredDataArray = [...tableData.value]
 
-  if (searchInput.value === '') {
-    filteredDataArray = tableData.value
-  } else {
-    const searchTerm = searchInput.value
-    filteredDataArray = tableData.value.filter((item: any) => {
-      return (
-        // Might need to modify to match types each variable
-        // item.walletProvider?.toLowerCase().includes(searchTerm) 
-        true
-      )
-    })
-  }
+    // if (searchInput.value === "") {
+    //     filteredDataArray = tableData.value
+    // } else {
+    //     const searchTerm = searchInput.value
+    //     filteredDataArray = tableData.value.filter((item: any) => {
+    //         return (
+    //         // Might need to modify to match types each variable
+    //         // item.walletProvider?.toLowerCase().includes(searchTerm) 
+    //             true
+    //         )
+    //     })
+    // }
 
-  if (selectedHeader.value !== '' && selectedOrientation.value !== '') {
-    filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
-      const valA = a[selectedHeader.value]
-      const valB = b[selectedHeader.value]
+    if (selectedHeader.value !== "" && selectedOrientation.value !== "") {
+        filteredDataArray = filteredDataArray.sort((a: any, b: any) => {
+            const valA = a[selectedHeader.value]
+            const valB = b[selectedHeader.value]
 
-      if (selectedOrientation.value === 'ascending') {
-        return valA < valB ? -1 : valA > valB ? 1 : 0
-      } else {
-        return valA > valB ? -1 : valA < valB ? 1 : 0
-      }
-    })
-  }
-  totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value) || 1
+            if (selectedOrientation.value === "ascending") {
+                return valA < valB ? -1 : valA > valB ? 1 : 0
+            } else {
+                return valA > valB ? -1 : valA < valB ? 1 : 0
+            }
+        })
+    }
+    totalPages.value = Math.round(filteredDataArray.length / itemsPerPage.value) || 1
 
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  filteredData.value = filteredDataArray.slice(start, end) as any
-  loading.value = false
+    const start = (currentPage.value - 1) * itemsPerPage.value
+    const end = start + itemsPerPage.value
+
+    filteredData.value = filteredDataArray.slice(start, end) as any
+    loading.value = false
 }
 
 const removeItemFromCheckedList = (item: any) => {
-  const index = checkedItems.value.indexOf(item)
-  if (index > -1) {
-    checkedItems.value.splice(index, 1)
-  }
+    const index = checkedItems.value.indexOf(item)
+    if (index > -1) {
+        checkedItems.value.splice(index, 1)
+    }
 }
 
-watch([selectedWallet, selectedOperatorID, selectedPublicNodeURL, selectedCollateral], () => {
-  if (selectedWallet.value.address !== '' && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== '' && selectedCollateral.value !== undefined) {
-    allInputsValid.value = true
-  } else {
-    allInputsValid.value = false
-  }
+watch([selectedWallet,
+    selectedOperatorID,
+    selectedPublicNodeURL,
+    selectedCollateral], () => {
+    if (selectedWallet.value.address !== "" && selectedOperatorID.value !== undefined && selectedPublicNodeURL.value !== "" && selectedCollateral.value !== undefined) {
+        allInputsValid.value = true
+    } else {
+        allInputsValid.value = false
+    }
 })
 
 async function submitRegisterOperatorForm() {
-  const selectedAddress = selectedWallet.value.address
-  const selectedProvider = selectedWallet.value.walletProvider
+    const selectedAddress = selectedWallet.value.address
+    const selectedProvider = selectedWallet.value.walletProvider
 
-  // const activeAddress = await detectActiveWalletAddress(selectedProvider)
-  // if (activeAddress !== selectedAddress) {
-  //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-  // }
+    // const activeAddress = await detectActiveWalletAddress(selectedProvider)
+    // if (activeAddress !== selectedAddress) {
+    //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
+    // }
 
-  try {
-    await registerOperatorWithCasimir({
-      walletProvider: selectedWallet.value.walletProvider as ProviderString,
-      address: selectedWallet.value.address,
-      operatorId: parseInt(selectedOperatorID.value),
-      collateral: selectedCollateral.value,
-      nodeUrl: selectedPublicNodeURL.value
-    })
-    openAddOperatorModal.value = false
-  } catch (error) {
-    console.log('Error in submitRegisterOperatorForm :>> ', error)
-    openAddOperatorModal.value = false
-  }
+    try {
+        await registerOperatorWithCasimir({
+            walletProvider: selectedWallet.value.walletProvider as ProviderString,
+            address: selectedWallet.value.address,
+            operatorId: parseInt(selectedOperatorID.value),
+            collateral: selectedCollateral.value,
+            nodeUrl: selectedPublicNodeURL.value
+        })
+        openAddOperatorModal.value = false
+    } catch (error) {
+        console.log("Error in submitRegisterOperatorForm :>> ", error)
+        openAddOperatorModal.value = false
+    }
 
-  if (selectedWallet.value.address === '') {
-    const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
-    selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
-  }
-  selectedOperatorID.value = ''
-  selectedPublicNodeURL.value = ''
-  selectedCollateral.value = ''
-  availableOperatorIDs.value = []
+    if (selectedWallet.value.address === "") {
+        const primaryAccount = user.value?.accounts.find(item => { item.address === user.value?.address })
+        selectedWallet.value = { address: primaryAccount?.address as string, walletProvider: primaryAccount?.walletProvider as ProviderString }
+    }
+    selectedOperatorID.value = ""
+    selectedPublicNodeURL.value = ""
+    selectedCollateral.value = ""
+    availableOperatorIDs.value = []
 }
 
 const showSkeleton = ref(true)
 
 watch([loadingSessionLogin || loadingInitializeOperators], () => {
-  setTimeout(() => {
-    if (loadingSessionLogin || loadingInitializeOperators) {
-      showSkeleton.value = false
-    }
-  }, 500)
+    setTimeout(() => {
+        if (loadingSessionLogin || loadingInitializeOperators) {
+            showSkeleton.value = false
+        }
+    }, 500)
 })
 
 </script>
@@ -400,7 +423,10 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                     v-show="header.value != 'blank_column'"
                     class="ml-[4px] flex flex-col items-center justify-between"
                     :class="selectedHeader === header.value ? 'opacity-100' : 'opacity-25'"
-                    @click="selectedHeader = header.value, selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'"
+                    @click="
+                      selectedHeader = header.value, 
+                      selectedOrientation === 'ascending' ? selectedOrientation = 'descending' : selectedOrientation = 'ascending'
+                    "
                   >
                     <vue-feather
                       type="arrow-up"
@@ -528,19 +554,17 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
       class="fixed top-0 left-0 w-[100%] h-[100vh] bg-black/[0.3] rounded-[3px] z-[2]"
     >
       <div class="flex items-center justify-center w-full h-full">
-        <div class="card_container w-[80%] overflow-auto px-[30px] py-[20px]">
-          <div class="flex gap-[10px] flex-wrap justify-between">
-            <div class="flex flex-col">
-              <h6 class="card_title">
+        <div class="modal_card_container w-[80%] overflow-auto px-[30px] py-[20px]">
+          <div class="flex justify-between items-start">
+            <div class="flex-grow text-center">
+              <h5 class="card_title inline-block align-middle">
                 Register Operator
-              </h6>
-
-              <!-- Even Better Link to Operator Docs -->
+              </h5>
               <div
-                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-9 mt-12 mb-4 w-[400px]"
+                class="bg-blue-100 border-t border-b border-blue-500 text-blue-700 px-15 py-6 my-2 w-full"
                 role="alert"
               >
-                <p class="text-sm">
+                <p class="text-lg">
                   Learn how to set up a Casimir operator using
                   <a
                     :href="`${docsUrl}/guide/operating`"
@@ -556,8 +580,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 </p>
               </div>
             </div>
-
-            <div class="">
+            <!-- An 'X' to cancel out of the modal -->
+            <div
+              class="shrink-0 relative"
+              style="top: -0.5rem;"
+            >
               <button
                 type="button"
                 class="card_title"
@@ -570,12 +597,16 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </button>
             </div>
           </div>
-          <form @submit.prevent="submitRegisterOperatorForm">
+
+          <form
+            class="grid grid-cols-2 grid-rows-4 gap-x-4 gap-y-6 items-center h-[75%] px-40"
+            @submit.prevent="submitRegisterOperatorForm"
+          >
             <!-- Wallet address input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Wallet
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
+              Wallet Address:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
                 id="walletAddress"
                 v-model="selectedWallet.address"
@@ -588,6 +619,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               >
               <button
                 type="button"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
                 @click="selectedWallet = { walletProvider: '', address: '' }"
               >
                 <vue-feather
@@ -599,7 +631,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 v-show="openSelectWalletOptions"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[16px]">
+                <h6 class="">
                   Your Connected Wallets
                 </h6>
                 <button
@@ -616,49 +648,18 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
               </div>
             </div>
 
-            <!-- Enable Eigen Support -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Add Eigen Support to Your Validator (Optional)
+            <!-- Operator ID input -->
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
+              Operator ID:
             </h6>
-            <button
-              class="toggle_container mt-10  w-full max-w-[400px] relative"
-              :disabled="true"
-              @click="toggleEigenLayerSupport"
-            >
-              <div class="tooltip_container">
-                COMING SOON!
-                <div class="tooltip_triangle" />
-              </div>
-              <img
-                class="eigen-logo"
-                src="/eigen.svg"
-              >
-              Enable EigenLayer Support
-              <span
-                v-if="eigenIsShining"
-                class="shine-effect"
-              />
-              <div
-                class="toggle-button"
-                :style="{ 'background-color': toggleBackgroundColor }"
-                :class="{ 'toggle-on': eigenIsToggled }"
-              >
-                <div class="toggle-circle" />
-              </div>
-            </button>
-
-            <!-- operator id input -->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Operator ID
-            </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
                 id="operator_id"
                 v-model="selectedOperatorID"
                 type="text"
                 readonly
                 placeholder="Operator ID.."
-                class=" outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
+                class="outline-none text-grey_4 text-[14px] w-full bg-white cursor-pointer"
                 autocomplete="off"
                 @focus="openSelectOperatorID = true"
                 @blur="onSelectOperatorIDBlur"
@@ -677,7 +678,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 v-show="openSelectOperatorID"
                 class="z-[3] absolute top-[110%] left-0 w-full border rounded-[8px] border-[#D0D5DD] p-[15px] bg-white max-h-[200px] overflow-auto"
               >
-                <h6 class="text-[16px]">
+                <h6>
                   Available Operators
                 </h6>
                 <div
@@ -700,64 +701,48 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 </button>
               </div>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px] whitespace-normal">
-              If no operators found with your SSV owner address, register one 
-              <a
-                href=""
-                target="_blank"
-                class="text-primary underline"
-              >here</a>.
-            </div> -->
 
-            <!-- <hr class="my-[20px]"> -->
-
-            <!-- public node url-->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              DKG Node URL
+            <!-- Public node URL input -->
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
+              DKG Node URL:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
-                id="operator_id"
+                id="publicNodeURL"
                 v-model="selectedPublicNodeURL"
                 type="text"
                 placeholder="URL.."
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full"
+                class="outline-none text-grey_4 text-[14px] w-full"
               >
-              <button @click="selectedPublicNodeURL = ''">
+              <button
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                @click="selectedPublicNodeURL = ''"
+              >
                 <vue-feather
                   type="x"
                   class="icon w-[12px] h-min"
                 />
               </button>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]  whitespace-normal">
-              Add RockX DKG support to your node as documented
-              <a
-                href=""
-                target="_blank"
-                class="text-primary underline"
-              >here</a>.
-            </div> -->
 
-            <!-- <hr class="my-[20px]"> -->
-
-            <!-- Collateral-->
-            <h6 class="text-[16px] font-[400] mt-[15px] mb-[4px] pl-[5px]">
-              Collateral
+            <!-- Collateral input -->
+            <h6 class="font-[400] mt-[15px] mb-[4px] col-span-1">
+              Collateral:
             </h6>
-            <div class="card_input w-full max-w-[400px] relative">
+            <div class="card_input w-full col-span-1 relative">
               <input
-                id="operator_id"
+                id="collateral"
                 v-model="selectedCollateral"
                 type="text"
                 placeholder="0.00"
                 autocomplete="off"
-                class=" outline-none text-grey_4 text-[14px] w-full"
+                class="outline-none text-grey_4 text-[14px] w-full"
                 @input="handleInputChangeCollateral"
               >
               <button
                 type="button"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
                 @click="selectedCollateral = ''"
               >
                 <vue-feather
@@ -766,11 +751,9 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
                 />
               </button>
             </div>
-            <!-- <div class="text-[14px] mt-[4px] text-grey_4 pl-[5px]">
-              Deposit at least 1 ETH per validator you plan to run.
-            </div> -->
 
-            <div class="flex justify-end mt-[10px]">
+            <!-- Submit button -->
+            <div class="flex justify-end mt-[10px] col-span-2">
               <button
                 type="submit"
                 class="export_button"
@@ -789,7 +772,7 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 
 <style scoped>
 .card_input {
-  padding: 0px 12px;
+  padding: 0px 8px; /* Adjust as needed */
   background: #FFFFFF;
   border: 1px solid #D0D5DD;
   box-shadow: 0px 1px 2px rgba(16, 24, 40, 0.05);
@@ -980,14 +963,11 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
 }
 
 .card_title {
-  font-family: 'IBM Plex Sans';
-  font-style: normal;
+  font-family: 'IBM Plex Sans', sans-serif;
   font-weight: 500;
-  font-size: 18px;
-  line-height: 0px;
+  font-size: 24px;
   color: #101828;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  margin: 14px 0;
 }
 
 .card_container {
@@ -995,6 +975,23 @@ watch([loadingSessionLogin || loadingInitializeOperators], () => {
   border: 1px solid #D0D5DD;
   box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
   border-radius: 3px;
+  min-height: 500px;
+}
+
+.modal_card_container {
+  background: #FFFFFF;
+  border: 1px solid #D0D5DD;
+  box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.04);
+  border-radius: 8px;
+  height: 500px;
+  max-width: 1000px; /* Adjust as needed */
+  overflow: auto;
+}
+
+/* the form h6 tags */
+.modal_card_container h6 {
+  font-size: 18px;
+  padding-bottom: 10px;
 }
 
 .title {

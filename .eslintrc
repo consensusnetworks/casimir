@@ -21,13 +21,20 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "indent": ["error", 4],
         "semi": ["error", "never"],
-        "vue/multi-word-component-names": "off",
-        "quotes": ["error", "single"]
+        "quotes": ["error", "double"],
+        "max-len": ["error", { "code": 120, "ignoreStrings": true, "comments": 300, "ignoreTemplateLiterals": true }],
+        "space-before-blocks": ["error", "always"],
+        "object-curly-spacing": ["error", "always"],
+        "space-in-parens": ["error", "never"],
+        "keyword-spacing": ["error", { "before": true, "after": true }]
     },
     "ignorePatterns": [
-        "lib",
-        "cdk.out",
-        "*.js"
+        "**/node_modules/**",
+        "**/build/**",
+        "**/dist/**",
+        "**/lib/**",
+        "cdk.out"
     ]
 }

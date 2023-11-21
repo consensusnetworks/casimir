@@ -1,6 +1,6 @@
-import { ethers } from 'hardhat'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { CasimirUpkeep, FunctionsBillingRegistry } from '../build/@types'
+import { ethers } from "hardhat"
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
+import { CasimirUpkeep, FunctionsBillingRegistry } from "../build/@types"
 
 export async function runUpkeep({
     donTransmitter, upkeep,
@@ -9,11 +9,11 @@ export async function runUpkeep({
     upkeep: CasimirUpkeep,
 }) {
     let ranUpkeep = false
-    const checkData = ethers.utils.toUtf8Bytes('')
+    const checkData = ethers.utils.toUtf8Bytes("0x")
     const { ...check } = await upkeep.connect(donTransmitter).checkUpkeep(checkData)
     const { upkeepNeeded } = check
     if (upkeepNeeded) {
-        const performData = ethers.utils.toUtf8Bytes('')
+        const performData = ethers.utils.toUtf8Bytes("0x")
         const performUpkeep = await upkeep.connect(donTransmitter).performUpkeep(performData)
         await performUpkeep.wait()
         ranUpkeep = true
@@ -43,13 +43,19 @@ export async function fulfillReport({
 }) {
     const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
 
-    const requestIds = (await upkeep.queryFilter(upkeep.filters.RequestSent())).slice(-2).map((event) => event.args.id)
+    const reportRequests = (await upkeep.queryFilter(upkeep.filters.ReportRequestSent())).slice(-2)
+    const requestIds = reportRequests.map((event) => event.args.requestId)
     
     const balancesRequestId = requestIds[0]
-
     const balancesResponse = ethers.utils.defaultAbiCoder.encode(
-        ['uint128', 'uint128'],
-        [ethers.utils.parseEther(beaconBalance.toString()), ethers.utils.parseEther(sweptBalance.toString())]
+        [
+            "uint128",
+            "uint128"
+        ],
+        [
+            ethers.utils.parseEther(beaconBalance.toString()),
+            ethers.utils.parseEther(sweptBalance.toString())
+        ]
     )
     
     await fulfillFunctionsRequest({
@@ -61,8 +67,18 @@ export async function fulfillReport({
 
     const detailsRequestId = requestIds[1]
     const detailsResponse = ethers.utils.defaultAbiCoder.encode(
-        ['uint32', 'uint32', 'uint32', 'uint32[5]'],
-        [activatedDeposits, forcedExits, completedExits, compoundablePoolIds]
+        [
+            "uint32",
+            "uint32",
+            "uint32",
+            "uint32[5]"
+        ],
+        [
+            activatedDeposits,
+            forcedExits,
+            completedExits,
+            compoundablePoolIds
+        ]
     )
 
     await fulfillFunctionsRequest({
@@ -92,7 +108,7 @@ export async function fulfillFunctionsRequest({
     const fulfillAndBill = await functionsBillingRegistry.connect(donTransmitter).fulfillAndBill(
         requestId,
         response,
-        '0x',
+        "0x",
         dummyTransmitter,
         dummySigners,
         4,

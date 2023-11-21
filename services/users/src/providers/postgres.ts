@@ -1,4 +1,4 @@
-import { Pool, PoolConfig } from 'pg'
+import { Pool, PoolConfig } from "pg"
 
 /**
  * Postgres database provider with pool client auto-connect-and-release

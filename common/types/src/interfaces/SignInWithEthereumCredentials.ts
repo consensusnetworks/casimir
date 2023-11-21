@@ -1,4 +1,4 @@
-import { LoginCredentials } from './LoginCredentials'
+import { LoginCredentials } from "./LoginCredentials"
 
 export interface SignInWithEthereumCredentials extends LoginCredentials {
     message: string

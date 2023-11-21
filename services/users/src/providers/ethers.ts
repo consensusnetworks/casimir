@@ -1,5 +1,5 @@
-import { ethers } from 'ethers'
-import { LoginCredentials } from '@casimir/types'
+import { ethers } from "ethers"
+import { LoginCredentials } from "@casimir/types"
 
 export default function useEthers() {
 
@@ -10,8 +10,8 @@ export default function useEthers() {
      * @see https://eips.ethereum.org/EIPS/eip-4361
      */
     function generateNonce(length = 16): string {
-        let result = ''
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        let result = ""
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         for (let i = 0; i < length; i++) {
             result += characters.charAt(Math.floor(Math.random() * characters.length))
         }
@@ -34,7 +34,7 @@ export default function useEthers() {
                 return address.toLowerCase() === recoveredAddress.toLowerCase()
             }
         } catch (error) {
-            console.log('error :>> ', error)
+            console.log("error :>> ", error)
             return false
         }
     }

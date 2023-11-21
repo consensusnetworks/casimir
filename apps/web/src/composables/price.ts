@@ -1,5 +1,5 @@
-import { Currency } from '@casimir/types'
-import useEnvironment from './environment'
+import { Currency } from "@casimir/types"
+import useEnvironment from "./environment"
 
 type PriceEntry = {
     time: number;
@@ -19,26 +19,26 @@ export default function usePrice() {
 
     function convertToWholeUnits (currency: Currency | string, amount: number) {
         switch (currency) {
-            case 'BTC':
-                return amount / 100000000
-                break
+        case "BTC":
+            return amount / 100000000
+            break
 
-            case 'ETH':
-                return amount / 1000000000000000000
-                break
+        case "ETH":
+            return amount / 1000000000000000000
+            break
         
-            default:
-                break
+        default:
+            break
         }
     }
     
     async function getExchangeRate(amount: string) {
 
-        if (amount === '0.0') {
+        if (amount === "0.0") {
             return 0
         }
 
-        const price = await getCurrentPrice({ coin: 'ETH', currency: 'USD' })
+        const price = await getCurrentPrice({ coin: "ETH", currency: "USD" })
         const rate = price * parseFloat(amount)
 
         return rate
@@ -47,10 +47,10 @@ export default function usePrice() {
     async function getConversionRateByDate (from: Currency, to: Currency, date: string) {
         const timestamp = Math.floor(new Date(date).getTime() / 1000)
         const options = {
-            method: 'GET',
+            method: "GET",
             headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Apikey ${cryptoCompareApiKey}`
+                "Content-Type": "application/json",
+                "authorization": `Apikey ${cryptoCompareApiKey}`
             }
         }
         const response = await fetch (`https://min-api.cryptocompare.com/data/pricehistorical?fsym=${from}&tsyms=${to}&ts=${timestamp}`, options)
@@ -58,9 +58,9 @@ export default function usePrice() {
         return data[to]
     }
 
-    async function getCurrentPrice({ coin, currency }: { coin: 'ETH' | 'BTC'; currency: 'USD' }) {
+    async function getCurrentPrice({ coin, currency }: { coin: "ETH" | "BTC"; currency: "USD" }) {
         const opt = {
-            method: 'GET'
+            method: "GET"
         }
     
         const now = Math.floor(Date.now() / 1000)
@@ -72,12 +72,12 @@ export default function usePrice() {
     
             const data = await response.json()
     
-            if (data.Response.toLowerCase() !== 'success') {
+            if (data.Response.toLowerCase() !== "success") {
                 throw new Error(data.Message)
             }
     
             if (data.Data.Data.length === 0) {
-                throw new Error('Empty response from API')
+                throw new Error("Empty response from API")
             }
     
             const first = data.Data.Data[0] as PriceEntry

@@ -1,6 +1,6 @@
-import { ethers } from 'ethers'
-import TrezorConnect, { Address, EthereumTransaction, EthereumSignedTx } from '@trezor/connect-web'
-import { CryptoAddress } from '@casimir/types'
+import { ethers } from "ethers"
+import TrezorConnect, { Address, EthereumTransaction, EthereumSignedTx } from "@trezor/connect-web"
+import { CryptoAddress } from "@casimir/types"
 
 export interface TrezorMessageSignature {
     address: string
@@ -12,10 +12,10 @@ export interface TrezorSignerOptions {
     path?: string
 }
 
-TrezorConnect.manifest({ email: 'support@consensusnetworks.com', appUrl: 'casimir.co' })
+TrezorConnect.manifest({ email: "support@consensusnetworks.com", appUrl: "casimir.co" })
 
 export class EthersTrezorSigner extends ethers.Signer {
-    readonly path: string = 'm/44\'/60\'/0\'/0/0'
+    readonly path: string = "m/44'/60'/0'/0/0"
     readonly eth = TrezorConnect
 
     constructor(options: TrezorSignerOptions) {
@@ -26,7 +26,7 @@ export class EthersTrezorSigner extends ethers.Signer {
         
         // Override readonly provider for ethers.Signer
         if (options.provider) {
-            ethers.utils.defineReadOnly(this, 'provider', options.provider)
+            ethers.utils.defineReadOnly(this, "provider", options.provider)
         }
 
     }
@@ -53,29 +53,31 @@ export class EthersTrezorSigner extends ethers.Signer {
         for (let i = 0; i < payload.length; i++) {
             const { address } = payload[i]
             // TODO: Replace with our own provider depending on environment
-            const provider = new ethers.providers.JsonRpcProvider('https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7')
+            const provider = new ethers.providers.JsonRpcProvider("https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7")
             const modifiedAddress = address.toLowerCase().trim()
             const balance = await provider.getBalance(modifiedAddress)
             const ethBalance = ethers.utils.formatEther(balance)
             // if (parseFloat(ethBalance) > 0) trezorAddresses.push({ address, balance: ethBalance, index: i.toString() }) // TODO: Uncomment this line; it is currently commented out for testing
-            trezorAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() }) // TODO: Remove this line; it is currently for testing
+            trezorAddresses.push(
+                { address, balance: ethBalance, pathIndex: i.toString() }
+            ) // TODO: Remove this line; it is currently for testing
         }
         return trezorAddresses.length ? trezorAddresses : [] 
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {
-        if (typeof(message) === 'string') message = ethers.utils.toUtf8Bytes(message)
+        if (typeof(message) === "string") message = ethers.utils.toUtf8Bytes(message)
         const messageHex = ethers.utils.hexlify(message).substring(2)
-        const { payload } = await this.eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true})
+        const { payload } = await this.eth.ethereumSignMessage({ path: this.path, message: messageHex, hex: true })
         const { signature } = payload as TrezorMessageSignature
         return signature
     }
 
     async signMessageWithIndex(message: ethers.utils.Bytes | string, pathIndex: number): Promise<string> {
-        if (typeof (message) === 'string') message = ethers.utils.toUtf8Bytes(message)
+        if (typeof (message) === "string") message = ethers.utils.toUtf8Bytes(message)
         const messageHex = ethers.utils.hexlify(message).substring(2)
         const path = `m/44'/60'/${pathIndex}'/0/0`
-        const { payload } = await this.eth.ethereumSignMessage({ path, message: messageHex, hex: true})
+        const { payload } = await this.eth.ethereumSignMessage({ path, message: messageHex, hex: true })
         const { signature } = payload as TrezorMessageSignature
         const convertedSignature = convertSignature(signature)
         return convertedSignature
@@ -101,7 +103,9 @@ export class EthersTrezorSigner extends ethers.Signer {
             type: transaction.type as number
         }
 
-        const ethereumSignedTransaction = await this.eth.ethereumSignTransaction({ path: this.path, transaction: unsignedTx })
+        const ethereumSignedTransaction = await this.eth.ethereumSignTransaction(
+            { path: this.path, transaction: unsignedTx }
+        )
         const { payload } = ethereumSignedTransaction
         
         const signature = payload as EthereumSignedTx 
@@ -118,8 +122,10 @@ export class EthersTrezorSigner extends ethers.Signer {
         return signedTransaction
     }
 
-    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>): Promise<ethers.providers.TransactionResponse> {
-        this._checkProvider('sendTransaction')
+    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+        : Promise<ethers.providers.TransactionResponse> 
+    {
+        this._checkProvider("sendTransaction")
         
         transaction.gasLimit = await this?.provider?.estimateGas(transaction)
         transaction.gasPrice = await this?.provider?.getGasPrice()
@@ -140,8 +146,8 @@ export class EthersTrezorSigner extends ethers.Signer {
 }
 
 function convertSignature(signature: string): string {
-    const r = '0x' + signature.slice(0, 64)
-    const s = '0x' + signature.slice(64, 128)
-    const v = parseInt('0x' + signature.slice(128, 130), 16)
+    const r = "0x" + signature.slice(0, 64)
+    const s = "0x" + signature.slice(64, 128)
+    const v = parseInt("0x" + signature.slice(128, 130), 16)
     return ethers.utils.joinSignature({ r, s, v })
 }

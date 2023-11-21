@@ -1,26 +1,26 @@
-import { createWebHistory, createRouter } from 'vue-router'
-import Landing from '@/pages/landing/Landing.vue'
-import Changelog from '@/pages/changelog/Changelog.vue'
-import Blog from '@/pages/blog/Blog.vue'
-import Article from '@/pages/blog/components/Article.vue'
+import { createWebHistory, createRouter } from "vue-router"
+import Landing from "@/pages/landing/Landing.vue"
+import Changelog from "@/pages/changelog/Changelog.vue"
+import Blog from "@/pages/blog/Blog.vue"
+import Article from "@/pages/blog/components/Article.vue"
 const routes = [
     {
-        path: '/',
+        path: "/",
         name: Landing,
         component: Landing,
     },
     {
-        path: '/blog',
+        path: "/blog",
         name: Blog,
         component: Blog,
     },
     {
-        path: '/blog/:id',
+        path: "/blog/:id",
         component: Article,
-        children: [{ path: '', name: Article, component: Article }],
+        children: [{ path: "", name: Article, component: Article }],
     },
     {
-        path: '/changelog',
+        path: "/changelog",
         name: Changelog,
         component: Changelog,
     },

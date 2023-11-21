@@ -1,8 +1,8 @@
-import fs from 'fs'
+import fs from "fs"
 
 export function getStartBlock(blockLogPath: string) {
     if (fs.existsSync(blockLogPath)) {
-        return parseInt(fs.readFileSync(blockLogPath, 'utf8'))
+        return parseInt(fs.readFileSync(blockLogPath, "utf8"))
     }
 }
 

@@ -1,5 +1,5 @@
-import useEnvironment from '@/composables/environment'
-import { SignInWithEthereumCredentials } from '@casimir/types'
+import useEnvironment from "@/composables/environment"
+import { SignInWithEthereumCredentials } from "@casimir/types"
 
 const { domain, usersUrl } = useEnvironment()
 
@@ -14,9 +14,9 @@ export default function useSiwe() {
     async function createSiweMessage(address: string, statement: string) {
         try {
             const requestOptions = {
-                method: 'POST',
+                method: "POST",
                 headers: { 
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     address
@@ -30,13 +30,13 @@ export default function useSiwe() {
                 address,
                 statement,
                 uri: origin,
-                version: '1',
+                version: "1",
                 chainId: 5,
                 nonce
             }
             return prepareMessage(message)
         } catch (error: any) {
-            throw new Error(error.message || 'Error creating SIWE message')
+            throw new Error(error.message || "Error creating SIWE message")
         }
     }
 
@@ -50,9 +50,9 @@ export default function useSiwe() {
     async function signInWithEthereum(signInWithEthereumCredentials: SignInWithEthereumCredentials): Promise<void> {
         try {
             const requestOptions = {
-                method: 'POST',
+                method: "POST",
                 headers: { 
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify(signInWithEthereumCredentials)
             }
@@ -60,7 +60,7 @@ export default function useSiwe() {
             const { error, message } = await response.json()
             if (error) throw new Error(message)
         } catch (error: any) {
-            throw new Error(error.message || 'Error signing in with Ethereum')
+            throw new Error(error.message || "Error signing in with Ethereum")
         }
     }
 
@@ -72,13 +72,13 @@ export default function useSiwe() {
 
 function prepareMessage(obj: any) {
     const {
-      domain,
-      address,
-      statement,
-      uri,
-      version,
-      chainId,
-      nonce,
+        domain,
+        address,
+        statement,
+        uri,
+        version,
+        chainId,
+        nonce,
     } = obj
   
     const issuedAt = new Date().toISOString()

@@ -1,13 +1,13 @@
-import { EthersTrezorSigner } from '@casimir/wallets'
-import useSiwe from '@/composables/siwe'
-import useEthers from '@/composables/ethers'
-import useEnvironment from '@/composables/environment'
-import { ethers } from 'ethers'
-import { LoginCredentials, MessageRequest, TransactionRequest } from '@casimir/types'
+import { EthersTrezorSigner } from "@casimir/wallets"
+import useSiwe from "@/composables/siwe"
+import useEthers from "@/composables/ethers"
+import useEnvironment from "@/composables/environment"
+import { ethers } from "ethers"
+import { LoginCredentials, MessageRequest, TransactionRequest } from "@casimir/types"
 
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 
-const trezorPath = 'm/44\'/60\'/0\'/0/0'
+const trezorPath = "m/44'/60'/0'/0/0"
 
 export default function useTrezor() {
     const { ethereumUrl } = useEnvironment()
@@ -15,11 +15,11 @@ export default function useTrezor() {
 
     // TODO: Implement this:
     function getBitcoinTrezorSigner() {
-        return alert('Not implemented yet')
-        // const options = {
-        //     path: trezorPath
-        // }
-        // return new BitcoinTrezorSigner(options)
+        return alert("Not implemented yet")
+    // const options = {
+    //     path: trezorPath
+    // }
+    // return new BitcoinTrezorSigner(options)
     }
 
     function getEthersTrezorSigner(): EthersTrezorSigner {
@@ -31,35 +31,35 @@ export default function useTrezor() {
     }
 
     const getTrezorAddress = {
-        'BTC': () => {
+        "BTC": () => {
             return new Promise((resolve, reject) => {
-                console.log('BTC is not yet supported on Trezor')
-                resolve('BTC is not yet supported on Trezor')
+                console.log("BTC is not yet supported on Trezor")
+                resolve("BTC is not yet supported on Trezor")
             }) as Promise<string>
         },
-        'ETH': getEthersTrezorAddresses,
-        'IOTX': () => {
+        "ETH": getEthersTrezorAddresses,
+        "IOTX": () => {
             return new Promise((resolve, reject) => {
-                console.log('IOTX is not yet supported on Trezor')
-                resolve('IOTX is not yet supported on Trezor')
+                console.log("IOTX is not yet supported on Trezor")
+                resolve("IOTX is not yet supported on Trezor")
             }) as Promise<string>
         },
-        'SOL': () => {
+        "SOL": () => {
             return new Promise((resolve, reject) => {
-                console.log('SOL is not yet supported on Trezor')
-                resolve('SOL is not yet supported on Trezor')
+                console.log("SOL is not yet supported on Trezor")
+                resolve("SOL is not yet supported on Trezor")
             }) as Promise<string>
         },
-        '': () => {
+        "": () => {
             return new Promise((resolve, reject) => {
-                console.log('No currency selected')
-                resolve('No currency selected')
+                console.log("No currency selected")
+                resolve("No currency selected")
             }) as Promise<string>
         },
-        'USD': () => {
+        "USD": () => {
             return new Promise((resolve, reject) => {
-                console.log('USD is not yet supported on Trezor')
-                resolve('USD is not yet supported on Trezor')
+                console.log("USD is not yet supported on Trezor")
+                resolve("USD is not yet supported on Trezor")
             }) as Promise<string>
         }
     }
@@ -72,7 +72,7 @@ export default function useTrezor() {
     async function loginWithTrezor(loginCredentials: LoginCredentials) {
         const { provider, address, currency, pathIndex } = loginCredentials
         try {
-            const message = await createSiweMessage(address, 'Sign in with Ethereum to the app.')
+            const message = await createSiweMessage(address, "Sign in with Ethereum to the app.")
             const signer = getEthersTrezorSigner()
             const signedMessage = await signer.signMessageWithIndex(message, pathIndex as number)
             await signInWithEthereum({ 
@@ -94,22 +94,23 @@ export default function useTrezor() {
         const { chainId } = await provider.getNetwork()
         const nonce = await provider.getTransactionCount(from)
         const unsignedTransaction = {
-          to,
-          data: '0x00',
-          nonce,
-          chainId,
-          value: ethers.utils.parseUnits(value),
-          type: 0
+            to,
+            data: "0x00",
+            nonce,
+            chainId,
+            value: ethers.utils.parseUnits(value),
+            type: 0
         } as ethers.UnsignedTransaction
-        const { gasPrice, gasLimit } = await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+        const { gasPrice, gasLimit } = 
+      await getGasPriceAndLimit(ethereumUrl, unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
         unsignedTransaction.gasPrice = gasPrice
         unsignedTransaction.gasLimit = gasLimit
 
         // Todo check before click (user can +/- gas limit accordingly)
         const balance = await provider.getBalance(from)
         const required = gasPrice.mul(gasLimit).add(ethers.utils.parseEther(value))
-        console.log('Balance', ethers.utils.formatEther(balance))
-        console.log('Required', ethers.utils.formatEther(required))
+        console.log("Balance", ethers.utils.formatEther(balance))
+        console.log("Required", ethers.utils.formatEther(required))
         return await signer.sendTransaction(unsignedTransaction as ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
     }
 

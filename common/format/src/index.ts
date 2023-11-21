@@ -9,7 +9,7 @@ export function camelCase(string: string): string {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
     })
-    const result = words.join('')
+    const result = words.join("")
     return result[0].toLowerCase() + result.slice(1)
 }
 
@@ -26,7 +26,7 @@ export function pascalCase(string: string): string {
             return word[0].toUpperCase() + word.slice(1).toLowerCase()
         })
     })
-    const result = words.join('')
+    const result = words.join("")
     return result
 }
 
@@ -36,10 +36,10 @@ export function pascalCase(string: string): string {
  * @returns A snake_case string from the input string
  */
 export function snakeCase(string: string): string {
-    return string.replace(/\W+/g, ' ')
+    return string.replace(/\W+/g, " ")
         .split(/ |\B(?=[A-Z])/)
         .map(word => word.toLowerCase())
-        .join('_')
+        .join("_")
 }
 
 /**
@@ -48,8 +48,8 @@ export function snakeCase(string: string): string {
  * @returns A kebab-case string from the input string
  */
 export function kebabCase(string: string): string {
-    return string.replace(/\W+/g, ' ')
+    return string.replace(/\W+/g, " ")
         .split(/ |\B(?=[A-Z])/)
         .map(word => word.toLowerCase())
-        .join('-')
+        .join("-")
 }

@@ -1,4 +1,4 @@
-import { ProviderString } from './ProviderString'
+import { ProviderString } from "./ProviderString"
 
 export interface FormattedWalletOption {
     provider: ProviderString,

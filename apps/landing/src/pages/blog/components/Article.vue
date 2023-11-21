@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
-import VueFeather from 'vue-feather'
-import useBlog from '@/composables/blog'
-import router from '@/composables/router'
-import { Article } from '@casimir/types'
+import { onMounted, ref, watch } from "vue"
+import VueFeather from "vue-feather"
+import useBlog from "@/composables/blog"
+import router from "@/composables/router"
+import { Article } from "@casimir/types"
 
-const appUrl = import.meta.env.PUBLIC_APP_URL || 'https://app.dev.casimir.co'
-const docsUrl = import.meta.env.PUBLIC_DOCS_URL || 'https://docs.dev.casimir.co'
+const appUrl = import.meta.env.PUBLIC_APP_URL || "https://app.dev.casimir.co"
+const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
 const {
     articles,
     loadingArticles,
@@ -20,7 +20,7 @@ function getActiveArticle(activeRoute: string) {
 }
 
 onMounted(() => {
-    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let currentRoutes = router.currentRoute.value.fullPath.split("/")
     let activeRoute = currentRoutes[currentRoutes.length - 1]
 
     // Finds active blog based on route 
@@ -29,7 +29,7 @@ onMounted(() => {
 
 watch([articles, loadingArticles], () => {
 
-    let currentRoutes = router.currentRoute.value.fullPath.split('/')
+    let currentRoutes = router.currentRoute.value.fullPath.split("/")
     let activeRoute = currentRoutes[currentRoutes.length - 1]
 
     // Finds active blog based on route 

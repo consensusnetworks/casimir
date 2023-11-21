@@ -1,5 +1,5 @@
-import { fromIni } from '@aws-sdk/credential-providers'
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
+import { fromIni } from "@aws-sdk/credential-providers"
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager"
 
 /**
  * Gets a secret from AWS Secrets Manager.
@@ -28,7 +28,7 @@ export async function getSecret(id: string) {
  * @returns AWS credentials
  */
 export async function loadCredentials() {
-    const defaultProfile = 'consensus-networks-dev'
+    const defaultProfile = "consensus-networks-dev"
     if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
         process.env.AWS_PROFILE = process.env.AWS_PROFILE || defaultProfile
         return await fromIni()()

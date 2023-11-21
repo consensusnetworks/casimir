@@ -1,12 +1,12 @@
-import fs from 'fs'
-import { run } from '@casimir/shell'
+import fs from "fs"
+import { run } from "@casimir/shell"
 
 void async function () {
     const referenceDir = `${process.cwd()}/src/reference`
     const solidityTemplateDir = `${process.cwd()}/templates/solidity`
     await run(`DOCS_OUTPUT_DIR=${referenceDir} DOCS_TEMPLATE_DIR=${solidityTemplateDir} npm run docgen --workspace @casimir/ethereum`)
     
-    const casimirOperatorReadmeUrl = 'https://raw.githubusercontent.com/consensusnetworks/casimir-operator/master/README.md'
+    const casimirOperatorReadmeUrl = "https://raw.githubusercontent.com/consensusnetworks/casimir-operator/master/README.md"
     const casimirOperatorReadme = await fetch(casimirOperatorReadmeUrl)
     const casimirOperatorReadmeText = await casimirOperatorReadme.text()
     

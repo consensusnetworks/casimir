@@ -1,16 +1,18 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import router from '@/composables/router'
-import VueFeather from 'vue-feather'
-import useAuth from '@/composables/auth'
-import useScreenDimensions from '@/composables/screenDimensions'
-import useUser from '@/composables/user'
-import useWallets from '@/composables/wallets'
+import { ref, onMounted, onUnmounted } from "vue"
+import router from "@/composables/router"
+import VueFeather from "vue-feather"
+import useAuth from "@/composables/auth"
+import useFormat from "@/composables/format"
+import useScreenDimensions from "@/composables/screenDimensions"
+import useUser from "@/composables/user"
+import useWallets from "@/composables/wallets"
 
-import ConnectWalletsFlow from '@/components/ConnectWalletsFlow.vue'
+import ConnectWalletsFlow from "@/components/ConnectWalletsFlow.vue"
 
-const { screenWidth } = useScreenDimensions()
 const { logout } = useAuth()
+const { convertString } = useFormat()
+const { screenWidth } = useScreenDimensions()
 const { user } = useUser()
 const { detectInstalledWalletProviders } = useWallets()
 
@@ -19,51 +21,66 @@ const openRouterMenu = ref(false)
 const openWalletsModal = ref(false)
 
 const show_setting_modal = ref(false)
+const showUserAddressesModal = ref(false)
 
 async function handleConnectWalletButtonClick() {
-  openWalletsModal.value = true
-  await detectInstalledWalletProviders()
+    openWalletsModal.value = true
+    await detectInstalledWalletProviders()
 }
 
 const handleOutsideClick = (event: any) => {
-  const setting_modal = document.getElementById('setting_modal')
-  const setting_modal_button = document.getElementById('setting_modal_button')
-  if (setting_modal && setting_modal_button) {
-    if (show_setting_modal.value) {
-      if (!setting_modal.contains(event.target)) {
-        show_setting_modal.value = false
-      }
-    } else {
-      if (setting_modal_button.contains(event.target)) {
-        show_setting_modal.value = true
-      }
+    const setting_modal = document.getElementById("setting_modal")
+    const setting_modal_button = document.getElementById("setting_modal_button")
+    if (setting_modal && setting_modal_button) {
+        if (show_setting_modal.value) {
+            if (!setting_modal.contains(event.target)) {
+                show_setting_modal.value = false
+            }
+        } else {
+            if (setting_modal_button.contains(event.target)) {
+                show_setting_modal.value = true
+            }
+        }
     }
-  }
 
-  const connect_wallet_container = document.getElementById('connect_wallet_container')
-  const connect_wallet_card = document.getElementById('connect_wallet_card')
-  if (connect_wallet_container && connect_wallet_card) {
-    if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
-      openWalletsModal.value = false
-      authFlowCardNumber.value = 1
+    const connect_wallet_container = document.getElementById("connect_wallet_container")
+    const connect_wallet_card = document.getElementById("connect_wallet_card")
+    if (connect_wallet_container && connect_wallet_card) {
+        if (openWalletsModal.value && connect_wallet_container.contains(event.target) && !connect_wallet_card.contains(event.target)) {
+            openWalletsModal.value = false
+            authFlowCardNumber.value = 1
+        }
     }
-  }
+
+    const user_addresses_modal = document.getElementById("user_addresses_modal")
+    const connect_wallet_button = document.getElementById("connect_wallet_button")
+    if (user_addresses_modal && connect_wallet_button) {
+        if (showUserAddressesModal.value) {
+            if (!user_addresses_modal.contains(event.target)) {
+                showUserAddressesModal.value = false
+            }
+        } else {
+            if (connect_wallet_button.contains(event.target)) {
+                showUserAddressesModal.value = true
+            }
+        }
+    }
 }
 
 const doesScrollBarExist = ref(true)
 
 onMounted(() => {
-  doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
+    doesScrollBarExist.value = document.documentElement.scrollHeight > document.documentElement.clientHeight
 
-  window.addEventListener('click', handleOutsideClick)
+    window.addEventListener("click", handleOutsideClick)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('click', handleOutsideClick)
+    window.removeEventListener("click", handleOutsideClick)
 })
 
 const toggleModal = (showModal: boolean) => {
-  openWalletsModal.value = showModal
+    openWalletsModal.value = showModal
 }
 </script>
 
@@ -158,57 +175,107 @@ const toggleModal = (showModal: boolean) => {
         </div>
 
         <div class="flex items-center justify-between gap-[45px] 600s:gap-[10px] text-white h-[76px]">
-          <button id="setting_modal_button">
-            <vue-feather
-              type="settings"
-              size="36"
-              class="icon w-[19px] h-min"
-            />
-          </button>
-
-          <button>Goerli Testnet</button>
-
+          <div class="cursor-default">
+            Goerli Testnet
+          </div>
           <div class="connect_wallet_gradient">
             <button
               id="connect_wallet_button"
               class="connect_wallet flex justify-between items-center gap-[8px] whitespace-nowrap"
-              @click="handleConnectWalletButtonClick"
             >
-              Connect Wallet
+              <div
+                v-if="!user"
+                @click="handleConnectWalletButtonClick"
+              >
+                Connect Wallet
+              </div>
+              <div
+                v-else
+                class="flex align-middle items-center justify-center"
+              >
+                <div class="green_dot mr-8" />
+                <img
+                  :src="`${user.walletProvider.toLocaleLowerCase()}.svg`"
+                  :alt="`${user.walletProvider.toLocaleLowerCase()} Icon`"
+                  class="h-[26px] mr-6"
+                > 
+                <div>{{ convertString(user.address) }}</div>
+              </div>
             </button>
           </div>
         </div>
 
+        <!-- Add address dropdown -->
         <div
-          v-show="show_setting_modal"
-          id="setting_modal"
+          v-show="showUserAddressesModal && user"
+          id="user_addresses_modal"
           class="absolute right-[60px] 800s:right-[5%] bg-white top-[80%] w-[200px] setting_modal"
         >
-          <button class="border-b border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]">
-            <vue-feather
-              type="user"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-
-            <span>
-              Account
-            </span>
-          </button>
-          <button
-            class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-full h-[41px]"
-            :disabled="!user"
-            @click="logout"
-          >
-            <vue-feather
-              type="log-out"
-              size="36"
-              class="icon w-[17px] h-min"
-            />
-            <span>
-              Log out
-            </span>
-          </button>
+          <ul class="dropdown_list">
+            <h6>
+              Primary Account
+            </h6>
+            <li
+              class="flex align-center items-center py-4 w-full cursor-default"
+            >
+              <img
+                :src="`${user?.walletProvider.toLocaleLowerCase()}.svg`"
+                :alt="`${user?.walletProvider.toLocaleLowerCase()} Icon`"
+                class="h-[26px] mr-6"
+              >
+              <div class="ml-6">
+                {{ user ? convertString(user?.address) : '' }}
+              </div> 
+            </li>
+          </ul>
+          <hr>
+          <ul class="dropdown_list">
+            <h6>
+              Secondary Accounts
+            </h6>
+            <li 
+              v-for="(account, index) in user?.accounts.filter((account) => account.address !== user?.address)"
+              :key="index"
+              class="flex align-center items-center py-4 w-full cursor-default"
+            >
+              <img
+                :src="`${account.walletProvider.toLocaleLowerCase()}.svg`"
+                :alt="`${account.walletProvider.toLocaleLowerCase()} Icon`"
+                class="h-[26px] mr-6"
+              >
+              <div class="ml-6">
+                {{ convertString(account.address) }}
+              </div>
+            </li>
+            <li
+              class="flex items-center justify-start gap-[8px] cursor-pointer w-full text-[#0d5fff]"
+              @click="handleConnectWalletButtonClick"
+            >
+              <vue-feather
+                type="plus"
+                size="16"
+                class="icon"
+              />
+              Add Account
+            </li>
+          </ul>
+          <hr>
+          <ul class="dropdown_list">
+            <li
+              class="flex items-center justify-start gap-[8px] w-full cursor-pointer"
+              :disabled="!user"
+              @click="logout"
+            >
+              <vue-feather
+                type="log-out"
+                size="16"
+                class="icon"
+              />
+              <span>
+                Log out
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -243,6 +310,11 @@ const toggleModal = (showModal: boolean) => {
 </template>
 
 <style scoped>
+/* TODO: Make this global? */
+body {
+  scrollbar-gutter: stable both-edges;
+}
+
 .card {
   background: #FFFFFF;
   border: 1px solid #D0D5DD;
@@ -252,7 +324,7 @@ const toggleModal = (showModal: boolean) => {
 
 .setting_modal {
   background: #FFFFFF;
-  border: 1px solid #F2F4F7;
+  /* border: 1px solid #F2F4F7; */
   box-shadow: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
   border-radius: 8px;
   z-index: 10;
@@ -319,5 +391,22 @@ const toggleModal = (showModal: boolean) => {
   color: #FFFFFF;
   background: black;
   height: 36px;
+}
+
+/* Should reflect these tailwind sytles: class="border-t border-[#EAECF0] flex items-center px-[16px] py-[10px] gap-[12px] w-fbuttonl h-[41px]" */
+.dropdown_list {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  gap: 12px;
+  width: 100%;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+.green_dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #29a329;
 }
 </style>

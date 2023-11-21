@@ -1,6 +1,6 @@
-import { pascalCase } from '@casimir/format'
-import { ProjectConfig } from '../interfaces/ProjectConfig'
-import dataPackage from '@casimir/data/package.json'
+import { pascalCase } from "@casimir/format"
+import { ProjectConfig } from "../interfaces/ProjectConfig"
+import dataPackage from "@casimir/data/package.json"
 
 /**
  * CDK app config
@@ -13,7 +13,10 @@ export class Config implements ProjectConfig {
     public readonly subdomains
     public readonly dataVersion
 
-    public readonly requiredEnvVars = ['PROJECT', 'STAGE', 'AWS_ACCOUNT', 'AWS_REGION']
+    public readonly requiredEnvVars = ["PROJECT",
+        "STAGE",
+        "AWS_ACCOUNT",
+        "AWS_REGION"]
 
     constructor() {
         this.checkEnvVars()
@@ -23,17 +26,17 @@ export class Config implements ProjectConfig {
             account: process.env.AWS_ACCOUNT as string,
             region: process.env.AWS_REGION as string
         }
-        this.rootDomain = `${this.stage === 'prod' ? '' : `${this.stage}.`}casimir.co`
+        this.rootDomain = `${this.stage === "prod" ? "" : `${this.stage}.`}casimir.co`
         this.subdomains = {
-            blog: 'blog',
-            docs: 'docs',
-            nodes: 'nodes',
-            landing: 'www',
-            users: 'users',
-            web: 'app',
-            wildcard: '*'
+            blog: "blog",
+            docs: "docs",
+            nodes: "nodes",
+            landing: "www",
+            users: "users",
+            web: "app",
+            wildcard: "*"
         }
-        this.dataVersion = Number(dataPackage.version.split('.')[0])
+        this.dataVersion = Number(dataPackage.version.split(".")[0])
     }
 
     /**
@@ -43,7 +46,7 @@ export class Config implements ProjectConfig {
     checkEnvVars(): void {
         this.requiredEnvVars.forEach(v => {
             if (!process.env[v]) {
-                console.log('No value provided for', v)
+                console.log("No value provided for", v)
                 process.exit(1)
             }
         })
@@ -76,7 +79,8 @@ export class Config implements ProjectConfig {
      * ```
      */
     getFullStackResourceName(stackName: string, resourceName: string, version?: number): string {
-        const name = pascalCase(this.project) + pascalCase(stackName) + pascalCase(resourceName) + pascalCase(this.stage)
+        const name = 
+            pascalCase(this.project) + pascalCase(stackName) + pascalCase(resourceName) + pascalCase(this.stage)
         if (version) {
             return name + version
         }

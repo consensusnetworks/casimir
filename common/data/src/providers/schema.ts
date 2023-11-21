@@ -1,10 +1,10 @@
-import * as glue from '@aws-cdk/aws-glue-alpha'
-import { JsonSchema } from '../interfaces/JsonSchema'
-import { snakeCase } from '@casimir/format'
+import * as glue from "@aws-cdk/aws-glue-alpha"
+import { JsonSchema } from "../interfaces/JsonSchema"
+import { snakeCase } from "@casimir/format"
 
-export type JsonType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null'
+export type JsonType = "string" | "number" | "integer" | "boolean" | "object" | "array" | "null"
 export type GlueType = glue.Type
-export type PostgresType = 'STRING' | 'INTEGER' | 'BOOLEAN' | 'DOUBLE' | 'DECIMAL' | 'BIGINT' | 'TIMESTAMP' | 'JSON' | 'DATE'
+export type PostgresType = "STRING" | "INTEGER" | "BOOLEAN" | "DOUBLE" | "DECIMAL" | "BIGINT" | "TIMESTAMP" | "JSON" | "DATE"
 
 export class Schema {
     /** Input JSON schema object */
@@ -41,10 +41,10 @@ export class Schema {
 
             let type: GlueType = glue.Schema[typeKey]
 
-            if (name.endsWith('_at')) type = glue.Schema.TIMESTAMP
-            if (name.endsWith('_balance')) type = glue.Schema.BIG_INT
-            if (name == 'amount') type = glue.Schema.BIG_INT
-            if (name === 'price') type = glue.Schema.FLOAT
+            if (name.endsWith("_at")) type = glue.Schema.TIMESTAMP
+            if (name.endsWith("_balance")) type = glue.Schema.BIG_INT
+            if (name == "amount") type = glue.Schema.BIG_INT
+            if (name === "price") type = glue.Schema.FLOAT
 
             const comment = property.description
             return { name, type, comment }
@@ -67,23 +67,23 @@ export class Schema {
         const columns = Object.keys(this.jsonSchema.properties).map((name: string) => {
             const property = this.jsonSchema.properties[name]
             let type = {
-                string: 'VARCHAR',
-                number: 'DOUBLE',
-                integer: 'INTEGER',
-                boolean: 'BOOLEAN',
-                object: 'JSON',
-                array: 'JSON',
-                null: 'VARCHAR',
-                serial: 'SERIAL'
+                string: "VARCHAR",
+                number: "DOUBLE",
+                integer: "INTEGER",
+                boolean: "BOOLEAN",
+                object: "JSON",
+                array: "JSON",
+                null: "VARCHAR",
+                serial: "SERIAL"
             }[property.type as JsonType] as PostgresType
 
-            if (name.endsWith('_at')) type = 'TIMESTAMP'
-            if (name.includes('balance')) type = 'BIGINT'
+            if (name.endsWith("_at")) type = "TIMESTAMP"
+            if (name.includes("balance")) type = "BIGINT"
 
             let column = `${name} ${type}`
 
             const comment = property.description
-            if (comment.includes('PK')) column += ' PRIMARY KEY'
+            if (comment.includes("PK")) column += " PRIMARY KEY"
             
             const defaultValue = property.default
             if (defaultValue !== undefined) column += ` DEFAULT ${defaultValue}`
@@ -97,7 +97,7 @@ export class Schema {
         /** Make table name plural of schema objects (todo: check edge-cases) */
         const tableName = this.getTitle()
 
-        const queryString = uniqueFields.length > 0 ? `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}, \n\tUNIQUE (${uniqueFields.join(', ')}));` : `CREATE TABLE ${tableName} (\n\t${columns.join(',\n\t')}\n);`
+        const queryString = uniqueFields.length > 0 ? `CREATE TABLE ${tableName} (\n\t${columns.join(",\n\t")}, \n\tUNIQUE (${uniqueFields.join(", ")}));` : `CREATE TABLE ${tableName} (\n\t${columns.join(",\n\t")}\n);`
         return queryString
     }
 
@@ -105,6 +105,6 @@ export class Schema {
      * Get the title of the JSON schema object.
      */
     getTitle(): string {
-        return snakeCase(this.jsonSchema.title) + 's'
+        return snakeCase(this.jsonSchema.title) + "s"
     }
 }

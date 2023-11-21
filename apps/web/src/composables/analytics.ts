@@ -1,7 +1,7 @@
-import { readonly, ref } from 'vue'
-import { UserAnalyticsData } from '@casimir/types'
-import useEnvironment from '@/composables/environment'
-import useTxData from '../mockData/mock_transaction_data'
+import { readonly, ref } from "vue"
+import { UserAnalyticsData } from "@casimir/types"
+import useEnvironment from "@/composables/environment"
+import useTxData from "../mockData/mock_transaction_data"
 
 const { usersUrl } = useEnvironment()
 const { mockData, txData } = useTxData()
@@ -68,7 +68,8 @@ export default function useAnalytics() {
                     const dataLength = userAnalytics.value.oneYear.data.push({ walletAddress, walletBalance: Array(12).fill(0) })
                     oneYearDataIndex = dataLength - 1
                 }
-                const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                const monthsAgo = 
+          (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
                 const intervalIndex = 11 - monthsAgo
                 userAnalytics.value.oneYear.data[oneYearDataIndex].walletBalance[intervalIndex] = walletBalance
             }
@@ -80,7 +81,8 @@ export default function useAnalytics() {
                     const dataLength = userAnalytics.value.sixMonth.data.push({ walletAddress, walletBalance: Array(6).fill(0) })
                     sixMonthDataIndex = dataLength - 1
                 }
-                const monthsAgo = (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
+                const monthsAgo = 
+          (new Date().getFullYear() - new Date(receivedAt).getFullYear()) * 12 + (new Date().getMonth() - new Date(receivedAt).getMonth())
                 const intervalIndex = 5 - monthsAgo
                 userAnalytics.value.sixMonth.data[sixMonthDataIndex].walletBalance[intervalIndex] = walletBalance
             }
@@ -98,7 +100,18 @@ export default function useAnalytics() {
             }
         })
 
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const months = ["Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"]
 
         // Set the historical labels array to the interval labels
         let previousMonth: any = null
@@ -144,9 +157,9 @@ export default function useAnalytics() {
     async function getUserAnalytics() {
         try {
             const requestOptions = {
-                method: 'GET',
+                method: "GET",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 }
             }
             // TODO: Re-enable this when athena is ready
@@ -171,7 +184,7 @@ export default function useAnalytics() {
             // return { error, message, data }
             return { data }
         } catch (error: any) {
-            throw new Error(error.message || 'Error getting user analytics')
+            throw new Error(error.message || "Error getting user analytics")
         }
     }
 
@@ -188,7 +201,7 @@ export default function useAnalytics() {
         } catch (error) {
             loadingInitializeAnalyticsError.value = true
             loadingInitializeAnalytics.value = false
-            throw new Error('Error initializing analytics')
+            throw new Error("Error initializing analytics")
         }
     }
 

@@ -1,23 +1,23 @@
-import * as cdk from 'aws-cdk-lib'
-import * as assertions from 'aws-cdk-lib/assertions'
-import { Config } from '../src/providers/config'
-import { AnalyticsStack } from '../src/providers/analytics'
-import { Schema, eventSchema, actionSchema } from '@casimir/data'
+import * as cdk from "aws-cdk-lib"
+import * as assertions from "aws-cdk-lib/assertions"
+import { Config } from "../src/providers/config"
+import { AnalyticsStack } from "../src/providers/analytics"
+import { Schema, eventSchema, actionSchema } from "@casimir/data"
 
-test('Analytics stack created', () => {
+test("Analytics stack created", () => {
     const config = new Config()
     const { env } = config
     const app = new cdk.App()
 
-    const analyticsStack = new AnalyticsStack(app, config.getFullStackName('analytics'), { env })
+    const analyticsStack = new AnalyticsStack(app, config.getFullStackName("analytics"), { env })
     const analyticsTemplate = assertions.Template.fromStack(analyticsStack)
-    Object.keys(analyticsTemplate.findOutputs('*')).forEach(output => {
+    Object.keys(analyticsTemplate.findOutputs("*")).forEach(output => {
         expect(output).toBeDefined()
     })
 
-    const resource = analyticsTemplate.findResources('AWS::Glue::Table')
+    const resource = analyticsTemplate.findResources("AWS::Glue::Table")
 
-    const eventTable = Object.keys(resource).filter(key => key.includes('EventTable'))
+    const eventTable = Object.keys(resource).filter(key => key.includes("EventTable"))
     const eventColumns = resource[eventTable[0]].Properties.TableInput.StorageDescriptor.Columns
     const eventGlueSchema = new Schema(eventSchema).getGlueColumns()
 
@@ -30,7 +30,7 @@ test('Analytics stack created', () => {
         expect(columnName).toEqual(name)
     }
 
-    const actionTable = Object.keys(resource).filter(key => key.includes('ActionTable'))[0]
+    const actionTable = Object.keys(resource).filter(key => key.includes("ActionTable"))[0]
     const actionColumns = resource[actionTable].Properties.TableInput.StorageDescriptor.Columns
     const actionGlueSchema = new Schema(actionSchema).getGlueColumns()
 

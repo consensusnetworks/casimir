@@ -1,5 +1,5 @@
-import { ethers } from 'ethers'
-import cbor from 'cbor'
+import { ethers } from "ethers"
+import cbor from "cbor"
 
 /**
  * Decodes a CBOR hex string, and adds opening and closing brackets to the CBOR if they are not present.
@@ -15,7 +15,7 @@ export function decodeDietCBOR(hex: string) {
  * @param hex The hex string to convert to a buffer
  */
 export function hexToBuf(hex: string): Buffer {
-    return Buffer.from(stripHexPrefix(hex), 'hex')
+    return Buffer.from(stripHexPrefix(hex), "hex")
 }
 
 /**
@@ -26,7 +26,7 @@ export function stripHexPrefix(hex: string): string {
     if (!ethers.utils.isHexString(hex)) {
         throw Error(`Expected valid hex string, got: "${hex}"`)
     }
-    return hex.replace('0x', '')
+    return hex.replace("0x", "")
 }
 
 /**
@@ -48,7 +48,9 @@ export function addCBORMapDelimiters(buffer: Buffer): Buffer {
      */
     const endIndefiniteLengthMap = Buffer.from([0xff])
     return Buffer.concat(
-        [startIndefiniteLengthMap, buffer, endIndefiniteLengthMap],
+        [startIndefiniteLengthMap,
+            buffer,
+            endIndefiniteLengthMap],
         buffer.length + 2,
     )
 }

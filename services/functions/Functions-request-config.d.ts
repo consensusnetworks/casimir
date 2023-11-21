@@ -1,4 +1,4 @@
-declare module '@casimir/functions/Functions-request-config' {
+declare module "@casimir/functions/Functions-request-config" {
     const requestConfig: {
         codeLocation: number
         codeLanguage: number

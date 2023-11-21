@@ -1,4 +1,4 @@
-import { Account, Operator, PoolConfig } from '@casimir/types'
+import { Account, Operator, PoolConfig } from "@casimir/types"
 
 export interface AccountWithStakingAndOperatorInfo extends Account {
     /** The user's current staking pools and details (this interface/logic is in the web app wallet composable, but it will be moved to the processor, see https://github.com/consensusnetworks/casimir/blob/master/apps/web/src/composables/wallet.ts#L146) */

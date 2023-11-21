@@ -612,7 +612,7 @@ ul li {
   font-size: 0.833rem;
   background-color: hsl(240, 20%, 98%);
   border: 1px solid hsl(236, 10.6%, 87.9%);
-  padding: 8px 18px;
+  padding: 8px 16px;
   color: hsl(227, 5.2%, 51.8%);
 }
 
@@ -842,11 +842,18 @@ ul li {
   gap: 10px;
 }
 
+.overview__container__mobile {
+  margin-top: 55px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* gap: 20px; */
+}
+
 .overview__container {
   margin-top: 55px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  /* gap: 40px; */
 }
 
 .overview__item {
@@ -879,13 +886,6 @@ ul li {
   justify-content: center;
   align-items: center;
   gap: 20px;
-}
-
-.overview__container {
-  margin-top: 55px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
 }
 
 .overview__item {

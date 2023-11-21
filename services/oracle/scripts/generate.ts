@@ -1,32 +1,40 @@
-import fs from 'fs'
-import { ethers } from 'ethers'
-import { run } from '@casimir/shell'
-import { Dkg } from '../src/providers/dkg'
-import { MOCK_VALIDATORS/*, MOCK_RESHARES*/ } from '@casimir/env'
-import { Validator/*, Reshare*/ } from '@casimir/types'
+import fs from "fs"
+import { ethers } from "ethers"
+import { run } from "@casimir/shell"
+import { Dkg } from "../src/providers/dkg"
+import { Validator/*, Reshare*/ } from "@casimir/types"
 
 /**
  * Generate validator keys for ethereum testing
  */
 void async function () {
-    const outputPath = '../../common/env/src/mock'
+    process.env.CLI_PATH = process.env.CLI_PATH || "./lib/dkg/bin/ssv-dkg"
+    process.env.CONFIG_PATH = process.env.CONFIG_PATH || "./config/example.dkg.initiator.yaml"
 
-    process.env.CLI_PATH = process.env.CLI_PATH || './lib/dkg/bin/ssv-dkg'
-    process.env.CONFIG_PATH = process.env.CONFIG_PATH || './config/example.dkg.initiator.yaml'
-
-    process.env.BIP39_SEED = process.env.BIP39_SEED || 'inflict ball claim confirm cereal cost note dad mix donate traffic patient'
+    process.env.BIP39_SEED = process.env.BIP39_SEED || "inflict ball claim confirm cereal cost note dad mix donate traffic patient"
     
-    if (!process.env.FACTORY_ADDRESS) throw new Error('No factory address provided')
+    if (!process.env.FACTORY_ADDRESS) throw new Error("No factory address provided")
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(',').map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
-    if (preregisteredOperatorIds.length < 4) throw new Error('Not enough operator ids provided')
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [208,
+        209,
+        210,
+        211/*, 212, 213, 214, 215*/]
+    if (preregisteredOperatorIds.length < 4) throw new Error("Not enough operator ids provided")
 
-    const accountPath = 'm/44\'/60\'/0\'/0/1'
+    const accountPath = "m/44'/60'/0'/0/1"
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED, accountPath)
 
     const validatorCount = 4
-    if (!MOCK_VALIDATORS[wallet.address] || Object.keys(MOCK_VALIDATORS[wallet.address]).length < validatorCount) {
-        await run('GOWORK=off make -C lib/dkg build') 
+    const keysDir = process.env.KEYS_DIR || "keys"
+    if (!fs.existsSync(keysDir)) fs.mkdirSync(keysDir, { recursive: true })
+    let mockValidators: Record<string, Validator[]> = {}
+    try {
+        mockValidators = JSON.parse(fs.readFileSync(`${keysDir}/example.validators.json`).toString())
+    } catch (error) {
+        mockValidators = {}
+    }
+    if (!mockValidators[wallet.address] || Object.keys(mockValidators[wallet.address]).length < validatorCount) {
+        await run("GOWORK=off make -C lib/dkg build") 
 
         const managerAddress = ethers.utils.getContractAddress({
             from: process.env.FACTORY_ADDRESS,
@@ -40,7 +48,7 @@ void async function () {
 
         for (let i = 0; i < validatorCount; i++) {
             const poolId = i + 1
-            console.log('🤖 Creating deposit for', poolId)
+            console.log("🤖 Creating deposit for", poolId)
 
             const poolAddress = ethers.utils.getContractAddress({
                 from: managerAddress,
@@ -85,9 +93,9 @@ void async function () {
             ownerNonce++
         }
 
-        MOCK_VALIDATORS[wallet.address] = newValidators
+        mockValidators[wallet.address] = newValidators
 
-        fs.writeFileSync(`${outputPath}/validators.json`, JSON.stringify(MOCK_VALIDATORS))
-        // fs.writeFileSync(`${outputPath}/reshares.json`, JSON.stringify(MOCK_RESHARES))
+        fs.writeFileSync(`${keysDir}/example.validators.json`, JSON.stringify(mockValidators))
+    // fs.writeFileSync(`${keysDir}/example.reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
 }()

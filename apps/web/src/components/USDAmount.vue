@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, ref, toRef, watch } from 'vue'
-import useFormat from '@/composables/format'
-import usePrice from '@/composables/price'
+import { onMounted, ref, toRef, watch } from "vue"
+import useFormat from "@/composables/format"
+import usePrice from "@/composables/price"
 
 const { formatDecimalString } = useFormat()
 const { getExchangeRate } = usePrice()
@@ -15,7 +15,7 @@ const props = defineProps({
         required: true,
     }
 })
-const etherAmount = toRef(props, 'etherAmount')
+const etherAmount = toRef(props, "etherAmount")
 onMounted(async () => {
     usdAmount.value = await getExchangeRate(props.etherAmount)
 })

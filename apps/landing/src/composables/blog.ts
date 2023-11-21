@@ -1,10 +1,10 @@
-import { onMounted, onUnmounted, readonly, ref } from 'vue'
-import snarkdown from 'snarkdown'
-import { Article } from '@casimir/types'
+import { onMounted, onUnmounted, readonly, ref } from "vue"
+import snarkdown from "snarkdown"
+import { Article } from "@casimir/types"
 
 const initializeComposable = ref(false)
 
-const blogUrl = import.meta.env.PUBLIC_BLOG_URL || 'http://localhost:4001'
+const blogUrl = import.meta.env.PUBLIC_BLOG_URL || "http://localhost:4001"
 const articles = ref([] as Article[])
 const loadingArticles = ref(true)
 
@@ -33,7 +33,7 @@ export default function useBlog() {
                         title: title,
                         content: content,
                         timestamp: timestamp,
-                        type: 'Blog',
+                        type: "Blog",
                         id: id,
                     })
                 }
@@ -41,7 +41,7 @@ export default function useBlog() {
                 articles.value = articleList
                 loadingArticles.value = false
             } catch (error) {
-                console.log('Error fetching articles', error)
+                console.log("Error fetching articles", error)
                 loadingArticles.value = false
             }
 

@@ -1,13 +1,13 @@
-import { ethers } from 'ethers'
-import { getEventsIterable } from '@casimir/events'
-import { getStartBlock, updateErrorLog, updateStartBlock } from '@casimir/logs'
-import ICasimirFactoryAbi from '@casimir/ethereum/build/abi/ICasimirFactory.json'
-import ICasimirManagerAbi from '@casimir/ethereum/build/abi/ICasimirManager.json'
-import ICasimirRegistryAbi from '@casimir/ethereum/build/abi/ICasimirRegistry.json'
-import ICasimirUpkeepAbi from '@casimir/ethereum/build/abi/ICasimirUpkeep.json'
-import { ICasimirFactory } from '@casimir/ethereum/build/@types'
-import { HandlerInput } from './interfaces/HandlerInput'
-import { getConfig } from './providers/config'
+import { ethers } from "ethers"
+import { getEventsIterable } from "@casimir/events"
+import { getStartBlock, updateErrorLog, updateStartBlock } from "@casimir/logs"
+import ICasimirFactoryAbi from "@casimir/ethereum/build/abi/ICasimirFactory.json"
+import ICasimirManagerAbi from "@casimir/ethereum/build/abi/ICasimirManager.json"
+import ICasimirRegistryAbi from "@casimir/ethereum/build/abi/ICasimirRegistry.json"
+import ICasimirUpkeepAbi from "@casimir/ethereum/build/abi/ICasimirUpkeep.json"
+import { ICasimirFactory } from "@casimir/ethereum/build/@types"
+import { HandlerInput } from "./interfaces/HandlerInput"
+import { getConfig } from "./providers/config"
 import {
     depositFunctionsBalanceHandler,
     depositUpkeepBalanceHandler,
@@ -17,8 +17,8 @@ import {
     // exitPoolHandler, 
     // reportForcedExitsHandler,
     reportCompletedExitsHandler
-} from './providers/handlers'
-import { ManagerConfig } from '@casimir/types'
+} from "./providers/handlers"
+import { ManagerConfig } from "@casimir/types"
 
 const config = getConfig()
 
@@ -66,8 +66,8 @@ void async function () {
         })
 
         let startBlock
-        if (process.env.USE_LOGS === 'true') {
-            startBlock = getStartBlock('block.log')
+        if (process.env.USE_LOGS === "true") {
+            startBlock = getStartBlock("block.log")
         }
 
         const eventsIterable = getEventsIterable({
@@ -86,7 +86,9 @@ void async function () {
         for await (const event of eventsIterable) {
             console.log(`Received ${event.event} event from ${event.address}`)
             const managerConfig = managerConfigs.find(({ managerAddress, registryAddress, upkeepAddress }) => {
-                return [managerAddress, registryAddress, upkeepAddress].includes(event.address)
+                return [managerAddress,
+                    registryAddress,
+                    upkeepAddress].includes(event.address)
             })
             if (!managerConfig) throw new Error(`No manager config found for address ${event.address}`)
             const args = event.args as ethers.utils.Result
@@ -95,14 +97,14 @@ void async function () {
             await depositFunctionsBalanceHandler({ managerConfig })
             await depositUpkeepBalanceHandler({ managerConfig })
             await handler({ managerConfig, args })
-            if (process.env.USE_LOGS === 'true') {
+            if (process.env.USE_LOGS === "true") {
                 // Todo check if this possibly misses events
-                updateStartBlock('block.log', event.blockNumber + 1)
+                updateStartBlock("block.log", event.blockNumber + 1)
             }
         }
     } catch (error) {
-        if (process.env.USE_LOGS === 'true') {
-            updateErrorLog('error.log', (error as Error).message)
+        if (process.env.USE_LOGS === "true") {
+            updateErrorLog("error.log", (error as Error).message)
         } else {
             console.log(error)
         }

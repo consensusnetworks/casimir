@@ -1,5 +1,5 @@
-import fs from 'fs'
+import fs from "fs"
 
 void function() {
-    fs.rmSync('build', { recursive: true })
+    fs.rmSync("build", { recursive: true })
 }()

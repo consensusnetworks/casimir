@@ -1,18 +1,24 @@
-import fs from 'fs'
-import os from 'os'
-import { run } from '@casimir/shell'
-import { getSecret, loadCredentials } from '@casimir/aws'
-import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from '@casimir/data'
+import fs from "fs"
+import os from "os"
+import { run } from "@casimir/shell"
+import { getSecret, loadCredentials } from "@casimir/aws"
+import { JsonSchema, Schema, accountSchema, nonceSchema, operatorSchema, userSchema, userAccountSchema } from "@casimir/data"
 
 /**
  * Run a local users database and service
  */
 void async function () {
 
-    if (process.env.STAGE !== 'local') {
+    if (process.env.STAGE !== "local") {
         await loadCredentials()
         const dbCredentials = await getSecret(`${process.env.PROJECT}-users-db-credentials-${process.env.STAGE}`)
-        const { port: dbPort, host: dbHost, dbname: dbName, username: dbUser, password: dbPassword } = JSON.parse(dbCredentials as string)
+        const { 
+            port: dbPort, 
+            host: dbHost,
+            dbname: dbName,
+            username: dbUser,
+            password: dbPassword 
+        } = JSON.parse(dbCredentials as string)
         process.env.DB_HOST = dbHost
         process.env.DB_PORT = dbPort
         process.env.DB_NAME = dbName
@@ -24,7 +30,7 @@ void async function () {
         process.env.SESSIONS_KEY = sessionsKey
     }
 
-    const resourceDir = './scripts'
+    const resourceDir = "./scripts"
 
     const tableSchemas = {
         account: accountSchema,
@@ -34,7 +40,7 @@ void async function () {
         userAccount: userAccountSchema
     }
 
-    let sqlSchema = ''
+    let sqlSchema = ""
     for (const table of Object.keys(tableSchemas)) {
         const tableSchema = tableSchemas[table] as JsonSchema
         const schema = new Schema(tableSchema)
@@ -47,20 +53,20 @@ void async function () {
     if (!fs.existsSync(sqlDir)) fs.mkdirSync(sqlDir, { recursive: true })
     fs.writeFileSync(`${sqlDir}/schema.sql`, sqlSchema)
 
-    const stackName = 'casimir-users-db'
+    const stackName = "casimir-users-db"
     await run(`docker compose -p ${stackName} -f ${resourceDir}/docker-compose.yaml up -d`)
     let dbReady = false
     while (!dbReady) {
-        const health = await run('docker inspect --format=\'{{lower .State.Health.Status}}\' postgres') as string
-        dbReady = health.trim() === 'healthy'
+        const health = await run("docker inspect --format='{{lower .State.Health.Status}}' postgres") as string
+        dbReady = health.trim() === "healthy"
         await new Promise(resolve => setTimeout(resolve, 2500))
     }
-    const atlas = await run('which atlas') as string
-    if (!atlas || atlas.includes('not found')) {
-        if (os.platform() === 'darwin') {
-            await run('echo y | brew install atlas')
+    const atlas = await run("which atlas") as string
+    if (!atlas || atlas.includes("not found")) {
+        if (os.platform() === "darwin") {
+            await run("echo y | brew install atlas")
         } else {
-            throw new Error('Please install atlas using `curl -sSf https://atlasgo.sh | sh`')
+            throw new Error("Please install atlas using `curl -sSf https://atlasgo.sh | sh`")
         }
     }
     

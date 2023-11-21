@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process'
+import { exec, execSync } from "child_process"
 
 /**
  * Run any shell command in a child process and return a promise
@@ -7,17 +7,17 @@ import { exec, execSync } from 'child_process'
  */
 export async function run(command: string) {
     const child = exec(command)
-    let data = ''
+    let data = ""
     return new Promise((resolve, reject) => {
-        child.on('error', reject)
-        child.stdout?.on('data', chunk => {
+        child.on("error", reject)
+        child.stdout?.on("data", chunk => {
             process.stdout.write(chunk.toString())
             data += chunk.toString()
         })
-        child.stderr?.on('data', chunk => {
+        child.stderr?.on("data", chunk => {
             process.stdout.write(chunk.toString())
         })
-        child.on('exit', () => {
+        child.on("exit", () => {
             resolve(data)
         })
     })
@@ -31,13 +31,13 @@ export async function run(command: string) {
  */
 export async function runRetry(command: string, retriesLeft: number | undefined = 25): Promise<unknown> {
     if (retriesLeft === 0) {
-        throw new Error('Command failed after maximum retries')
+        throw new Error("Command failed after maximum retries")
     }
     try {
         return await run(command)
     } catch (error) {
         await new Promise(resolve => setTimeout(resolve, 5000))
-        console.log('Retrying command', command)
+        console.log("Retrying command", command)
         return await runRetry(command, retriesLeft - 1)
     }
 }

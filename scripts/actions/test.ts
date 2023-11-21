@@ -1,12 +1,12 @@
-import { loadCredentials } from '@casimir/aws'
-import { run } from '@casimir/shell'
+import { loadCredentials } from "@casimir/aws"
+import { run } from "@casimir/shell"
 
 /**
  * Test a workflow from `.github/workflows`
  */
 void async function () {
 
-    const workflow = process.env.WORKFLOW || 'push'
+    const workflow = process.env.WORKFLOW || "push"
 
     const { accessKeyId, secretAccessKey } = await loadCredentials()
 

@@ -1,7 +1,12 @@
 {
+    "css.lint.unknownAtRules": "ignore",
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
+    "eslint.validate": [
+        "vue",
+        "typescript"
+    ],
     "[html]": {
         "editor.defaultFormatter": "Vue.volar"
     },
@@ -14,10 +19,5 @@
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "eslint.validate": [
-        "vue",
-        "typescript"
-    ],
-    "css.lint.unknownAtRules": "ignore",
     "volar.inlayHints.eventArgumentInInlineHandlers": false
 }

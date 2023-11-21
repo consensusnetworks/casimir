@@ -1,12 +1,12 @@
-import { ethers } from 'ethers'
-import { ISSVClusters, ISSVOperators, ISSVViews } from '@casimir/ethereum/build/@types'
-import ISSVClustersAbi from '@casimir/ethereum/build/abi/ISSVClusters.json'
-import ISSVOperatorsAbi from '@casimir/ethereum/build/abi/ISSVOperators.json'
-import ISSVViewsAbi from '@casimir/ethereum/build/abi/ISSVViews.json'
-import { GetClusterInput } from '../interfaces/GetClusterInput'
-import { Cluster } from '../interfaces/Cluster'
-import { Operator } from '../interfaces/Operator'
-import { ScannerOptions } from '../interfaces/ScannerOptions'
+import { ethers } from "ethers"
+import { ISSVClusters, ISSVOperators, ISSVViews } from "@casimir/ethereum/build/@types"
+import ISSVClustersAbi from "@casimir/ethereum/build/abi/ISSVClusters.json"
+import ISSVOperatorsAbi from "@casimir/ethereum/build/abi/ISSVOperators.json"
+import ISSVViewsAbi from "@casimir/ethereum/build/abi/ISSVViews.json"
+import { GetClusterInput } from "../interfaces/GetClusterInput"
+import { Cluster } from "../interfaces/Cluster"
+import { Operator } from "../interfaces/Operator"
+import { ScannerOptions } from "../interfaces/ScannerOptions"
 
 export class Scanner {
     DAY = 5400
@@ -23,9 +23,15 @@ export class Scanner {
         } else {
             this.provider = new ethers.providers.JsonRpcProvider(options.ethereumUrl)
         }
-        this.ssvClusters = new ethers.Contract(options.ssvNetworkAddress, ISSVClustersAbi, this.provider) as ISSVClusters & ethers.Contract
-        this.ssvOperators = new ethers.Contract(options.ssvNetworkAddress, ISSVOperatorsAbi, this.provider) as ISSVOperators & ethers.Contract
-        this.ssvViews = new ethers.Contract(options.ssvViewsAddress, ISSVViewsAbi, this.provider) as ISSVViews & ethers.Contract
+        this.ssvClusters = new ethers.Contract(
+            options.ssvNetworkAddress, ISSVClustersAbi, this.provider
+        ) as ISSVClusters & ethers.Contract
+        this.ssvOperators = new ethers.Contract(
+            options.ssvNetworkAddress, ISSVOperatorsAbi, this.provider
+        ) as ISSVOperators & ethers.Contract
+        this.ssvViews = new ethers.Contract(
+            options.ssvViewsAddress, ISSVViewsAbi, this.provider
+        ) as ISSVViews & ethers.Contract
     }
 
     /** 
@@ -59,7 +65,8 @@ export class Scanner {
                 for (const item of items) {
                     const { args, blockNumber } = item
                     const clusterMatch = args?.cluster !== undefined
-                    const operatorsMatch = JSON.stringify(args?.operatorIds.map(id => id.toNumber())) === JSON.stringify(operatorIds)
+                    const operatorsMatch = 
+                        JSON.stringify(args?.operatorIds.map(id => id.toNumber())) === JSON.stringify(operatorIds)
                     if (!clusterMatch || !operatorsMatch) continue
                     if (blockNumber > biggestBlockNumber) {
                         biggestBlockNumber = blockNumber
@@ -107,7 +114,7 @@ export class Scanner {
     async getNonce(ownerAddress: string): Promise<number> {
         const eventFilter = this.ssvClusters.filters.ValidatorAdded(ownerAddress)
         const fromBlock = 0
-        const toBlock = 'latest'
+        const toBlock = "latest"
         const items = await this.ssvClusters.queryFilter(eventFilter, fromBlock, toBlock)
         return items.length
     }
@@ -135,7 +142,7 @@ export class Scanner {
     async getOperators(ownerAddress: string): Promise<Operator[]> {
         const eventFilter = this.ssvOperators.filters.OperatorAdded(null, ownerAddress)
         const operators: Operator[] = []
-        const items = await this.ssvOperators.queryFilter(eventFilter, 0, 'latest')
+        const items = await this.ssvOperators.queryFilter(eventFilter, 0, "latest")
         for (const item of items) {
             const { args } = item
             const { operatorId } = args

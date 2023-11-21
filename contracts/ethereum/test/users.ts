@@ -1,45 +1,48 @@
-import { ethers } from 'hardhat'
-import { loadFixture, setBalance, time } from '@nomicfoundation/hardhat-network-helpers'
-import { expect } from 'chai'
-import { preregistrationFixture } from './fixtures/shared'
-import { round } from '../helpers/math'
-import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from '../helpers/oracle'
-import { fulfillReport, runUpkeep } from '../helpers/upkeep'
+import { ethers } from "hardhat"
+import { loadFixture, setBalance, time } from "@nomicfoundation/hardhat-network-helpers"
+import { expect } from "chai"
+import { preregistrationFixture } from "./fixtures/shared"
+import { round } from "../helpers/math"
+import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from "../helpers/oracle"
+import { fulfillReport, runUpkeep } from "../helpers/upkeep"
 
-describe('Users', async function () {
-    it('User\'s 16.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
+describe("Users", async function () {
+    it("User's 16.0 stake and half withdrawal updates total and user stake, and user balance", async function () {
         const { manager } = await loadFixture(preregistrationFixture)
         const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)
-        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const value = ethers.utils.parseEther(depositAmount.toString())
+        const deposit = await manager.connect(firstUser).depositStake({ value })
         await deposit.wait()
 
         let stake = await manager.getTotalStake()
         let userStake = await manager.getUserStake(firstUser.address)
 
-        expect(ethers.utils.formatEther(stake)).equal('16.0')
-        expect(ethers.utils.formatEther(userStake)).equal('16.0')
+        expect(ethers.utils.formatEther(stake)).equal("16.0")
+        expect(ethers.utils.formatEther(userStake)).equal("16.0")
 
         const userBalanceBefore = await ethers.provider.getBalance(firstUser.address)
-        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('8.0'))
+        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther("8.0"))
         await userWithdrawalRequest.wait()
         const userBalanceAfter = await ethers.provider.getBalance(firstUser.address)
 
         stake = await manager.getTotalStake()
         userStake = await manager.getUserStake(firstUser.address)
 
-        expect(ethers.utils.formatEther(stake)).equal('8.0')
-        expect(ethers.utils.formatEther(userStake)).equal('8.0')
-        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('7.9')
+        expect(ethers.utils.formatEther(stake)).equal("8.0")
+        expect(ethers.utils.formatEther(userStake)).equal("8.0")
+        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains("7.9")
     })
 
-    it('User\'s 64.0 stake and half withdrawal updates total and user stake, and user balance', async function () {
-        const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = await loadFixture(preregistrationFixture)
+    it("User's 64.0 stake and half withdrawal updates total and user stake, and user balance", async function () {
+        const { manager, upkeep, views, functionsBillingRegistry, daoOracle, donTransmitter } = 
+            await loadFixture(preregistrationFixture)
         const [firstUser] = await ethers.getSigners()
 
         const depositAmount = round(64 * ((100 + await manager.userFee()) / 100), 10)
-        const deposit = await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+        const value = ethers.utils.parseEther(depositAmount.toString())
+        const deposit = await manager.connect(firstUser).depositStake({ value })
         await deposit.wait()
 
         await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
@@ -61,7 +64,11 @@ describe('Users', async function () {
             activatedDeposits: 2,
             forcedExits: 0,
             completedExits: 0,
-            compoundablePoolIds: [0, 0, 0, 0, 0]
+            compoundablePoolIds: [0,
+                0,
+                0,
+                0,
+                0]
         }
 
         await fulfillReport({
@@ -82,18 +89,18 @@ describe('Users', async function () {
         let stake = await manager.getTotalStake()
         let userStake = await manager.getUserStake(firstUser.address)
 
-        expect(ethers.utils.formatEther(stake)).equal('64.0')
-        expect(ethers.utils.formatEther(userStake)).equal('64.0')
+        expect(ethers.utils.formatEther(stake)).equal("64.0")
+        expect(ethers.utils.formatEther(userStake)).equal("64.0")
 
         const userBalanceBefore = await ethers.provider.getBalance(firstUser.address)
-        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther('32.0'))
+        const userWithdrawalRequest = await manager.connect(firstUser).requestWithdrawal(ethers.utils.parseEther("32.0"))
         await userWithdrawalRequest.wait()
 
         stake = await manager.getTotalStake()
         userStake = await manager.getUserStake(firstUser.address)
 
-        expect(ethers.utils.formatEther(stake)).equal('32.0')
-        expect(ethers.utils.formatEther(userStake)).equal('32.0')
+        expect(ethers.utils.formatEther(stake)).equal("32.0")
+        expect(ethers.utils.formatEther(userStake)).equal("32.0")
 
         await time.increase(time.duration.days(1))
         await runUpkeep({ donTransmitter, upkeep })
@@ -105,7 +112,11 @@ describe('Users', async function () {
             activatedDeposits: 0,
             forcedExits: 0,
             completedExits: 1,
-            compoundablePoolIds: [0, 0, 0, 0, 0]
+            compoundablePoolIds: [0,
+                0,
+                0,
+                0,
+                0]
         }
 
         await fulfillReport({
@@ -130,8 +141,8 @@ describe('Users', async function () {
 
         const userBalanceAfter = await ethers.provider.getBalance(firstUser.address)
 
-        expect(ethers.utils.formatEther(stake)).equal('32.0')
-        expect(ethers.utils.formatEther(userStake)).equal('32.0')
-        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains('31.9')
+        expect(ethers.utils.formatEther(stake)).equal("32.0")
+        expect(ethers.utils.formatEther(userStake)).equal("32.0")
+        expect(ethers.utils.formatEther(userBalanceAfter.sub(userBalanceBefore))).contains("31.9")
     })
 })

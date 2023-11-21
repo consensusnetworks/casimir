@@ -25,8 +25,8 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event ReportRequested();
-    event ReportRequestsSent(uint32, uint256, uint256, uint256, uint256);
+    event NewReportRequested();
+    event ReportRequestSent(bytes32 requestId, string[] requestArgs);
     event UpkeepPerformed(ReportStatus indexed status);
 
     error InvalidRequest();
