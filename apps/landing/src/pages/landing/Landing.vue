@@ -63,7 +63,7 @@ const toggleQuestionItem = (index: number) => {
 </script>
 
 <template>
-  <div>
+  <div class="csm:m-[16px] overflow-x-hidden">
     <nav class="nav">
       <div class="nav__container">
         <a href="/">
@@ -112,15 +112,17 @@ const toggleQuestionItem = (index: number) => {
         <div class="cta__container">
           <a
             :href="appUrl"
-            class="btn-primary"
+            class="btn-primary flex justify-center csm:min-w-[145px]"
           >
-            Launch Staking App
+            <span class="csm:hidden">Launch Staking App</span>
+            <span class="md-lg:hidden">Launch App</span>
           </a>
           <a
             href="https://drive.google.com/file/d/1giIojTS-4gf0xWXUirmd2AaqalFmgA72/view"
             class="btn-secondary"
           >
-            Read the Whitepaper
+            <span class="csm:hidden">Read the Whitepaper</span>
+            <span class="md-lg:hidden">Read Whitepaper</span>
           </a>
         </div>
       </div>
@@ -132,16 +134,19 @@ const toggleQuestionItem = (index: number) => {
     <section class="overview">
       <div class="overview__header">
         <!-- <span class="highlight text-8">Minimized Risk & Maximized Rewards</span> -->
-        <h2>
+        <h2 class="csm:hidden">
           Casimir is built to maximize your rewards <br>
           without compromising security.
         </h2>
+        <h2 class="md-lg:hidden">
+          Casimir is built to maximize your rewards without compromising security.
+        </h2>
       </div>
       <!-- <div class="mock"><img src="/hero.png" /></div> -->
-      <div class="overview__container">
+      <div class="overview__container csm:gap-[20px] md-lg:gap-[40px]">
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/disc.svg"
                 width="17"
@@ -156,7 +161,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/key.svg"
                 width="17"
@@ -172,7 +177,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/disc.svg"
                 width="17"
@@ -188,7 +193,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/flash.svg"
                 width="17"
@@ -203,7 +208,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/credit-card.svg"
                 width="17"
@@ -219,7 +224,7 @@ const toggleQuestionItem = (index: number) => {
 
         <div class="overview__item">
           <div class="overview__item__header">
-            <div class="icon">
+            <div class="icon csm:hidden">
               <img
                 src="/users.svg"
                 width="17"
@@ -233,8 +238,48 @@ const toggleQuestionItem = (index: number) => {
         </div>
       </div>
     </section>
+    
+    <!-- Hide this section on small screens for now -->
+    <section class="bento md-lg:hidden">
+      <div class="overview__header">
+        <h2 class="csm:hidden">
+          One place to connect your wallets, <br> stake, withdraw, and see your analytics.
+        </h2>
+        <h2 class="md-lg:hidden">
+          One place to connect your wallets, stake, withdraw, and see your analytics.
+        </h2>
+      </div>
+      <div class="bento__container">
+        <div class="bento__base__card bento__card__1">
+          <h2 class="text-6">
+            Track all of your historical balances, rewards, and  <br> withdrawals in one dashboard.
+          </h2>
+          <div><img src="/analytics-chart.png"></div>
+        </div>
 
-    <section class="bento">
+        <div class="bento__base__card bento__card__4">
+          <h2 class="text-6">
+            Natively stake or withdraw ETH.
+          </h2>
+          <div><img src="/staking-component.png"></div>
+        </div>
+
+        <div class="bento__base__card bento__card__3">
+          <h2 class="text-6">
+            Get your transaction history <br> for any connected address.
+          </h2>
+          <div><img src="/tx.png"></div>
+        </div>
+
+        <div class="bento__base__card bento__card__2">
+          <h2 class="text-6">
+            Connect any number of wallets at the same time.
+          </h2>
+          <div><img src="/multi-wallet.png"></div>
+        </div>
+      </div>
+    </section>
+    <section class="bento csm:hidden">
       <div class="overview__header">
         <h2>
           One place to connect your wallets, <br> stake, withdraw, and see your analytics.
