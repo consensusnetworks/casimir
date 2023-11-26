@@ -195,8 +195,8 @@ const toggleModal = (showModal: boolean) => {
               >
                 <div class="green_dot mr-8" />
                 <img
-                  :src="`${user.walletProvider.toLocaleLowerCase()}.svg`"
-                  :alt="`${user.walletProvider.toLocaleLowerCase()} Icon`"
+                  :src="`${user?.walletProvider.toLocaleLowerCase()}.svg`"
+                  :alt="`${user?.walletProvider.toLocaleLowerCase()} Icon`"
                   class="h-[26px] mr-6"
                 > 
                 <div>{{ convertString(user.address) }}</div>
@@ -219,6 +219,7 @@ const toggleModal = (showModal: boolean) => {
               class="flex align-center items-center py-4 w-full cursor-default"
             >
               <img
+                v-if="user"
                 :src="`${user?.walletProvider.toLocaleLowerCase()}.svg`"
                 :alt="`${user?.walletProvider.toLocaleLowerCase()} Icon`"
                 class="h-[26px] mr-6"
