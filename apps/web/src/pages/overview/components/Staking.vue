@@ -3,6 +3,7 @@ import { computed, ref, onMounted, watch } from "vue"
 import { FormattedWalletOption, ProviderString, StakeDetails } from "@casimir/types"
 import VueFeather from "vue-feather"
 import useEnvironment from "@/composables/environment"
+import useEthers from "@/composables/ethers"
 import useStaking from "@/composables/staking"
 import useFormat from "@/composables/format"
 import usePrice from "@/composables/price"
@@ -11,11 +12,12 @@ import useWallets from "@/composables/wallets"
 import { ethers } from "ethers"
 import TermsOfService from "@/components/TermsOfService.vue"
 
+const { browserProvidersList } = useEthers()
 const { batchProvider } = useEnvironment()
 const { stakeWithdrawError, stakingComposableInitialized, userStakeDetails, deposit, withdraw, getWithdrawableBalance } = useStaking()
 const { convertString, formatEthersCasimir, formatEthersCasimirStaking, parseEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
-const { user, updateUserAgreement } = useUser()
+const { user, getPathIndex, updateUserAgreement } = useUser()
 const { detectActiveWalletAddress } = useWallets()
 
 // Staking Component Refs
@@ -216,22 +218,28 @@ function handleInputOnAmountToStakeOrWithdraw(event: any) {
 }
 
 async function handleStake() {
+    let pathIndex = undefined
     stakeButtonText.value = "Staking..."
+    eigenIsToggled.value = false
 
     // TODO: @DemogorGod - Should we check for active wallet here or in the staking.ts composable?
-    const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
-    if (activeAddress !== selectedWalletAddress.value) {
-        formattedAmountToStakeOrWithdraw.value = 0
-        stakeButtonText.value = "Stake"
-        return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your ${selectedStakingProvider.value} browser extension select the account you want to use to stake.`)
+    if (browserProvidersList.includes(selectedWalletAddress.value as string)) {
+        const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+        if (activeAddress !== selectedWalletAddress.value) {
+            formattedAmountToStakeOrWithdraw.value = 0
+            stakeButtonText.value = "Stake"
+            return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your ${selectedStakingProvider.value} browser extension select the account you want to use to stake.`)
+        }
+    } else {
+        pathIndex = getPathIndex(selectedStakingProvider.value, selectedWalletAddress.value as string)
     }
-
-    eigenIsToggled.value = false
-    const result = await deposit({
+    const depositPayload = {
         amount: formattedAmountToStakeOrWithdraw.value.toString(),
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value
-    })
+        type: stakeType.value,
+        pathIndex: pathIndex !== undefined ? pathIndex : undefined
+    }
+    const result = await deposit(depositPayload)
 
     setTimeout(() => {
         stakeButtonText.value = "Stake"

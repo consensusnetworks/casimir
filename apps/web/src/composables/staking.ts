@@ -47,7 +47,7 @@ export default function useStaking() {
         }
     }
 
-    async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
+    async function deposit({ amount, walletProvider, type, pathIndex }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen", pathIndex: number | undefined}) {
         stakeWithdrawError.value = ""
         try {
             const activeNetwork = await detectActiveNetwork(walletProvider)
@@ -62,7 +62,7 @@ export default function useStaking() {
             } else if (walletProvider === "WalletConnect") {
                 signer = await getWalletConnectSignerV2()
             } else if (walletProvider === "Ledger") {
-                signer = getEthersLedgerSigner()
+                signer = getEthersLedgerSigner(pathIndex)
             } else if (walletProvider === "Trezor") {
                 signer = getEthersTrezorSigner()
             } else {

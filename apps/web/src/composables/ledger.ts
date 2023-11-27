@@ -21,7 +21,7 @@ export default function useLedger() {
     // }
 
     function getEthersLedgerSigner(pathIndex?: number) {
-        const path = pathIndex ? `m/44'/60'/0'/0/${pathIndex}` : "m/44'/60'/0'/0/0"
+        const path = pathIndex ? `m/44'/60'/${pathIndex}'/0/0` : "m/44'/60'/0'/0/0"
         const options = {
             provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
             type: ledgerType,
