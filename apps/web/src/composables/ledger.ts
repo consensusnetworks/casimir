@@ -85,7 +85,8 @@ export default function useLedger() {
                 currency,
                 message, 
                 provider, 
-                signedMessage
+                signedMessage,
+                pathIndex
             })
         } catch (err) {
             console.log("Error logging in: ", err)

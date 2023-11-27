@@ -95,10 +95,13 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
  * Checks if user is adding an account or logging in
  * @param address 
 */
-async function selectAddress(address: string, pathIndex: number): Promise<void> {
+async function selectAddress(address: string, pathIndex?: number): Promise<void> {
     selectedAddress.value = address
     flowState.value = "loading"
-    const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex }
+    const loginCredentials: LoginCredentials = 
+      pathIndex !== undefined ? 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex } : 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH" }
     const response = await login(loginCredentials)
     if (response === "Successfully logged in" || response === "Successfully added account to user") {
         flowState.value = "success"
@@ -349,7 +352,11 @@ onUnmounted(() => {
           <button
             class="connect_wallet_btn"
             :disabled="checkIfAddressIsUsed(act)"
-            @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex)"
+            @click="
+              selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
+                selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
+                selectAddress(trimAndLowercaseAddress(act.address), undefined)
+            "
           >
             <div>
               {{ convertString(act.address) }}

@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import { LoginCredentials } from "@casimir/types"
+import { SignInWithEthereumCredentials } from "@casimir/types"
 
 export default function useEthers() {
 
@@ -21,11 +21,11 @@ export default function useEthers() {
     /**
      * Verifies a user's login attempt with an address, message and signed message
      * 
-     * @param {LoginCredentials} loginCredentials - The user's address, message and signed message 
+     * @param {SignInWithEthereumCredentials} SignInWithEthereumCredentials - The user's address, message and signed message 
      * @returns {boolean} - The response from the login request
      */
-    function verifyMessageSignature(loginCredentials: LoginCredentials): boolean {
-        const { address, message, signedMessage } = loginCredentials
+    function verifyMessageSignature(SignInWithEthereumCredentials: SignInWithEthereumCredentials): boolean {
+        const { address, message, signedMessage } = SignInWithEthereumCredentials
         try {
             if (!address.length || !message.length || !signedMessage.length) {
                 return false

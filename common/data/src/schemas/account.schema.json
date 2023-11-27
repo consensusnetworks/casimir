@@ -24,6 +24,10 @@
             "type": "serial",
             "description": "The account ID (PK)"
         },
+        "path_index": {
+            "type": "integer",
+            "description": "The account path index (typically used for HD wallets)"
+        },
         "snapshots": {
             "type": "array",
             "description": "The account snapshots",
@@ -60,6 +64,7 @@
     },
     "uniqueFields": [
         "address",
+        "path_index",
         "user_id",
         "wallet_provider"
     ],

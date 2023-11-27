@@ -245,7 +245,7 @@ async function handleWithdraw() {
     stakeButtonText.value = "Withdrawing..."
     selectedOperatorGroupStakeDetails.value = undefined
 
-    /// TODO: @DemogorGod - Should we check for active wallet here or in the staking.ts composable?
+    // TODO: @DemogorGod - Should we check for active wallet here or in the staking.ts composable?
     const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
     if (activeAddress !== selectedWalletAddress.value) {
         formattedAmountToStakeOrWithdraw.value = 0

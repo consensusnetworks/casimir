@@ -34,16 +34,17 @@ export default function useAuth() {
         provider,
         address,
         currency,
+        pathIndex
     }: {
     provider: string;
     address: string;
     currency: string;
+    pathIndex?: number;
   }) {
-        const userAccountExists = user.value?.accounts?.some(
-            (account: Account | any) =>
-                account?.address === address &&
-        account?.walletProvider === provider &&
-        account?.currency === currency
+        const userAccountExists = user.value?.accounts?.some((account: Account | any) =>
+            account?.address === address &&
+            account?.walletProvider === provider &&
+            account?.currency === currency
         )
         if (userAccountExists) return "Account already exists for this user"
         const account = {
@@ -52,6 +53,7 @@ export default function useAuth() {
             currency: currency || "ETH",
             ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: provider,
+            pathIndex
         }
 
         const requestOptions = {
