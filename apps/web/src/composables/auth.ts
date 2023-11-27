@@ -6,6 +6,7 @@ import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
 import useWalletConnect from "@/composables/walletConnectV2"
+import useWallets from "@/composables/wallets"
 import {
     Account,
     ApiResponse,
@@ -15,11 +16,12 @@ import {
 } from "@casimir/types"
 
 const { usersUrl } = useEnvironment()
-const { browserProvidersList, detectActiveEthersWalletAddress, loginWithEthers } = useEthers()
+const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
 const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -72,16 +74,6 @@ export default function useAuth() {
             return { error, message, data: updatedUser }
         } catch (error: any) {
             throw new Error(error.message || "Error adding account")
-        }
-    }
-
-    async function detectActiveWalletAddress(providerString: ProviderString) {
-        if (browserProvidersList.includes(providerString)) {
-            return await detectActiveEthersWalletAddress(providerString)
-        } else {
-            alert(
-                "detectActiveWalletAddress not yet implemented for this wallet provider"
-            )
         }
     }
 
@@ -177,17 +169,13 @@ export default function useAuth() {
                 // If no, cancel/do nothing
 
                 const hardwareWallet = provider === "Ledger" || provider === "Trezor"
-                const browserWallet = browserProvidersList.includes(
-          provider as ProviderString
-                )
+                const browserWallet = browserProvidersList.includes(provider as ProviderString)
                 if (hardwareWallet) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
                     return "Successfully logged in"
                 } else if (browserWallet) {
-                    const activeAddress = await detectActiveWalletAddress(
-            provider as ProviderString
-                    )
+                    const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
                     if (activeAddress === address) {
                         await loginWithProvider({
                             provider: provider as ProviderString,

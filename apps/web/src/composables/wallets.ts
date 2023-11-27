@@ -3,7 +3,7 @@ import { ProviderString } from "@casimir/types"
 import useEthers from "@/composables/ethers"
 
 const installedWallets = ref([] as ProviderString[])
-const { browserProvidersList, getBrowserProvider } = useEthers()
+const { browserProvidersList, detectActiveEthersWalletAddress, getBrowserProvider } = useEthers()
 
 export default function useWallets() {
     async function detectActiveNetwork(providerString: ProviderString): Promise<number> {
@@ -28,6 +28,16 @@ export default function useWallets() {
         } catch (err) {
             console.log("Error in detectActiveNetwork: ", err)
             return await new Promise(resolve => resolve(0))
+        }
+    }
+
+    async function detectActiveWalletAddress(providerString: ProviderString) {
+        if (browserProvidersList.includes(providerString)) {
+            return await detectActiveEthersWalletAddress(providerString)
+        } else {
+            alert(
+                "detectActiveWalletAddress not yet implemented for this wallet provider"
+            )
         }
     }
       
@@ -86,6 +96,7 @@ export default function useWallets() {
     return {
         installedWallets: readonly(installedWallets),
         detectActiveNetwork,
+        detectActiveWalletAddress,
         detectInstalledWalletProviders,
         switchEthersNetwork
     }
