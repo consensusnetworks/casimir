@@ -13,7 +13,14 @@ import useWallets from "@/composables/wallets"
 import useWalletConnect from "@/composables/walletConnectV2"
 // import useWallets from '@/composables/wallets'
 
-type UserAuthFlowState = "select_provider" | "select_address" | "loading" | "success" | "add_account" | "confirm_signage_with_existing_secondary" | "connection_failed"
+type UserAuthFlowState = 
+  "select_provider"
+  | "select_address" 
+  | "loading" 
+  | "success" 
+  | "add_account" 
+  | "confirm_signage_with_existing_secondary" 
+  | "connection_failed"
 
 const supportedWalletProviders = [
     "MetaMask",
@@ -29,8 +36,8 @@ const { login, loginWithSecondaryAddress } = useAuth()
 const { requiredNetwork } = useEnvironment()
 const { browserProvidersList, getEthersAddressesWithBalances } = useEthers()
 const { convertString, formatEthersCasimir, trimAndLowercaseAddress } = useFormat()
-const { getLedgerAddress } = useLedger()
-const { getTrezorAddress } = useTrezor()
+const { getEthersLedgerAddresses } = useLedger()
+const { getEthersTrezorAddresses } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnect()
@@ -159,9 +166,9 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
         } else if (provider === "Ledger") {
-            walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
+            walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
         } else if (provider === "Trezor") {
-            walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
+            walletProviderAddresses.value = await getEthersTrezorAddresses() as CryptoAddress[]
         } else {
             throw new Error("Provider not supported")
         }
@@ -181,7 +188,16 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
                 errorMessageText.value = "Unlock your Ledger and open Ethereum Goerli app."
                 selectProviderLoading.value = false
             }
+        } else if (provider === "Trezor") {
+            if (error.message.includes("Trezor Suite is not open")) {
+                errorMessageText.value = "Open your Trezor Suite desktop app."
+                selectProviderLoading.value = false
+            } else {
+                errorMessageText.value = "Something went wrong with your Trezor connection, please try again later."
+                selectProviderLoading.value = false
+            }
         } else {
+            console.log("error in selectProvider in ConnectWalletsFlow.vue :>> ", error)
             errorMessageText.value = "Something went wrong, please try again later."
             selectProviderLoading.value = false
         }
@@ -659,4 +675,4 @@ onUnmounted(() => {
   letter-spacing: -0.01em;
   color: #667085;
 }
-</style>
+</style>@/composables/eventBus
