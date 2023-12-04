@@ -193,6 +193,7 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
                 errorMessageText.value = "Open your Trezor Suite desktop app."
                 selectProviderLoading.value = false
             } else {
+                console.log("Error in selectProvider :>> ", error)
                 errorMessageText.value = "Something went wrong with your Trezor connection, please try again later."
                 selectProviderLoading.value = false
             }

@@ -45,10 +45,11 @@ export class EthersTrezorSigner extends ethers.Signer {
             bundle.push({ path, showOnTrezor: false })
         }
         const { payload } = await this.eth.ethereumGetAddress({ bundle }) as any
-    
         if (payload.error) {
             if (payload.code === "Transport_Missing") {
                 throw new Error("Trezor Suite is not open")
+            } else if (payload.error === "session not found") {
+                throw new Error("There was an error connecting to Trezor. Please try again.")
             } else {
                 throw new Error(`Error from Trezor: ${payload.error}`)
             }
