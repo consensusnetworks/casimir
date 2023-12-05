@@ -41,10 +41,7 @@ export class Schema {
 
             let type: GlueType = glue.Schema[typeKey]
 
-            if (name.endsWith("_at")) type = glue.Schema.TIMESTAMP
-            if (name.endsWith("_balance")) type = glue.Schema.BIG_INT
-            if (name == "amount") type = glue.Schema.BIG_INT
-            if (name === "price") type = glue.Schema.FLOAT
+            if (name == "timestamp") type = glue.Schema.TIMESTAMP
 
             const comment = property.description
             return { name, type, comment }
@@ -84,10 +81,10 @@ export class Schema {
 
             const comment = property.description
             if (comment.includes("PK")) column += " PRIMARY KEY"
-            
+
             const defaultValue = property.default
             if (defaultValue !== undefined) column += ` DEFAULT ${defaultValue}`
-            
+
             return column
         })
 
