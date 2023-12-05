@@ -4,66 +4,43 @@
     "$comment": "analytics",
     "title": "Event",
     "type": "object",
+    "description": "Event schema covers all events emitted by the Casimir contracts (e.g. Factory, Manager, ..)",
     "properties": {
-        "chain": {
-            "type": "string",
-            "description": "The chain which the event belongs to (e.g. iotex, ethereum)"
-        },
         "network": {
             "type": "string",
-            "description": "Network type (e.g. mainnet, testnet)"
+            "description": "Network type (e.g. mainnet, goerli)"
         },
-        "provider": {
-            "type": "string",
-            "description": "The provider used to source the event (e.g. infura, consensus)"
-        },
-        "type": {
-            "type": "string",
-            "description": "The type of event (e.g. block, transaction)"
-        },
-        "height": {
+        "block_number": {
             "type": "integer",
-            "description": "The height of the block the event belongs to"
+            "description": "Block number"
         },
-        "block": {
+        "block_hash": {
             "type": "string",
-            "description": "The block hash"
+            "description": "Block hash"
         },
-        "transaction": {
+        "tx_hash": {
             "type": "string",
             "description": "The transaction hash"
         },
-        "received_at": {
+        "timestamp": {
             "type": "integer",
-            "description": "Timestamp of the event in unix format"
+            "description": "The timestamp of the log"
+        },
+        "contract": {
+            "type": "string",
+            "description": "The contract address which emitted the event"
+        },
+        "event": {
+            "type": "string",
+            "description": "Type of casimir contract event (e.g. StakeDeposit, StakeRebalanced, WithrawalFulfilled)"
         },
         "sender": {
             "type": "string",
             "description": "The sender's address"
         },
-        "recipient": {
-            "type": "string",
-            "description": "The recipient's address"
-        },
-        "sender_balance": {
-            "type": "string",
-            "description": "The sender's balance at the time of the event"
-        },
-        "recipient_balance": {
-            "type": "string",
-            "description": "The recipient's balance at the time of the event"
-        },
         "amount": {
-            "type": "string",
+            "type": "number",
             "description": "The amount transferred in the event"
-        },
-        "price": {
-            "type": "string",
-            "description": "The exchange price of the coin at the time of the event"
-        },
-        "gas_fee": {
-            "type": "integer",
-            "description": "The gas fee paid for the transaction"
         }
     }
 }
