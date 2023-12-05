@@ -42,7 +42,6 @@ export class Schema {
             let type: GlueType = glue.Schema[typeKey]
 
             if (name == "timestamp") type = glue.Schema.TIMESTAMP
-            if (name === "amount") type = glue.Schema.FLOAT
 
             const comment = property.description
             return { name, type, comment }

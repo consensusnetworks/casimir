@@ -31,6 +31,7 @@ test("Analytics stack created", () => {
     }
 
     const workgroup = analyticsTemplate.findResources("AWS::Athena::WorkGroup")
-
-    expect(workgroup).toBeDefined()
+    const outputBucket = Object.keys(analyticsTemplate.findResources("AWS::S3::Bucket")).filter(key => key.includes("OutputBucket"))[0]
+    const workgroupRef = workgroup[Object.keys(workgroup)[0]].Properties.WorkGroupConfiguration.ResultConfiguration.OutputLocation["Fn::Join"][1][1]["Ref"]
+    expect(workgroupRef).toEqual(outputBucket)
 })

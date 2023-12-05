@@ -13,7 +13,6 @@ import { CfnWorkGroup } from "aws-cdk-lib/aws-athena"
  */
 export class AnalyticsStack extends cdk.Stack {
     public readonly name = pascalCase("analytics")
-    public readonly workGroupName: string
 
     constructor(scope: Construct, id: string, props: AnalyticsStackProps) {
         super(scope, id, props)
@@ -34,8 +33,8 @@ export class AnalyticsStack extends cdk.Stack {
             bucketName: kebabCase(config.getFullStackResourceName(this.name, "output-bucket", config.dataVersion))
         })
 
-        const workGroup = new CfnWorkGroup(this, config.getFullStackResourceName(this.name, "workgroup", config.dataVersion), {
-            name: config.getFullStackResourceName(this.name, "workgroup", config.dataVersion),
+        new CfnWorkGroup(this, config.getFullStackResourceName(this.name, "workGroup", config.dataVersion), {
+            name: config.getFullStackResourceName(this.name, "workGroup", config.dataVersion),
             recursiveDeleteOption: true,
             state: "ENABLED",
             workGroupConfiguration: {
@@ -45,8 +44,6 @@ export class AnalyticsStack extends cdk.Stack {
             },
             tags: [{ key: "version", value: config.dataVersion.toString() }],
         })
-
-        this.workGroupName = workGroup.name
 
         new glue.Table(this, config.getFullStackResourceName(this.name, "event-table", config.dataVersion), {
             database: database,
