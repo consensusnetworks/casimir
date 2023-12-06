@@ -151,6 +151,7 @@ async function getDepositedPoolPublicKeys(startIndex, endIndex) {
     })
     if (request.error) throw new Error("Failed to get validator public keys")
     const data = request.data.result.slice(2).match(/.{1,64}/g)
+    console.log("data", data)
     // '0000000000000000000000000000000000000000000000000000000000000020', // Chunk size?
     // '0000000000000000000000000000000000000000000000000000000000000002', // Array size
     // '0000000000000000000000000000000000000000000000000000000000000040', // Item size
