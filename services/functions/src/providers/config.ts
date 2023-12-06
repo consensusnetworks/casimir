@@ -1,6 +1,8 @@
 import { ethers } from "ethers"
 
 export function getConfig() {
+    const dryRun = process.env.DRY_RUN === "true"
+
     const ethereumUrl = process.env.ETHEREUM_RPC_URL
     if (!ethereumUrl) throw new Error("No ethereum rpc url provided")
 
@@ -16,6 +18,7 @@ export function getConfig() {
     if (!functionsOracleAddress) throw new Error("No functions oracle address provided")
 
     return {
+        dryRun,
         ethereumUrl,
         functionsBillingRegistryAddress,
         functionsOracleAddress,
