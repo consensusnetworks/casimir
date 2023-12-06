@@ -59,7 +59,7 @@ async function run() {
 }
 
 run().catch(error => {
-    if (process.env.USE_LOGS === "true") {
+    if (process.env.USE_LOGS === "true" && !config.dryRun) {
         updateErrorLog("error.log", (error as Error).message)
     } else {
         console.log(error)
