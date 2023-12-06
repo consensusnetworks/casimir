@@ -27,7 +27,7 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
     }
 
     const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
-    if (success) {
+    if (success && !config.dryRun) {
         const signer = config.wallet.connect(provider)        
         const dummySigners = Array(31).fill(signer.address)    
         const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(

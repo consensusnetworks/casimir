@@ -3,7 +3,7 @@ import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME } from "@casimir/env"
 import { run } from "@casimir/shell"
 
 /**
- * Run an ethereum development environment
+ * Run a report on testnet
  */
 void async function () {
     if (process.env.USE_SECRETS !== "false") {
