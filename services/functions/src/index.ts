@@ -64,7 +64,5 @@ run().catch(error => {
     } else {
         console.log(error)
     }
-    if (!config.dryRun) {
-        process.exit(1)
-    }
+    process.exit(1)
 })

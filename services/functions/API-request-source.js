@@ -29,6 +29,9 @@ async function balancesHandler() {
     const endIndex = BigInt(depositedPoolCount).toString(16).padStart(64, "0")
 
     const depositedPoolPublicKeys = await getDepositedPoolPublicKeys(startIndex, endIndex)
+    console.log("depositedPoolPublicKeys", depositedPoolPublicKeys)
+    const depositedPoolStatuses = await getDepositedPoolStatuses(startIndex, endIndex)
+    console.log("depositedPoolStatuses", depositedPoolStatuses)
     const validators = await getValidators(depositedPoolPublicKeys)
 
     const beaconBalance = Functions.gweiToWei(validators.reduce((accumulator, { balance }) => {
