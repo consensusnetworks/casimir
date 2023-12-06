@@ -63,6 +63,8 @@ run().catch(error => {
         updateErrorLog("error.log", (error as Error).message)
     } else {
         console.log(error)
-    }    
-    process.exit(1)
+    }
+    if (!config.dryRun) {
+        process.exit(1)
+    }
 })
