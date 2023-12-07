@@ -22,6 +22,7 @@ const { getWalletConnectSignerV2 } = useWalletConnectV2()
 const stakingComposableInitialized = ref(false)
 const awaitingStakeOrWithdrawConfirmation = ref(false)
 const userStakeDetails = ref<Array<StakeDetails>>([])
+const stakeWithdrawError = ref("")
 
 let baseManager: CasimirManager
 let eigenManager: CasimirManager
@@ -46,7 +47,8 @@ export default function useStaking() {
         }
     }
 
-    async function deposit({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
+    async function deposit({ amount, walletProvider, type, pathIndex }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen", pathIndex: number | undefined}) {
+        stakeWithdrawError.value = ""
         try {
             const activeNetwork = await detectActiveNetwork(walletProvider)
             if (activeNetwork !== 5) {
@@ -60,7 +62,7 @@ export default function useStaking() {
             } else if (walletProvider === "WalletConnect") {
                 signer = await getWalletConnectSignerV2()
             } else if (walletProvider === "Ledger") {
-                signer = getEthersLedgerSigner()
+                signer = getEthersLedgerSigner(pathIndex)
             } else if (walletProvider === "Trezor") {
                 signer = getEthersTrezorSigner()
             } else {
@@ -76,8 +78,14 @@ export default function useStaking() {
             const confirmation = await result.wait(1)
             if (confirmation) awaitingStakeOrWithdrawConfirmation.value = false
             return confirmation
-        } catch (err) {
-            console.error(`There was an error in deposit function: ${JSON.stringify(err)}`)
+        } catch (err: any) {
+            console.error(`Error in deposit function: ${JSON.stringify(err)}`)
+            if (err.message.includes("denied by the user")) {
+                stakeWithdrawError.value = "Transaction denied by the user"
+                console.log("Transaction denied by the user")
+            } else {
+                stakeWithdrawError.value = err.message
+            }
             awaitingStakeOrWithdrawConfirmation.value = false
             return false
         }
@@ -175,6 +183,7 @@ export default function useStaking() {
 
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
         try {
+            stakeWithdrawError.value = ""
             const activeNetwork = await detectActiveNetwork(walletProvider)
             if (activeNetwork !== 5) {
                 await switchEthersNetwork(walletProvider, "0x5")
@@ -201,8 +210,9 @@ export default function useStaking() {
             const confirmation = await result.wait(1)
             if (confirmation) awaitingStakeOrWithdrawConfirmation.value = false
             return confirmation
-        } catch (err) {
+        } catch (err: any) {
             console.error(`There was an error in withdraw function: ${JSON.stringify(err)}`)
+            stakeWithdrawError.value = err.reason
             awaitingStakeOrWithdrawConfirmation.value = false
             return false
         }
@@ -210,6 +220,7 @@ export default function useStaking() {
 
     return {
         awaitingStakeOrWithdrawConfirmation: readonly(awaitingStakeOrWithdrawConfirmation),
+        stakeWithdrawError: readonly(stakeWithdrawError),
         stakingComposableInitialized,
         userStakeDetails,
         initializeStakingComposable,

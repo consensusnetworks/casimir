@@ -6,6 +6,7 @@ import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
 import useWalletConnect from "@/composables/walletConnectV2"
+import useWallets from "@/composables/wallets"
 import {
     Account,
     ApiResponse,
@@ -15,11 +16,12 @@ import {
 } from "@casimir/types"
 
 const { usersUrl } = useEnvironment()
-const { browserProvidersList, detectActiveEthersWalletAddress, loginWithEthers } = useEthers()
+const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
@@ -32,16 +34,17 @@ export default function useAuth() {
         provider,
         address,
         currency,
+        pathIndex
     }: {
     provider: string;
     address: string;
     currency: string;
+    pathIndex?: number;
   }) {
-        const userAccountExists = user.value?.accounts?.some(
-            (account: Account | any) =>
-                account?.address === address &&
-        account?.walletProvider === provider &&
-        account?.currency === currency
+        const userAccountExists = user.value?.accounts?.some((account: Account | any) =>
+            account?.address === address &&
+            account?.walletProvider === provider &&
+            account?.currency === currency
         )
         if (userAccountExists) return "Account already exists for this user"
         const account = {
@@ -50,6 +53,7 @@ export default function useAuth() {
             currency: currency || "ETH",
             ownerAddress: user?.value?.address.toLowerCase() as string,
             walletProvider: provider,
+            pathIndex
         }
 
         const requestOptions = {
@@ -72,16 +76,6 @@ export default function useAuth() {
             return { error, message, data: updatedUser }
         } catch (error: any) {
             throw new Error(error.message || "Error adding account")
-        }
-    }
-
-    async function detectActiveWalletAddress(providerString: ProviderString) {
-        if (browserProvidersList.includes(providerString)) {
-            return await detectActiveEthersWalletAddress(providerString)
-        } else {
-            alert(
-                "detectActiveWalletAddress not yet implemented for this wallet provider"
-            )
         }
     }
 
@@ -177,17 +171,18 @@ export default function useAuth() {
                 // If no, cancel/do nothing
 
                 const hardwareWallet = provider === "Ledger" || provider === "Trezor"
-                const browserWallet = browserProvidersList.includes(
-          provider as ProviderString
-                )
-                if (hardwareWallet) {
+                const browserWallet = browserProvidersList.includes(provider as ProviderString)
+
+                if (provider === "WalletConnect") {
+                    await loginWithProvider(loginCredentials as LoginCredentials)
+                    await getUser()
+                    return "Successfully logged in"
+                } else if (hardwareWallet) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
                     return "Successfully logged in"
                 } else if (browserWallet) {
-                    const activeAddress = await detectActiveWalletAddress(
-            provider as ProviderString
-                    )
+                    const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
                     if (activeAddress === address) {
                         await loginWithProvider({
                             provider: provider as ProviderString,
@@ -203,6 +198,7 @@ export default function useAuth() {
                 }
             }
         } catch (error: any) {
+            console.log("Error in userAuthState :>> ", error)
             return "Error in userAuthState"
         }
     }
@@ -282,7 +278,8 @@ export default function useAuth() {
     async function logout() {
         try {
             loadingSessionLogout.value = true
-            await Session.signOut()
+            const promises = [disconnectWalletConnect(), Session.signOut()]
+            await Promise.all(promises)
             setUser(undefined)
             loadingSessionLogout.value = false
         } catch (error) {

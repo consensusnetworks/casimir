@@ -30,7 +30,7 @@ export default function useDB() {
     async function addAccount(account: Account, createdAt?: string) : Promise<Account> {
         try {
             if (!createdAt) createdAt = new Date().toISOString()
-            const { address, currency, userId, walletProvider } = account
+            const { address, currency, pathIndex, userId, walletProvider } = account
     
             // Check if the account already exists for the user
             const checkText = "SELECT * FROM accounts WHERE user_id = $1 AND address = $2;"
@@ -43,12 +43,18 @@ export default function useDB() {
             }
     
             // Proceed to add the account
-            const text = "INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *;"
-            const params = [address,
-                currency,
-                userId,
-                walletProvider,
-                createdAt]
+            let text = "INSERT INTO accounts (address, currency, user_id, wallet_provider, created_at"
+            const params = [address, currency, userId, walletProvider, createdAt]
+            console.log("pathIndex :>> ", pathIndex)
+            if (pathIndex !== undefined) {
+                text += ", path_index"
+                params.push(pathIndex.toString())
+            }
+    
+            text += ") VALUES ("
+            text += params.map((_, index) => `$${index + 1}`).join(", ") // This will generate $1, $2, ..., $N based on the parameters
+            text += ") RETURNING *;"
+    
             const rows = await postgres.query(text, params)
             const accountAdded = rows[0]
             const accountId = accountAdded.id
@@ -57,7 +63,8 @@ export default function useDB() {
         } catch (error: any) {
             throw new Error("There was an error adding the account to the database: " + error.message)
         }
-    }    
+    }
+      
 
     /**
      * Adds operator to operator table
@@ -175,6 +182,7 @@ export default function useDB() {
                             'balance', a.balance,
                             'currency', a.currency,
                             'created_at', a.created_at,
+                            'path_index', a.path_index,
                             'updated_at', a.updated_at,
                             'user_id', a.user_id,
                             'wallet_provider', a.wallet_provider,
@@ -227,6 +235,7 @@ export default function useDB() {
                             'balance', a.balance,
                             'currency', a.currency,
                             'created_at', a.created_at,
+                            'path_index', a.path_index,
                             'updated_at', a.updated_at,
                             'user_id', a.user_id,
                             'wallet_provider', a.wallet_provider,

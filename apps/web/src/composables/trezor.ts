@@ -7,66 +7,26 @@ import { LoginCredentials, MessageRequest, TransactionRequest } from "@casimir/t
 
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 
-const trezorPath = "m/44'/60'/0'/0/0"
-
 export default function useTrezor() {
     const { ethereumUrl } = useEnvironment()
     const { getGasPriceAndLimit } = useEthers()
 
-    // TODO: Implement this:
-    function getBitcoinTrezorSigner() {
-        return alert("Not implemented yet")
-    // const options = {
-    //     path: trezorPath
-    // }
-    // return new BitcoinTrezorSigner(options)
-    }
-
     function getEthersTrezorSigner(): EthersTrezorSigner {
-        const options = {
-            provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
-            path: trezorPath
-        }
-        return new EthersTrezorSigner(options)
-    }
-
-    const getTrezorAddress = {
-        "BTC": () => {
-            return new Promise((resolve, reject) => {
-                console.log("BTC is not yet supported on Trezor")
-                resolve("BTC is not yet supported on Trezor")
-            }) as Promise<string>
-        },
-        "ETH": getEthersTrezorAddresses,
-        "IOTX": () => {
-            return new Promise((resolve, reject) => {
-                console.log("IOTX is not yet supported on Trezor")
-                resolve("IOTX is not yet supported on Trezor")
-            }) as Promise<string>
-        },
-        "SOL": () => {
-            return new Promise((resolve, reject) => {
-                console.log("SOL is not yet supported on Trezor")
-                resolve("SOL is not yet supported on Trezor")
-            }) as Promise<string>
-        },
-        "": () => {
-            return new Promise((resolve, reject) => {
-                console.log("No currency selected")
-                resolve("No currency selected")
-            }) as Promise<string>
-        },
-        "USD": () => {
-            return new Promise((resolve, reject) => {
-                console.log("USD is not yet supported on Trezor")
-                resolve("USD is not yet supported on Trezor")
-            }) as Promise<string>
+        try {
+            const options = {
+                provider: new ethers.providers.JsonRpcProvider(ethereumUrl),
+            }
+            // This is working when Trezor Suite is not opened
+            return new EthersTrezorSigner(options)
+        } catch (error: any) {
+            console.log(`Error in getEthersTrezorSigner: ${error}`)
+            throw new Error(error)
         }
     }
 
     async function getEthersTrezorAddresses() {
         const signer = getEthersTrezorSigner()
-        return await signer.getAddresses()
+        return await signer.getAddresses() // This error logs here: POST http://127.0.0.1:21325/ net::ERR_CONNECTION_REFUSED
     }
 
     async function loginWithTrezor(loginCredentials: LoginCredentials) {
@@ -121,8 +81,8 @@ export default function useTrezor() {
     }
 
     return { 
+        getEthersTrezorAddresses, 
         getEthersTrezorSigner, 
-        getTrezorAddress, 
         loginWithTrezor, 
         sendTrezorTransaction, 
         signTrezorMessage

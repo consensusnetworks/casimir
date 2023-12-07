@@ -3,18 +3,22 @@ import { computed, ref, onMounted, watch } from "vue"
 import { FormattedWalletOption, ProviderString, StakeDetails } from "@casimir/types"
 import VueFeather from "vue-feather"
 import useEnvironment from "@/composables/environment"
+import useEthers from "@/composables/ethers"
 import useStaking from "@/composables/staking"
 import useFormat from "@/composables/format"
 import usePrice from "@/composables/price"
 import useUser from "@/composables/user"
+import useWallets from "@/composables/wallets"
 import { ethers } from "ethers"
 import TermsOfService from "@/components/TermsOfService.vue"
 
+const { browserProvidersList } = useEthers()
 const { batchProvider } = useEnvironment()
-const { stakingComposableInitialized, userStakeDetails, deposit, withdraw, getWithdrawableBalance } = useStaking()
+const { stakeWithdrawError, stakingComposableInitialized, userStakeDetails, deposit, withdraw, getWithdrawableBalance } = useStaking()
 const { convertString, formatEthersCasimir, formatEthersCasimirStaking, parseEthersCasimir } = useFormat()
 const { getCurrentPrice } = usePrice()
-const { user, updateUserAgreement } = useUser()
+const { user, getPathIndex, updateUserAgreement } = useUser()
+const { detectActiveWalletAddress } = useWallets()
 
 // Staking Component Refs
 const addressBalance = ref<string | null>(null)
@@ -114,15 +118,10 @@ function toggleEstimatedAPY() {
 
 function selectAmountInput() {
     const inputElement = document.getElementById("amount_input") as HTMLInputElement
-
     if (inputElement) {
-
         inputElement.setSelectionRange(0, inputElement.value.length)
-
-        // For mobile devices
-        inputElement.select()
+        inputElement.select() // For mobile devices
     }
-
 }
 
 function aggregateAddressesByProvider() {
@@ -219,22 +218,28 @@ function handleInputOnAmountToStakeOrWithdraw(event: any) {
 }
 
 async function handleStake() {
+    let pathIndex = undefined
     stakeButtonText.value = "Staking..."
-
-    // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
-    // if (activeAddress !== selectedWalletAddress.value) {
-    //   formattedAmountToStakeOrWithdraw.value = ''
-    //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
-    // }
     eigenIsToggled.value = false
-    const result = await deposit({
+
+    // TODO: @DemogorGod - Should we check for active wallet here or in the staking.ts composable?
+    if (browserProvidersList.includes(selectedWalletAddress.value as string)) {
+        const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+        if (activeAddress !== selectedWalletAddress.value) {
+            formattedAmountToStakeOrWithdraw.value = 0
+            stakeButtonText.value = "Stake"
+            return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your ${selectedStakingProvider.value} browser extension select the account you want to use to stake.`)
+        }
+    } else {
+        pathIndex = getPathIndex(selectedStakingProvider.value, selectedWalletAddress.value as string)
+    }
+    const depositPayload = {
         amount: formattedAmountToStakeOrWithdraw.value.toString(),
         walletProvider: selectedStakingProvider.value,
-        type: stakeType.value
-    })
-
-    if (result === false) stakeButtonText.value = "User Rejected Signature"
-    else stakeButtonText.value = "Staked!"
+        type: stakeType.value,
+        pathIndex: pathIndex !== undefined ? pathIndex : undefined
+    }
+    const result = await deposit(depositPayload)
 
     setTimeout(() => {
         stakeButtonText.value = "Stake"
@@ -242,17 +247,19 @@ async function handleStake() {
     }, 1000)
 
     if (result) alert("Your Stake Has Been Deposited!")
-    else alert("Your Stake Action Has Failed, Please Try Again Later!")
 }
 
 async function handleWithdraw() {
     stakeButtonText.value = "Withdrawing..."
     selectedOperatorGroupStakeDetails.value = undefined
-    // const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
-    // if (activeAddress !== selectedWalletAddress.value) {
-    //   formattedAmountToStakeOrWithdraw.value = ''
-    //   return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your browser extension and select the account that you want to log in with.`)
-    // }
+
+    // TODO: @DemogorGod - Should we check for active wallet here or in the staking.ts composable?
+    const activeAddress = await detectActiveWalletAddress(selectedStakingProvider.value)
+    if (activeAddress !== selectedWalletAddress.value) {
+        formattedAmountToStakeOrWithdraw.value = 0
+        stakeButtonText.value = "Withdraw"
+        return alert(`The account you selected is not the same as the one that is active in your ${selectedStakingProvider.value} wallet. Please open your ${selectedStakingProvider.value} browser extension select the account you want to use to withdraw.`)
+    }
 
     const withdrawableBalance = await getWithdrawableBalance({
         walletProvider: selectedStakingProvider.value,
@@ -281,7 +288,6 @@ async function handleWithdraw() {
     }, 1000)
 
     if (confirmation) alert("Your Stake Has Been Withdrawn!")
-    else alert("Your Stake Action Has Failed, Please Try Again Later!")
 }
 
 watch(formattedWalletOptions, async () => {
@@ -335,6 +341,22 @@ watch(selectedWalletAddress, async () => {
     } else {
         addressBalance.value = null
     // currentUserStake.value = 0
+    }
+})
+
+watch(stakeWithdrawError, () => {
+    if (stakeWithdrawError.value === "") return
+    if (stakeWithdrawError.value === "user rejected transaction") {
+        alert("User rejected transaction. Try again and confirm signature.")
+        setTimeout(() => {
+            stakeOrWithdraw.value === "stake" ? stakeButtonText.value = "Stake" : stakeButtonText.value = "Withdraw"
+        }, 2000)
+    } else {
+        // TODO: Determine other errors to handle and handle here.
+        alert("Stake failed. Try again later.")
+        setTimeout(() => {
+            stakeOrWithdraw.value === "stake" ? stakeButtonText.value = "Stake" : stakeButtonText.value = "Withdraw"
+        }, 2000)
     }
 })
 

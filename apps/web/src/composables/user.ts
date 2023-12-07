@@ -1,5 +1,5 @@
 import { readonly, ref, watch } from "vue"
-import { UserWithAccountsAndOperators } from "@casimir/types"
+import { Account, ProviderString, UserWithAccountsAndOperators } from "@casimir/types"
 import useEnvironment from "@/composables/environment"
 import { ethers } from "ethers"
 
@@ -14,6 +14,12 @@ export default function useUser() {
         watch(user, async () => {
             await setUserAccountBalances()
         })
+    }
+
+    function getPathIndex(provider: ProviderString, address: string) {
+        const { accounts } = user.value as UserWithAccountsAndOperators
+        const target = accounts.find((account: Account) => account.walletProvider === provider && account.address === address)
+        return target?.pathIndex
     }
 
     function setUser(newUserValue: UserWithAccountsAndOperators | undefined) {
@@ -57,6 +63,7 @@ export default function useUser() {
     return {
         user: readonly(user),
         initializeUserComposable,
+        getPathIndex,
         setUser,
         updateUserAgreement,
     }

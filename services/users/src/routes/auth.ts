@@ -36,7 +36,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
     try {
         const { body } = req
         const loginCredentials = body
-        const { provider, address, currency, message, signedMessage } = loginCredentials
+        const { provider, address, currency, message, signedMessage, pathIndex } = loginCredentials
         const { parsedDomain, parsedNonce } = parseMessage(message)
         const verifyDomain = parsedDomain ? verifyMessageDomain(parsedDomain) : false
         const verifyNonce = parsedNonce ? await verifyMessageNonce(address, parsedNonce) : false
@@ -62,6 +62,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
                     address,
                     currency,
                     walletProvider: provider,
+                    pathIndex,
                 } as Account
 
                 const addUserResult = await addUser(newUser, account)

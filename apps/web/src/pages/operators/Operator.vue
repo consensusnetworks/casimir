@@ -5,14 +5,13 @@ import { ProviderString } from "@casimir/types"
 import useAuth from "@/composables/auth"
 import useContracts from "@/composables/contracts"
 import useEnvironment from "@/composables/environment"
-// import useEthers from '@/composables/ethers'
 import useFormat from "@/composables/format"
 import useOperators from "@/composables/operators"
 import useUser from "@/composables/user"
+import useWallets from "@/composables/wallets"
 
 const { loadingSessionLogin } = useAuth()
 const { docsUrl } = useEnvironment()
-// const { detectActiveWalletAddress } = useEthers()
 const { contractsAreInitialized } = useContracts()
 const { convertString } = useFormat()
 const {
@@ -25,6 +24,7 @@ const {
     loadingAddOperator
 } = useOperators()
 const { user } = useUser()
+const { detectActiveWalletAddress } = useWallets()
 
 // Form inputs
 const selectedWallet = ref<{ address: string, walletProvider: ProviderString }>({ address: "", walletProvider: "" })
@@ -285,10 +285,10 @@ async function submitRegisterOperatorForm() {
     const selectedAddress = selectedWallet.value.address
     const selectedProvider = selectedWallet.value.walletProvider
 
-    // const activeAddress = await detectActiveWalletAddress(selectedProvider)
-    // if (activeAddress !== selectedAddress) {
-    //   return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your browser extension and select the account that you want to log in with.`)
-    // }
+    const activeAddress = await detectActiveWalletAddress(selectedProvider)
+    if (activeAddress !== selectedAddress) {
+        return alert(`The account you selected is not the same as the one that is active in your ${selectedProvider} wallet. Please open your ${selectedProvider} browser extension and select the account you want to use.`)
+    }
 
     try {
         await registerOperatorWithCasimir({

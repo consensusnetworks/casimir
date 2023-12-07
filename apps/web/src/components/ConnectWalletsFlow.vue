@@ -13,7 +13,14 @@ import useWallets from "@/composables/wallets"
 import useWalletConnect from "@/composables/walletConnectV2"
 // import useWallets from '@/composables/wallets'
 
-type UserAuthFlowState = "select_provider" | "select_address" | "loading" | "success" | "add_account" | "confirm_signage_with_existing_secondary" | "connection_failed"
+type UserAuthFlowState = 
+  "select_provider"
+  | "select_address" 
+  | "loading" 
+  | "success" 
+  | "add_account" 
+  | "confirm_signage_with_existing_secondary" 
+  | "connection_failed"
 
 const supportedWalletProviders = [
     "MetaMask",
@@ -29,8 +36,8 @@ const { login, loginWithSecondaryAddress } = useAuth()
 const { requiredNetwork } = useEnvironment()
 const { browserProvidersList, getEthersAddressesWithBalances } = useEthers()
 const { convertString, formatEthersCasimir, trimAndLowercaseAddress } = useFormat()
-const { getLedgerAddress } = useLedger()
-const { getTrezorAddress } = useTrezor()
+const { getEthersLedgerAddresses } = useLedger()
+const { getEthersTrezorAddresses } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnect()
@@ -50,7 +57,7 @@ const props = defineProps({
 
 const flowState = ref<UserAuthFlowState>("select_provider")
 const errorMessage = ref(false)
-const errorMassageText = ref("Something went wrong, please try again later.")
+const errorMessageText = ref("Something went wrong, please try again later.")
 const walletProviderAddresses = ref([] as CryptoAddress[])
 const selectProviderLoading = ref(false)
 const selectedProvider = ref(null as ProviderString | null)
@@ -78,7 +85,7 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
     } else if (response === "Selected address is not active address in wallet") {
         flowState.value = "select_address"
         errorMessage.value = true
-        errorMassageText.value = "Address selected is not active."
+        errorMessageText.value = "Address selected is not active."
     } else if (response === "Error in userAuthState") {
         flowState.value = "connection_failed"
         setTimeout(() => {
@@ -87,7 +94,7 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
         }, 1000)
     } else {
         errorMessage.value = true
-        errorMassageText.value = "Something went wrong, please try again later."
+        errorMessageText.value = "Something went wrong, please try again later."
     }
 }
 
@@ -95,10 +102,13 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
  * Checks if user is adding an account or logging in
  * @param address 
 */
-async function selectAddress(address: string, pathIndex: number): Promise<void> {
+async function selectAddress(address: string, pathIndex?: number): Promise<void> {
     selectedAddress.value = address
     flowState.value = "loading"
-    const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex }
+    const loginCredentials: LoginCredentials = 
+      pathIndex !== undefined ? 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex } : 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH" }
     const response = await login(loginCredentials)
     if (response === "Successfully logged in" || response === "Successfully added account to user") {
         flowState.value = "success"
@@ -109,7 +119,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
     } else if (response === "Address already exists on this account") {
         flowState.value = "select_address"
         errorMessage.value = true
-        errorMassageText.value = "Address selected is already connected to your account."
+        errorMessageText.value = "Address selected is already connected to your account."
     } else if (
         response === "Address already exists as a primary address on another account" ||
         response === "Address already exists as a secondary address on another account"
@@ -118,7 +128,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
     } else if (response === "Selected address is not active address in wallet") {
         flowState.value = "select_address"
         errorMessage.value = true
-        errorMassageText.value = "Address selected is not active."
+        errorMessageText.value = "Address selected is not active."
     } else if (response === "Error in userAuthState") {
         flowState.value = "connection_failed"
         setTimeout(() => {
@@ -127,7 +137,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
         }, 1500)
     } else {
         errorMessage.value = true
-        errorMassageText.value = "Something went wrong, please try again later."
+        errorMessageText.value = "Something went wrong, please try again later."
     }
 }
 
@@ -136,7 +146,7 @@ async function selectAddress(address: string, pathIndex: number): Promise<void> 
  * @param provider 
  * @param currency 
 */
-async function selectProvider(provider: ProviderString, currency: Currency = "ETH"): Promise<void> {
+async function selectProvider(provider: ProviderString): Promise<void> {
     console.clear()
     try {
         selectedProvider.value = provider
@@ -144,10 +154,12 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
     
         // Hard Goerli Check
         // TODO: Make this dynamic
-        const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
-        if (activeNetwork !== 5) {
-            await switchEthersNetwork(selectedProvider.value, "0x5")
-            return window.location.reload()
+        if (provider !== "WalletConnect") {
+            const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
+            if (activeNetwork !== 5) {
+                await switchEthersNetwork(selectedProvider.value, "0x5")
+                return window.location.reload()
+            }
         }
 
         if (provider === "WalletConnect") {
@@ -156,19 +168,42 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
         } else if (provider === "Ledger") {
-            walletProviderAddresses.value = await getLedgerAddress[currency]() as CryptoAddress[]
+            walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
         } else if (provider === "Trezor") {
-            walletProviderAddresses.value = await getTrezorAddress[currency]() as CryptoAddress[]
+            walletProviderAddresses.value = await getEthersTrezorAddresses() as CryptoAddress[]
         } else {
             throw new Error("Provider not supported")
         }
+        errorMessage.value = false
+        errorMessageText.value = ""
         selectProviderLoading.value = false
         flowState.value = "select_address"
     } catch (error: any) {
         errorMessage.value = true
-        errorMassageText.value = "Something went wrong, please try again later."
-        selectProviderLoading.value = false
-        throw new Error(`Error selecting provider: ${error.message}`)
+        if (provider === "Ledger") {
+            const { message, name, statusCode } = error
+            if (
+                message === "Ledger device: UNKNOWN_ERROR (0x6511)" 
+              && name === "TransportStatusError" 
+              && statusCode === 25873
+            ) {
+                errorMessageText.value = "Unlock your Ledger and open Ethereum Goerli app."
+                selectProviderLoading.value = false
+            }
+        } else if (provider === "Trezor") {
+            if (error.message.includes("Trezor Suite is not open")) {
+                errorMessageText.value = "Open your Trezor Suite desktop app."
+                selectProviderLoading.value = false
+            } else {
+                console.log("Error in selectProvider :>> ", error)
+                errorMessageText.value = "Something went wrong with your Trezor connection, please try again later."
+                selectProviderLoading.value = false
+            }
+        } else {
+            console.log("error in selectProvider in ConnectWalletsFlow.vue :>> ", error)
+            errorMessageText.value = "Something went wrong, please try again later."
+            selectProviderLoading.value = false
+        }
     }
 }
 
@@ -230,7 +265,7 @@ onUnmounted(() => {
           <button
             class="connect_wallet_btn_provider relative"
             :disabled="selectProviderLoading"
-            @click="selectProvider(walletProvider, 'ETH')"
+            @click="selectProvider(walletProvider)"
           >
             <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" />
             <img
@@ -260,7 +295,7 @@ onUnmounted(() => {
       </div>
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
         <span v-show="errorMessage">
-          Something went wrong, please try again later.
+          {{ errorMessageText }}
         </span>
       </div>
       <div>
@@ -336,7 +371,11 @@ onUnmounted(() => {
           <button
             class="connect_wallet_btn"
             :disabled="checkIfAddressIsUsed(act)"
-            @click="selectAddress(trimAndLowercaseAddress(act.address), pathIndex)"
+            @click="
+              selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
+                selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
+                selectAddress(trimAndLowercaseAddress(act.address), undefined)
+            "
           >
             <div>
               {{ convertString(act.address) }}
@@ -350,7 +389,7 @@ onUnmounted(() => {
 
       <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
         <span v-show="errorMessage">
-          {{ errorMassageText }}
+          {{ errorMessageText }}
         </span>
       </div>
       <div>
@@ -639,4 +678,4 @@ onUnmounted(() => {
   letter-spacing: -0.01em;
   color: #667085;
 }
-</style>
+</style>@/composables/eventBus
