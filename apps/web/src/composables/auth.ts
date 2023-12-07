@@ -20,7 +20,7 @@ const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
@@ -172,7 +172,12 @@ export default function useAuth() {
 
                 const hardwareWallet = provider === "Ledger" || provider === "Trezor"
                 const browserWallet = browserProvidersList.includes(provider as ProviderString)
-                if (hardwareWallet) {
+
+                if (provider === "WalletConnect") {
+                    await loginWithProvider(loginCredentials as LoginCredentials)
+                    await getUser()
+                    return "Successfully logged in"
+                } else if (hardwareWallet) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
                     return "Successfully logged in"
@@ -193,6 +198,7 @@ export default function useAuth() {
                 }
             }
         } catch (error: any) {
+            console.log("Error in userAuthState :>> ", error)
             return "Error in userAuthState"
         }
     }
@@ -272,7 +278,8 @@ export default function useAuth() {
     async function logout() {
         try {
             loadingSessionLogout.value = true
-            await Session.signOut()
+            const promises = [disconnectWalletConnect(), Session.signOut()]
+            await Promise.all(promises)
             setUser(undefined)
             loadingSessionLogout.value = false
         } catch (error) {

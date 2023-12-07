@@ -6,11 +6,13 @@ import { PairingTypes, SessionTypes } from "@walletconnect/types"
 import useSiwe from "@/composables/siwe"
 import useEthers from "@/composables/ethers"
 import useEnvironment from "@/composables/environment"
+import useUser from "@/composables/user"
 import { CryptoAddress, LoginCredentials } from "@casimir/types"
 
 const { createSiweMessage, signInWithEthereum } = useSiwe()
 const { walletConnectProjectId } = useEnvironment()
 const { getEthersBalance } = useEthers()
+const { user } = useUser()
 
 let cleanupFunctions: Array<any> = [] // TODO: Potentially fix type here.
 const accounts = ref<Array<string>>([])
@@ -47,7 +49,6 @@ export default function useWalletConnectV2() {
             web3Modal.value?.closeModal()
             const connectedAddress = _accounts[0].toLowerCase().trim() as string
             const connectedAddressBalance = (await getEthersBalance(connectedAddress)).toString()
-
             return [{ address: connectedAddress as string, balance: connectedAddressBalance }]
         } catch (error) {
             console.error("Failed to connect:", error)
@@ -89,7 +90,7 @@ export default function useWalletConnectV2() {
         web3Provider.value = ethersProviderInstance
     }
 
-    async function disconnect() {
+    async function disconnectWalletConnect() {
         if (!ethereumProvider.value) {
             throw new Error("ethereumProvider is not initialized")
         }
@@ -106,11 +107,11 @@ export default function useWalletConnectV2() {
 
     async function initializeWalletConnect() {
         if (componentIsMounted.value) return
-        // if (import.meta.env.MODE === "development") console.log("initializing wallet connect")
+        if (import.meta.env.MODE === "development") console.log("initializing wallet connect")
         componentIsMounted.value = true
 
         // Check for persisted sessions & Subscribe to provider events
-        if (ethereumProvider.value) {
+        if (ethereumProvider.value && user.value) {
             _subscribeToProviderEvents()
             subscribedToProviderEvents.value = true
             await _checkForPersistedSession()
@@ -139,8 +140,6 @@ export default function useWalletConnectV2() {
   
     async function signWalletConnectMessage(message: string) : Promise<string> {
         try {
-            console.log("got to signWalletConnectMessage")
-            console.log("message :>> ", message)
             const signer = await web3Provider.value?.getSigner()
             return await signer?.signMessage(message) as string
         } catch (err) {
@@ -160,6 +159,10 @@ export default function useWalletConnectV2() {
         if (ethereumProvider.value?.session) {
             const _session = ethereumProvider.value?.session
             console.log("RESTORED SESSION:", _session)
+            if (!user.value) {
+                await disconnectWalletConnect()
+                return
+            }
             await _onSessionConnected(_session)
             return _session
         }
@@ -237,11 +240,12 @@ export default function useWalletConnectV2() {
     }
 
     return {
+        web3Provider,
         connectWalletConnectV2,
+        disconnectWalletConnect,
         getWalletConnectSignerV2,
         initializeWalletConnect,
         loginWithWalletConnectV2,
-        uninitializeWalletConnect,
-        web3Provider
+        uninitializeWalletConnect
     }
 }
