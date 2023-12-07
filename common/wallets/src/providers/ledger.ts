@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { ethers } from "ethers"
 // import Btc from '@ledgerhq/hw-app-btc'
 import Eth, { ledgerService } from "@ledgerhq/hw-app-eth"
@@ -223,38 +224,42 @@ export class EthersLedgerSigner extends ethers.Signer {
         return ethers.utils.joinSignature(signature)
     }
 
-    async signTransaction(transaction: ethers.providers.TransactionRequest): Promise<string> {
-        const tx = await ethers.utils.resolveProperties(transaction)
+    async signTransaction(tx: ethers.providers.TransactionRequest): Promise<string> {
+        const resolvedTx = await ethers.utils.resolveProperties(tx)
+        
         const baseTx: ethers.utils.UnsignedTransaction = {
-            chainId: (tx.chainId || undefined),
-            data: (tx.data || undefined),
-            gasLimit: (tx.gasLimit || undefined),
-            gasPrice: (tx.gasPrice || undefined),
-            nonce: (tx.nonce ? ethers.BigNumber.from(tx.nonce).toNumber() : undefined),
-            to: (tx.to || undefined),
-            value: (tx.value || undefined),
-            type: (tx.type || undefined)
+            chainId: (resolvedTx.chainId || 1),
+            data: (resolvedTx.data || undefined),
+            gasLimit: (resolvedTx.gasLimit || undefined),
+            maxFeePerGas: (resolvedTx.maxFeePerGas || undefined),
+            maxPriorityFeePerGas: (resolvedTx.maxPriorityFeePerGas || undefined),
+            nonce: (resolvedTx.nonce ? ethers.BigNumber.from(resolvedTx.nonce).toNumber() : 0),
+            to: (resolvedTx.to || undefined),
+            value: (resolvedTx.value || undefined),
+            type: (resolvedTx.type || undefined)
         }
-
-        const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2)
+    
+        const unsignedTx = ethers.utils.serializeTransaction(baseTx).substring(2) // Do we have to do this step?
         const resolution = await ledgerService.resolveTransaction(unsignedTx, {}, {})
         const signature = await this.retry((eth) => eth.signTransaction(this.path, unsignedTx, resolution))
-
-        return ethers.utils.serializeTransaction(baseTx, {
+    
+        const result = ethers.utils.serializeTransaction(baseTx, {
             v: ethers.BigNumber.from("0x" + signature.v).toNumber(),
             r: ("0x" + signature.r),
             s: ("0x" + signature.s),
         })
+        return result
     }
 
     // Populates all fields in a transaction, signs it and sends it to the network
-    async sendTransaction(transaction: ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
+    async sendTransaction(tx: ethers.utils.Deferrable<ethers.providers.TransactionRequest>)
         : Promise<ethers.providers.TransactionResponse> 
     {
         this._checkProvider("sendTransaction")
-        const tx = await this.populateTransaction(transaction)
-        const signedTx = await this.signTransaction(tx)
-        return await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
+        const populatedTx = await this.populateTransaction(tx)
+        const signedTx = await this.signTransaction(populatedTx)
+        const result = await (this.provider as ethers.providers.JsonRpcProvider).sendTransaction(signedTx)
+        return result
     }
 
     connect(provider: ethers.providers.Provider): ethers.Signer {

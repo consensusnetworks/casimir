@@ -80,7 +80,12 @@ export default function useStaking() {
             return confirmation
         } catch (err: any) {
             console.error(`Error in deposit function: ${JSON.stringify(err)}`)
-            stakeWithdrawError.value = err.reason
+            if (err.message.includes("denied by the user")) {
+                stakeWithdrawError.value = "Transaction denied by the user"
+                console.log("Transaction denied by the user")
+            } else {
+                stakeWithdrawError.value = err.message
+            }
             awaitingStakeOrWithdrawConfirmation.value = false
             return false
         }

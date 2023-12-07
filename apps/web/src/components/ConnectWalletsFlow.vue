@@ -146,7 +146,7 @@ async function selectAddress(address: string, pathIndex?: number): Promise<void>
  * @param provider 
  * @param currency 
 */
-async function selectProvider(provider: ProviderString, currency: Currency = "ETH"): Promise<void> {
+async function selectProvider(provider: ProviderString): Promise<void> {
     console.clear()
     try {
         selectedProvider.value = provider
@@ -154,10 +154,12 @@ async function selectProvider(provider: ProviderString, currency: Currency = "ET
     
         // Hard Goerli Check
         // TODO: Make this dynamic
-        const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
-        if (activeNetwork !== 5) {
-            await switchEthersNetwork(selectedProvider.value, "0x5")
-            return window.location.reload()
+        if (provider !== "WalletConnect") {
+            const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
+            if (activeNetwork !== 5) {
+                await switchEthersNetwork(selectedProvider.value, "0x5")
+                return window.location.reload()
+            }
         }
 
         if (provider === "WalletConnect") {
@@ -263,7 +265,7 @@ onUnmounted(() => {
           <button
             class="connect_wallet_btn_provider relative"
             :disabled="selectProviderLoading"
-            @click="selectProvider(walletProvider, 'ETH')"
+            @click="selectProvider(walletProvider)"
           >
             <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" />
             <img
