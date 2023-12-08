@@ -8,7 +8,7 @@ import { run, runSync } from "@casimir/shell"
  * You can override the following configuration environment variables:
  * - PROJECT: casimir
  * - STAGE: local | dev | sandbox | prod
- * - APP: web | landing
+ * - APP: web | www
  * - NETWORK: mainnet | testnet
  * - FORK: mainnet | testnet
  * - USE_SECRETS: true | false
@@ -24,7 +24,7 @@ import { run, runSync } from "@casimir/shell"
  */
 async function root() {
     const apps = {
-        landing: {
+        www: {
             contracts: false,
             port: 3002,
             services: {

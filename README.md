@@ -17,7 +17,7 @@
     - [Environment Variables](#environment-variables)
   - [Apps](#apps)
     - [@casimir/web](#casimirweb)
-    - [@casimir/landing](#casimirlanding)
+    - [@casimir/www](#casimirwww)
   - [Contracts](#contracts)
     - [@casimir/ethereum](#casimirethereum)
   - [Common](#common)
@@ -41,7 +41,7 @@ Configure the following prerequisite global dependency versions.
 
 1. [Docker (v24.x)](https://docs.docker.com/engine/install/).
 
-2. [Go (v1.18.x)](https://golang.org/doc/install).
+2. [Go (v1.20.x)](https://golang.org/doc/install).
 
 3. [Node.js (v18.x)](https://nodejs.org/en/download/).
 
@@ -142,16 +142,16 @@ npm run dev
 
 See the [@casimir/web README.md](apps/web/README.md) for detailed documentation.
 
-#### @casimir/landing
+#### @casimir/www
 
-Run the landing app.
+Run the www app.
 
 ```zsh
 # From the root directory
-npm run dev:landing
+npm run dev:www
 ```
 
-See the [@casimir/landing README.md](apps/landing/README.md) for detailed documentation.
+See the [@casimir/www README.md](apps/www/README.md) for detailed documentation.
 
 ### Contracts
 
@@ -221,7 +221,7 @@ Code is organized into work directories (apps, common, contracts, infrastructure
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   |── landing/ (landing page app)
+|   |── www/ (www page app)
 |   └── web/ (main web app)
 ├── common/ (shared code)
 |   ├── data/ (data schemas and operational workflows)

@@ -38,17 +38,12 @@ void async function () {
 
         const go = await run("go version") as string
         try {
-            const goSplit = go.split(" ")
-            const goNumber = goSplit[2]
-            const goNumberSplit = goNumber.split(".")
-            const goMajor = parseInt(goNumberSplit[0])
-            const goMinor = parseInt(goNumberSplit[1])
-            if (goMajor < 1 || goMinor < 20) {
+            if (!go.includes("1.20")) {
                 throw new Error("🚩 Incompatible go version")
             }
         } catch (error) {
             console.error(error.message)
-            throw new Error("🚩 Please install go v1.18.x (see https://github.com/consensusnetworks/casimir#prerequisites #3)")
+            throw new Error("🚩 Please install go v1.20.x (see https://github.com/consensusnetworks/casimir#prerequisites #3)")
         }
 
         try {
