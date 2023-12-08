@@ -8,7 +8,7 @@ import { run, runSync } from "@casimir/shell"
  * You can override the following configuration environment variables:
  * - PROJECT: casimir
  * - STAGE: local | dev | sandbox | prod
- * - APP: web | www
+ * - APP: app | www
  * - NETWORK: mainnet | testnet
  * - FORK: mainnet | testnet
  * - USE_SECRETS: true | false
@@ -33,7 +33,7 @@ async function root() {
                 }
             }
         },
-        web: {
+        app: {
             contracts: true,
             port: 3001,
             services: {
@@ -44,7 +44,7 @@ async function root() {
         }
     }
 
-    const app = process.env.APP || "web"
+    const app = process.env.APP || "app"
     if (!apps[app]) {
         throw new Error(`App ${app} is not supported`)
     }
@@ -137,7 +137,7 @@ async function root() {
         run(`npm run dev --workspace @casimir/${app}`)
     }
 
-    if (process.env.MOCK_SERVICES === "true" && app === "web") {
+    if (process.env.MOCK_SERVICES === "true" && app === "app") {
         process.on("SIGINT", () => {
             console.log("🧹 Cleaning up users service")
             runSync("npm run clean --workspace @casimir/users")

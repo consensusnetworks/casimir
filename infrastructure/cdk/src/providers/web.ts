@@ -67,7 +67,7 @@ export class WebStack extends cdk.Stack {
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, "bucket-deployment"), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset("../../apps/web/dist")],
+            sources: [s3Deployment.Source.asset("../../apps/app/dist")],
             distribution,
             distributionPaths: ["/*"]
         })

@@ -16,7 +16,7 @@
   - [Configure](#configure)
     - [Environment Variables](#environment-variables)
   - [Apps](#apps)
-    - [@casimir/web](#casimirweb)
+    - [@casimir/app](#casimirapp)
     - [@casimir/www](#casimirwww)
   - [Contracts](#contracts)
     - [@casimir/ethereum](#casimirethereum)
@@ -131,7 +131,7 @@ echo "USE_SECRETS=false" > .env
 
 The apps packages provide a UI to end-users.
 
-#### @casimir/web
+#### @casimir/app
 
 Run the web app with an integrated development environment, including local contracts and services.
 
@@ -140,7 +140,7 @@ Run the web app with an integrated development environment, including local cont
 npm run dev
 ```
 
-See the [@casimir/web README.md](apps/web/README.md) for detailed documentation.
+See the [@casimir/app README.md](apps/app/README.md) for detailed documentation.
 
 #### @casimir/www
 
@@ -221,8 +221,8 @@ Code is organized into work directories (apps, common, contracts, infrastructure
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   |── www/ (www page app)
-|   └── web/ (main web app)
+|   |── www/ (landing page app)
+|   └── app/ (main web app)
 ├── common/ (shared code)
 |   ├── data/ (data schemas and operational workflows)
 |   └── helpers/ (general utilities)
