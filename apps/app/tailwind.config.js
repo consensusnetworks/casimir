@@ -6,7 +6,24 @@ export default {
     "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      padding: {
+      },
+      colors: {
+        // Backgrounds
+        lightBg: "#FFF",
+        darkBg: "#09090B",
+        // text-colors
+        mainLightText: "#FAFAFA",
+        mainDarkText: "#09090B",
+      },
+      spacing: {
+      }
+    },
+    fontFamily: {
+    },
+    screens: {
+    },
   },
   plugins: [],
 }

@@ -1,15 +1,24 @@
 <script setup>
-import { useDark, useToggle } from "@vueuse/core"
+import { ref } from "vue"
+import { useDark, useToggle, useStorage } from "@vueuse/core"
 
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
+
+const acceptTerms = ref(false)
+const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
 </script>
 
 <template>
-  <div class="text-white dark:text-red-500">
-    Basic App {{ isDark }}
+  <div>
+    Basic App
     <button @click="toggleDark()">
       toggle light/dark mode
+    </button>
+
+
+    <button @click="acceptTerms = !acceptTerms">
+      toggle terms of service {{ acceptTermsStorage }}
     </button>
   </div>
 </template>
