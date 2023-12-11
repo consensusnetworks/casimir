@@ -39,19 +39,19 @@ Get started contributing to Casimir's codebase.
 
 Configure the following prerequisite global dependency versions:
 
-  1. [Git (v2.x)](https://git-scm.com/downloads).
+1. [Git (v2.x)](https://git-scm.com/downloads).
 
     > 🚩 **GitHub submodule support:** You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules within submodules). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-  2. [Docker (v24.x)](https://docs.docker.com/engine/install).
+2. [Docker (v24.x)](https://docs.docker.com/engine/install).
 
-  3. [Go (v1.20.x)](https://golang.org/doc/install).
+3. [Go (v1.20.x)](https://golang.org/doc/install).
 
-  4. [Node.js (LTS)](https://nodejs.org/en/download).
+4. [Node.js (LTS)](https://nodejs.org/en/download).
 
     > 🚩 **Using NVM**: Install [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run `nvm install --lts`.
 
-  5. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
+5. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
 
     > 🚩 **Consensus Networks team only**: Create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
@@ -106,8 +106,6 @@ Customize and override the development environment configuration by creating a [
   echo "AWS_PROFILE=<"your-aws-profile-name">" > .env
   ```
 
-  > 🚩 The AWS CLI profile must have command-line access to the `consensus-networks-dev` account resources.
-
 **If you are outside of the Consensus Networks organization**, set `USE_SECRETS` to `false` in your [.env](.env) file:
 
   ```zsh
@@ -150,12 +148,12 @@ See the [@casimir/app README.md](apps/app/README.md) for detailed documentation.
 
 #### @casimir/www
 
-Run the landing page app.
+Run the landing page app:
 
-```zsh
-# From the root directory
-npm run dev:www
-```
+  ```zsh
+  # From the root directory
+  npm run dev:www
+  ```
 
 See the [@casimir/www README.md](apps/www/README.md) for detailed documentation.
 
