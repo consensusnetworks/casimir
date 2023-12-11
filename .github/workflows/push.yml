@@ -13,20 +13,20 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
-    # Skip any pushes with commit flag '(skip deploy)'
+    # Skip any pushes with commit flag "(skip deploy)"
     # Comment out for testing
-    if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
+    if: ${{ !contains(github.event.head_commit.message, "(skip deploy)") }}
 
     steps:
       - name: Checkout the repo with submodules
         uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts'
+          node-version: "lts/*"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
