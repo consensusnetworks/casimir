@@ -6,24 +6,22 @@ import fs from "fs"
  */
 void async function () {
     if (process.env.CI !== "true") {
-        const submodules = fs.readFileSync(".gitmodules", "utf8")
-        const submoduleDirs = submodules.match(/path = (.*)/g)?.map((path) => path.replace("path = ", ""))
-        if (submoduleDirs) {
-            try {
-                for (const dir of submoduleDirs) {
-                    const content = fs.readdirSync(dir)
-                    if (!content.length) {
-                        throw new Error("🚩 Missing ssh key for submodules")
-                    }
+        try {
+            const submodules = fs.readFileSync(".gitmodules", "utf8")
+            const submoduleDirs = submodules.match(/path = (.*)/g)?.map((path) => path.replace("path = ", ""))
+            submoduleDirs?.forEach((dir) => {
+                const content = fs.readdirSync(dir)
+                if (!content.length) {
+                    throw new Error("🚩 Missing ssh key for submodules")
                 }
-            } catch (error) {
-                console.error(error.message)
-                throw new Error("🚩 Please add an ssh key for submodules (see https://github.com/consensusnetworks/casimir#prerequisites #1)")
-            }
+            })
+        } catch (error) {
+            console.error(error.message)
+            throw new Error("🚩 Please add an ssh key for submodules (see https://github.com/consensusnetworks/casimir#prerequisites #1)")
         }
 
-        const docker = await run("docker --version") as string
         try {
+            const docker = await run("docker --version") as string
             const dockerSplit = docker.split(" ")
             const dockerNumber = dockerSplit[2]
             const dockerNumberSplit = dockerNumber.split(".")
@@ -36,8 +34,8 @@ void async function () {
             throw new Error("🚩 Please install docker 24.x (see https://github.com/consensusnetworks/casimir#prerequisites #2)")
         }
 
-        const go = await run("go version") as string
         try {
+            const go = await run("go version") as string
             if (!go.includes("1.20")) {
                 throw new Error("🚩 Incompatible go version")
             }
@@ -48,9 +46,8 @@ void async function () {
 
         try {
             const node = await run("node --version") as string
-            const nodeLtsList = (await run("nvm ls-remote --lts") as string).split("\n")
-            const nodeLts = nodeLtsList[nodeLtsList.length - 1].split(" ")[0]
-            if (!nodeLts.includes(node)) {
+            const nodeLts = await run("source ~/.nvm/nvm.sh && nvm ls-remote --lts | grep 'Latest LTS' | tail -n 1 | awk '{print $2}'") as string
+            if (!nodeLts.trim().includes(node.trim())) {
                 throw new Error("🚩 Incompatible node version")
             }
         } catch (error) {
