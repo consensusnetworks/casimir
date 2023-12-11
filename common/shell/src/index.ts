@@ -1,12 +1,13 @@
-import { exec, execSync } from "child_process"
+import { ExecOptions, exec, execSync } from "child_process"
+import { ObjectEncodingOptions } from "fs"
 
 /**
  * Run any shell command in a child process and return a promise
  * @param command - The full command to run
  * @returns A promise that resolves when the command exits
  */
-export async function run(command: string) {
-    const child = exec(command)
+export async function run(command: string, options?: ObjectEncodingOptions & ExecOptions) {
+    const child = exec(command, options)
     let data = ""
     return new Promise((resolve, reject) => {
         child.on("error", reject)

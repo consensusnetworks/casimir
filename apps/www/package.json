@@ -1,5 +1,5 @@
 {
-  "name": "@casimir/landing",
+  "name": "@casimir/www",
   "description": "Casimir landing page",
   "private": true,
   "scripts": {

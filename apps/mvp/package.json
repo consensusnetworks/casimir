@@ -1,5 +1,5 @@
 {
-  "name": "@casimir/web",
+  "name": "@casimir/mvp",
   "description": "Casimir web app",
   "private": true,
   "scripts": {

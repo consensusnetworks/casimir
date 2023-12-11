@@ -15,7 +15,7 @@
     "deploy:cdk": "npx esno -r dotenv/config scripts/cdk/deploy.ts",
     "deploy:ethereum": "npx esno -r dotenv/config scripts/ethereum/deploy.ts",
     "dev": "npx esno -r dotenv/config scripts/root/dev.ts",
-    "dev:landing": "APP=landing npm run dev",
+    "dev:www": "APP=www npm run dev",
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
