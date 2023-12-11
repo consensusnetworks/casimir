@@ -21,14 +21,15 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
 
     steps:
-      - name: Check out the repo
+      - name: Checkout the repo with submodules
         uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
-      - name: Install action dependencies
-        run: |
-          curl -sSf https://atlasgo.sh | sh
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -37,12 +38,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Install action dependencies
+        run: |
+          curl -sSf https://atlasgo.sh | sh
+
       - name: Install and build all package dependencies
         run: npm ci
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 
-      - name: Deploy cdk infrastructure
+      - name: Deploy CDK infrastructure
         run: npm run deploy:cdk
 
       - name: Migrate users database
