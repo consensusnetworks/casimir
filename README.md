@@ -49,7 +49,7 @@ Configure the following prerequisite global dependency versions:
 
 4. [Node.js (LTS)](https://nodejs.org/en/download).
 
-    > 🚩 **Using NVM**: Install [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run `nvm install --lts`.
+    > 🚩 **Using NVM**: Install [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run `nvm install --lts && nvm alias default lts/*` to set the default version to the latest LTS. You will need to rerun this command whenever the latest LTS changes.
 
 5. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
 
