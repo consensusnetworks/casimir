@@ -6,7 +6,7 @@ import nodePolyfills from "rollup-plugin-polyfill-node"
 import nodeResolve from "@rollup/plugin-node-resolve"
 
 export default defineConfig({
-    server: { port: 3001 },
+    server: { port: 3003 },
     plugins: [
         vue(),
         nodePolyfills(),

@@ -48,7 +48,7 @@ void async function () {
     await run("npm run build --workspace @casimir/redirect")
     await run("npm run build --workspace @casimir/www")
     await run("npm run build --workspace @casimir/users")
-    await run("npm run build --workspace @casimir/app")
+    await run("npm run build --workspace @casimir/mvp")
 
     await run("npm run bootstrap --workspace @casimir/cdk")
     await run("npm run synth --workspace @casimir/cdk")

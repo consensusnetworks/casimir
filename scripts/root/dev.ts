@@ -41,6 +41,10 @@ async function root() {
                     port: 4000,
                 }
             }
+        },
+        mvp: {
+            contracts: false,
+            port: 3003
         }
     }
 
@@ -135,6 +139,10 @@ async function root() {
         run(`npm run preview --workspace @casimir/${app}`)
     } else {
         run(`npm run dev --workspace @casimir/${app}`)
+    }
+
+    if (process.env.RUN_MVP === "true" && app === "app") {
+        run("npm run dev --workspace @casimir/mvp")
     }
 
     if (process.env.MOCK_SERVICES === "true" && app === "app") {
