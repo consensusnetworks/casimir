@@ -9,12 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "init": "^0.1.2",
+    "npx": "^10.2.2",
     "vue": "^3.3.8"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@vitejs/plugin-vue": "^4.5.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
     "rollup-plugin-polyfill-node": "^0.13.0",
+    "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "vite": "^5.0.0",
     "vue-tsc": "^1.8.22"
