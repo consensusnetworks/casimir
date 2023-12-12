@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: Inter;
+  line-height: 1.15;
   font-weight: 400;
+  letter-spacing: -0.6px;
 
   color-scheme: light dark;
 
@@ -17,10 +18,53 @@
 }
 
 body {
-  
   @apply bg-lightBg dark:bg-darkBg text-mainDarkText dark:text-mainLightText;
 }
 
-#app {
+h1 {
+  font-size: 32.44px;
+  font-weight: 600;
+  letter-spacing: -0.032em;
 }
 
+h2 {
+  font-size: 25.63px;
+  font-weight: 500;
+  letter-spacing: -0.022em; 
+}
+
+h3 {
+  font-size: 22.78px;
+  font-weight: 500;
+  letter-spacing: -0.022em; 
+}
+
+h4 {
+  font-size: 20.25px;
+  font-weight: 500;
+  letter-spacing: -0.022em; 
+}
+
+h5 {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.022em; 
+}
+
+h6 {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.022em;
+}
+
+p {
+  font-size: 14.22px;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+}
+
+small{
+  font-size: 12.64px;
+  font-weight: 300;
+  letter-spacing: -0.022em;
+}
