@@ -31,6 +31,9 @@ export default {
         white: "#FAFAFA",
         hover_white: "#D4D4D4",
         active_white: "#737373",
+
+        // Grays
+        gray_1: "#C3C3CB",
       },
       spacing: {
       }
