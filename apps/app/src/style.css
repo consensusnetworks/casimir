@@ -15,6 +15,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  --max-app-width: 1275px;
+  --navbar-height: 56px;
+  --x-padding: 14px;
+  --y-padding: 4px;
+  --page-padding: 24px;
 }
 
 body {
@@ -28,42 +33,48 @@ h1 {
 }
 
 h2 {
-  font-size: 25.63px;
+  font-size: 28.83px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
 h3 {
-  font-size: 22.78px;
+  font-size: 25.63px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
 h4 {
-  font-size: 20.25px;
+  font-size: 22.78px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
 h5 {
-  font-size: 18px;
+  font-size: 20.25px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
 h6 {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.022em; 
+}
+
+p {
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.022em;
 }
 
-p {
+small {
   font-size: 14.22px;
   font-weight: 400;
   letter-spacing: -0.022em;
 }
 
-small{
+caption{
   font-size: 12.64px;
   font-weight: 300;
   letter-spacing: -0.022em;
@@ -74,16 +85,40 @@ small{
 }
 
 .app_container_inner {
-  @apply w-full max-w-[1275px] mx-auto;
-  height: calc(100% - 36px);
+  @apply w-full mx-auto py-[24px];
+  min-height: calc(100% - var(--navbar-height));
+  max-width: var(--max-app-width);
 }
 
 .nav_bar_container{
   @apply w-full sticky top-0 left-0 border-b 
-  border-b-lightBorder dark:border-b-darkBorder
-  h-[36px];
+  border-b-lightBorder dark:border-b-darkBorder;
+  height: var(--navbar-height)
 }
 
 .nav_bar_container_inner{
-  @apply w-full h-full max-w-[1275px] mx-auto;
+  @apply w-full h-full mx-auto flex 
+  items-center justify-between;
+  max-width: var(--max-app-width);
+}
+
+.nav_bar_container_inner img{
+  @apply h-[16px] w-[19.56px];
+}
+
+.pill_primary {
+  @apply bg-black rounded-[999px] 
+  px-[var(--x-padding)] py-[var(--y-padding)] text-lightBorder
+  dark:bg-white dark:text-black
+  flex items-center gap-[12px] w-min;
+}
+
+.pill_primary_icon {
+  @apply w-[14px] h-[14px] mb-[2px]
+}
+
+.pill_primary_button{
+  @apply bg-black hover:bg-hover_black active:bg-active_black
+  dark:bg-white dark:text-black dark:hover:bg-hover_white 
+  dark:active:bg-active_white;
 }

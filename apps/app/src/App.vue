@@ -6,8 +6,8 @@ import NavBar from "@/components/elements/NavBar.vue"
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
 
-const acceptTerms = ref(false)
-const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
+// const acceptTerms = ref(false)
+// const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
 </script>
 
 <template>
@@ -20,9 +20,11 @@ const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
         toggle light/dark mode
       </button>
     </div>
-    <!-- <button @click="acceptTerms = !acceptTerms">
+    <!-- 
+    <button @click="acceptTerms = !acceptTerms">
       toggle terms of service {{ acceptTermsStorage }}
-    </button> -->
+    </button>
+    -->
   </div>
 </template>
 

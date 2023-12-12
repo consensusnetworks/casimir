@@ -20,7 +20,17 @@ export default {
 
         // borders
         lightBorder: "#E4E4E7",
-        darkBorder: "#27272A"
+        darkBorder: "#27272A",
+
+        // Primary
+
+        black: "#18181B",
+        hover_black: "#334155",
+        active_black: "#64748B",
+
+        white: "#FAFAFA",
+        hover_white: "#D4D4D4",
+        active_white: "#737373",
       },
       spacing: {
       }
