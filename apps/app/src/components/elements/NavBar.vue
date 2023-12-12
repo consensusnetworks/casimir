@@ -1,14 +1,21 @@
 <script setup>
-import { useDark, } from "@vueuse/core"
-import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/24/outline"
+import { ArrowTopRightOnSquareIcon, SunIcon, MoonIcon } from "@heroicons/vue/24/outline"
 import router from "@/composables/services/router"
+import { useDark, useToggle } from "@vueuse/core"
 
-const isDark = useDark()
 
-const matchRoute = (route) => {
-    // router.currentRoute.value.fullPath.split("/")
+const matchRoutes = (routes) => {
+    for (let i = 0; i < routes.length; i++) {
+        if (routes[i] === router.currentRoute.value.fullPath.split("/")[1]) {
+            return true
+        }
+    }
     return false
 }
+
+const isDark = useDark()
+const toggleDark = useToggle(isDark)
+
 </script>
 
 <template>
@@ -35,38 +42,52 @@ const matchRoute = (route) => {
         </button>
       </div>
 
-
       <!-- TODO: Make these route to actual pages and check if they are active -->
       <div class="flex items-center gap-[12px]">
         <router-link
           to="/"
           class="nav_links"
-          :class="{ 'nav_link_active': matchRoute('') }"
+          :class="{ 'nav_link_active': matchRoutes(['']) }"
         >
           Overview
         </router-link>
         <router-link
           to="/"
           class="nav_links"
+          :class="{ 'nav_link_active': matchRoutes(['stake']) }"
         >
           Stake
         </router-link>
         <router-link
           to="/"
           class="nav_links"
+          :class="{ 'nav_link_active': matchRoutes(['explore']) }"
         >
           Explore
         </router-link>
         <router-link
           to="/"
           class="nav_links"
+          :class="{ 'nav_link_active': matchRoutes(['settings']) }"
         >
           Settings
         </router-link>
       </div>
 
-      <div>
-        connect wallet
+      <div class="flex items-center gap-[12px]">
+        <button @click="toggleDark()">
+          <SunIcon
+            v-if="isDark"
+            class="nav_icon"
+          />
+          <MoonIcon
+            v-else
+            class="nav_icon"
+          />
+        </button>
+        <div class="w-[200px] border">
+          connect wallet
+        </div>
       </div>
     </div>
   </div>

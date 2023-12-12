@@ -10,13 +10,13 @@ const { initializeContractsComposable } = useContracts()
 const { initializeBreakdownMetricsComposable } = useBreakdownMetrics()
 const { initializeUserComposable, user } = useUser()
 
-watch(user, async (newUser, oldUser) => { 
+watch(user, async (newUser, oldUser) => {
     // On Sign in
     if (newUser && !oldUser) {
         await initializeContractsComposable()
         await initializeBreakdownMetricsComposable()
     } else if (newUser && oldUser) {
-        // On page refresh when signed in}
+    // On page refresh when signed in}
         await initializeContractsComposable()
         await initializeBreakdownMetricsComposable()
     }
@@ -26,9 +26,7 @@ watch(user, async (newUser, oldUser) => {
   
 <template>
   <Suspense>
-    <component
-      :is="DefaultLayout"
-    >
+    <component :is="DefaultLayout">
       <RouterView />
     </component>
   </Suspense>

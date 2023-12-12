@@ -1,10 +1,8 @@
 <script setup>
-import { ref } from "vue"
-import { useDark, useToggle, useStorage } from "@vueuse/core"
+// import { ref } from "vue"
+// import { useDark, useToggle, useStorage } from "@vueuse/core"
 import NavBar from "@/components/elements/NavBar.vue"
 
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
 
 // const acceptTerms = ref(false)
 // const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
@@ -15,10 +13,6 @@ const toggleDark = useToggle(isDark)
     <NavBar />
     <div class="app_container_inner">
       <router-view />
-
-      <button @click="toggleDark()">
-        toggle light/dark mode
-      </button>
     </div>
     <!-- 
     <button @click="acceptTerms = !acceptTerms">

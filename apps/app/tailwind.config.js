@@ -1,47 +1,53 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class",
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      padding: {
-      },
-      colors: {
-        // Backgrounds
-        lightBg: "#FFF",
-        darkBg: "#09090B",
+    darkMode: "class",
+    content: [
+        "./index.html",
+        "./src/**/*.{vue,js,ts,jsx,tsx}",
+    ],
+    theme: {
+        extend: {
+            padding: {
+            },
+            colors: {
+                // Backgrounds
+                lightBg: "#FFF",
+                darkBg: "#09090B",
 
-        // text-colors
-        mainLightText: "#FAFAFA",
-        mainDarkText: "#09090B",
+                // text-colors
+                mainLightText: "#FAFAFA",
+                mainDarkText: "#09090B",
 
-        // borders
-        lightBorder: "#E4E4E7",
-        darkBorder: "#27272A",
+                // borders
+                lightBorder: "#E4E4E7",
+                darkBorder: "#27272A",
 
-        // Primary
+                // Primary
 
-        black: "#18181B",
-        hover_black: "#334155",
-        active_black: "#64748B",
+                black: "#18181B",
+                hover_black: "#334155",
+                active_black: "#64748B",
 
-        white: "#FAFAFA",
-        hover_white: "#D4D4D4",
-        active_white: "#737373",
+                white: "#FAFAFA",
+                hover_white: "#D4D4D4",
+                active_white: "#737373",
 
-        // Grays
-        gray_1: "#C3C3CB",
-      },
-      spacing: {
-      }
+                // Grays
+                gray_1: "#C3C3CB",
+                gray_2: "#09090B",
+                gray_3: "#9D9D9F",
+
+                // Blacks
+                black_1: "#09090B",
+            },
+            spacing: {
+            }
+        },
+        fontFamily: {
+        },
+        screens: {
+            "1300s": { "min": "0px", "max": "1300px" },
+        },
     },
-    fontFamily: {
-    },
-    screens: {
-    },
-  },
-  plugins: [],
+    plugins: [],
 }
