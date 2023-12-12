@@ -68,3 +68,22 @@ small{
   font-weight: 300;
   letter-spacing: -0.022em;
 }
+
+.app_container{
+  @apply w-screen h-screen overflow-x-hidden;
+}
+
+.app_container_inner {
+  @apply w-full max-w-[1275px] mx-auto;
+  height: calc(100% - 36px);
+}
+
+.nav_bar_container{
+  @apply w-full sticky top-0 left-0 border-b 
+  border-b-lightBorder dark:border-b-darkBorder
+  h-[36px];
+}
+
+.nav_bar_container_inner{
+  @apply w-full h-full max-w-[1275px] mx-auto;
+}

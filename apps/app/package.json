@@ -11,7 +11,8 @@
   "dependencies": {
     "init": "^0.1.2",
     "npx": "^10.2.2",
-    "vue": "^3.3.8"
+    "vue": "^3.3.8",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",

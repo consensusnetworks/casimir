@@ -13,9 +13,14 @@ export default {
         // Backgrounds
         lightBg: "#FFF",
         darkBg: "#09090B",
+
         // text-colors
         mainLightText: "#FAFAFA",
         mainDarkText: "#09090B",
+
+        // borders
+        lightBorder: "#E4E4E7",
+        darkBorder: "#27272A"
       },
       spacing: {
       }
