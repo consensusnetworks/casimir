@@ -36,6 +36,8 @@ export default {
                 gray_1: "#C3C3CB",
                 gray_2: "#09090B",
                 gray_3: "#9D9D9F",
+                gray_4: "#F4F4F5",
+                gray_5: "#27272A",
 
                 // Blacks
                 black_1: "#09090B",
@@ -47,6 +49,7 @@ export default {
         },
         screens: {
             "1300s": { "min": "0px", "max": "1300px" },
+            "700s": { "min": "0px", "max": "700px" },
         },
     },
     plugins: [],

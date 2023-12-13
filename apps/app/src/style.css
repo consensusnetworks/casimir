@@ -15,7 +15,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --max-app-width: 1275px;
+  --max-app-width: 1275px; 
+  --min-app-width: 360px;
   --navbar-height: 56px;
   --x-padding: 14px;
   --y-padding: 4px;
@@ -88,6 +89,7 @@ caption{
   @apply w-full mx-auto py-[24px] 1300s:px-[24px];
   min-height: calc(100% - var(--navbar-height));
   max-width: var(--max-app-width);
+  min-width: var(--min-app-width);
   transition: padding 0.5s;
 }
 
@@ -101,6 +103,7 @@ caption{
   @apply w-full h-full mx-auto flex 
   items-center justify-between 1300s:px-[24px];
   max-width: var(--max-app-width);
+  min-width: var(--min-app-width);
   transition: padding 0.5s;
 }
 
@@ -112,7 +115,7 @@ caption{
   @apply bg-black rounded-[999px] 
   px-[var(--x-padding)] py-[var(--y-padding)] text-lightBorder
   dark:bg-white dark:text-black
-  flex items-center gap-[12px] w-min;
+  flex items-center gap-[12px];
 }
 
 .pill_primary_icon {
@@ -138,4 +141,54 @@ caption{
 
 .nav_icon{
   @apply text-gray_3 w-[20px] h-[20px] dark:text-white;
+}
+
+.nav_menu_bar{
+  @apply sr-only 700s:not-sr-only text-black_1
+  hover:text-black_1/30 active:text-black_1/60
+  dark:text-white
+  dark:hover:text-white/30 dark:active:text-white/60;;
+}
+
+.nav_menu_container {
+  @apply absolute top-0 left-0 w-screen h-screen 
+  bg-white/70 dark:bg-black/70 backdrop-blur-[1px] overflow-hidden;
+}
+
+.nav_menu_inner{
+  @apply w-[250px] h-full bg-[#FFF] dark:bg-black_1
+  border-r border-r-lightBorder dark:border-r-darkBorder 
+  px-[24px] pt-[12px] pb-[24px] flex flex-col justify-between 
+  overflow-auto items-start;
+  animation: slide_in_left_to_inside 0.2s ease-in;
+}
+
+@keyframes slide_in_left_to_inside {
+  0% {
+    transform: translateX(-100%); 
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.nav_menu_links{
+  @apply text-black_1 dark:text-white
+  text-[16px] font-[500] flex items-center gap-[12px]
+  opacity-30 hover:opacity-60 active:opacity-80 
+  hover:bg-gray_4/60 dark:hover:bg-gray_5/60
+  px-[14px] py-[10px] w-full rounded-[8px]; 
+  
+}
+
+.nav_menu_links img{
+  @apply opacity-100 w-[18px] h-[18px] ml-[1px];
+}
+.nav_menu_links_icons{
+  @apply w-[20px] h-[20px];
+}
+
+.nav_menu_links_active{
+  @apply text-black_1 dark:text-white font-[600] 
+  opacity-100 bg-gray_4 dark:bg-gray_5;
 }
