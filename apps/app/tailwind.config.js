@@ -38,9 +38,13 @@ export default {
                 gray_3: "#9D9D9F",
                 gray_4: "#F4F4F5",
                 gray_5: "#27272A",
+                gray_6: "#71717A",
 
                 // Blacks
                 black_1: "#09090B",
+
+                // Functional Colors
+                red: "#FF8080",
             },
             spacing: {
             }

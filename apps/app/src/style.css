@@ -192,3 +192,47 @@ caption{
   @apply text-black_1 dark:text-white font-[600] 
   opacity-100 bg-gray_4 dark:bg-gray_5;
 }
+
+.connect_wallet_menu_btn{
+  @apply w-full rounded-[6px] px-[16px] py-[6px] border
+  border-lightBorder dark:border-lightBorder/40 flex items-center
+  justify-between;
+}
+
+.placeholder_avatar{
+  @apply w-[19px] h-[19px] rounded-[999px];
+  background: linear-gradient(135deg, #0D5FFF 15%, #000 92.5%);
+}
+
+.card{
+  @apply bg-[#FFF] dark:bg-black 
+  border border-lightBorder dark:border-lightBorder/40
+  rounded-[6px] overflow-hidden
+}
+
+.connect_wallet_card{
+  @apply bg-[#FFF] dark:bg-black 
+  border border-lightBorder dark:border-lightBorder/40
+  rounded-[6px] overflow-hidden p-[24px] max-w-[300px] w-full h-[440px] text-left;
+  box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.06), 0px 4px 6px -1px rgba(0, 0, 0, 0.10);
+}
+
+.card_title{
+  @apply mb-[6px] text-black dark:text-white;
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+.shawdow{
+  box-shadow: 1px 2px 3px 0px rgba(0, 0, 0, 0.17);
+}
+.card_subtitle{
+  @apply text-black_1 dark:text-white/80;
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
