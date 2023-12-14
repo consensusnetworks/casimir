@@ -7,15 +7,26 @@ import {
     DialogPanel,
 } from "@headlessui/vue"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
-
+import Loading from "@/components/elements/Loading.vue"
+import Success from "@/components/elements/Success.vue"
+import Failure from "@/components/elements/Failure.vue"
 const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
 
 function closeModal() {
     toggleConnectWalletModal(false)
 }
 
+// type UserAuthFlowState = 
+//   "select_provider"
+//   | "select_address" 
+//   | "loading" 
+//   | "success" 
+//   | "add_account" 
+//   | "confirm_signage_with_existing_secondary" 
+//   | "connection_failed"
 
-const flowState = ref("add_account")
+
+const flowState = ref("connection_failed")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
@@ -53,6 +64,7 @@ const handleOuterClick = (event) =>{
       as="div"
       class="relative z-10"
       @mousedown="handleOuterClick"
+      @close="closeModal"
     >
       <TransitionChild
         as="template"
@@ -109,6 +121,7 @@ const handleOuterClick = (event) =>{
                         hover:bg-hover_white dark:hover:bg-hover_black"
                       :disabled="selectProviderLoading"
                     >
+                      <!-- TODO: Add this loading shine back once we enable it -->
                       <!-- <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" /> -->
                       <img
                         :src="`/${walletProvider.toLowerCase()}.svg`"
@@ -159,194 +172,206 @@ const handleOuterClick = (event) =>{
               </section>
   
               <!-- SECTION: SELECT ADDRESS -->
-              <!-- <section v-else-if="flowState === 'select_address'">
-                  <div>
-                    <h1 class="mb-[15px]">
-                      Connect wallet
-                    </h1>
-                    <p class="">
-                      Select a wallet address
-                      <span class=" inline-block mt-10">
-                        Selecting a wallet allows us connect to a your active account.
-                      </span>
-                    </p>
-                  </div>
+              <section v-else-if="flowState === 'select_address'">
+                <div>
+                  <h1 class="mb-[15px]">
+                    Select Wallet
+                  </h1>
+                  <p class="">
+                    Select the wallet address you want to connect
+                  </p>
+                </div>
   
-                  <div class="mt-15 h-[240px] overflow-y-auto overflow-x-hidden">
-                    <div
-                      v-if="walletProviderAddresses.length === 0"
-                      class="text-[16px] font-[500]"
-                    >
-                      <button
-                        class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
-                        @click="flowState = 'select_provider'"
-                      >
-                        <vue-feather
-                          type="arrow-left-circle"
-                          class="w-[20px] h-[20px]"
-                        />
-                        Back to provider selection
-                      </button>
-                      We do not see any available addresses, please connect or create a wallet to your {{ selectedProvider }}
-                    </div>
-  
+                <div class="mt-15 h-[240px] overflow-y-auto overflow-x-hidden">
+                  <!-- TODO: Add back once available -->
+                  <!-- <div
+                    v-if="walletProviderAddresses.length === 0"
+                    class="text-[16px] font-[500]"
+                  >
                     <button
-                      v-else
                       class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
                       @click="flowState = 'select_provider'"
                     >
                       <vue-feather
                         type="arrow-left-circle"
-                        class="w-[14px] h-[14px] mb-2"
+                        class="w-[20px] h-[20px]"
                       />
-                      back
+                      Back to provider selection
                     </button>
+                    We do not see any available addresses, please connect or create a wallet to your {{ selectedProvider }}
+                  </div> -->
   
+                  <!-- <button
+                    v-else
+                    class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
+                    @click="flowState = 'select_provider'"
+                  >
+                    <vue-feather
+                      type="arrow-left-circle"
+                      class="w-[14px] h-[14px] mb-2"
+                    />
+                    back
+                  </button> -->
+  
+                  <!-- <div
+                    v-for="(act, pathIndex) in walletProviderAddresses"
+                    :key="pathIndex"
+                    class="flex items-center gap-5"
+                  >
                     <div
-                      v-for="(act, pathIndex) in walletProviderAddresses"
-                      :key="pathIndex"
-                      class="flex items-center gap-5"
-                    >
-                      <div
-                        v-if="checkIfAddressIsUsed(act)"
-                        class="tooltip_container text-white"
-                      >
-                        <vue-feather
-                          type="alert-circle"
-                          class="text-warning/40 hover:text-warning/75 h-[20px] w-[20px] mb-5"
-                        />
-                        <div class="tooltip w-[260px]">
-                          This address is already connected!
-                        </div>
-                      </div>
-                      <button
-                        class="connect_wallet_btn"
-                        :disabled="checkIfAddressIsUsed(act)"
-                        @click="
-                          selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
-                            selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
-                            selectAddress(trimAndLowercaseAddress(act.address), undefined)
-                        "
-                      >
-                        <div>
-                          {{ convertString(act.address) }}
-                        </div>
-                        <div>
-                          {{ formatEthersCasimir(parseFloat(act.balance)) }} ETH
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-  
-                  <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
-                    <span v-show="errorMessage">
-                      {{ errorMessageText }}
-                    </span>
-                  </div>
-                  <div>
-                    <p>
-                      <span>
-                        Note: Make sure you have the address that you want to connect active.
-                      </span>
-                    </p>
-                  </div>
-                </section> -->
-  
-              <!-- SECTION: LOADING -->
-              <!-- <section
-                  v-else-if="flowState === 'loading'"
-                  class="w-full h-full"
-                >
-                  <div class="flex flex-col items-center justify-center h-full w-full gap-5">
-                    <vue-feather
-                      type="loader"
-                      class="icon w-[45px] h-min text-primary animate-spin "
-                      style="animation-duration: 3s;"
-                    />
-                    <p>
-                      Waiting on confirmation of signature
-                    </p>
-                  </div>
-                </section> -->
-  
-              <!-- SECTION: SUCCESS -->
-              <!-- <section
-                  v-else-if="flowState === 'success'"
-                  class="w-full h-full"
-                >
-                  <div class="flex flex-col items-center justify-center h-full w-full gap-5">
-                    <vue-feather
-                      type="check-circle"
-                      class="icon w-[45px] h-min text-approve"
-                    />
-                    <p>
-                      Confirmation successful, wallet connected!
-                    </p>
-                  </div>
-                </section> -->
-  
-              <!-- SECTION: CONNECTION FAILED -->
-              <!-- <section
-                  v-else-if="flowState === 'connection_failed'"
-                  class="w-full h-full"
-                >
-                  <div class="flex flex-col items-center justify-center h-full w-full gap-5">
-                    <vue-feather
-                      type="x-circle"
-                      class="icon w-[45px] h-min text-decline"
-                    />
-                    <p>
-                      Connection Failed, Please try again.
-                    </p>
-                  </div>
-                </section> -->
-  
-              <!-- SECTION: CONFIRMING SIGNAGE WITH AN EXISTING SECONDARY ACCOUNT -->
-              <!-- <section
-                  v-else-if="flowState === 'confirm_signage_with_existing_secondary'"
-                  class="w-full h-full"
-                >
-                  <div>
-                    <h1 class="mb-[15px]">
-                      Confirm Signage
-                    </h1>
-                    <p>
-                      The current wallet you are trying to connect exists under another primary wallet or is a primary account.
-                    </p>
-                    <br>
-                    <p>Would you like to create a new account with this address as the primary wallet address?</p>
-                  </div>
-  
-                  <div class="mt-15 h-[220px] w-full flex items-center justify-center gap-5">
-                    <button
-                      class="action_button_cancel flex items-center justify-center gap-5 w-full"
-                      @click="flowState = 'select_address'"
+                      v-if="checkIfAddressIsUsed(act)"
+                      class="tooltip_container text-white"
                     >
                       <vue-feather
-                        type="arrow-left-circle"
-                        class="icon w-[16px] h-min"
+                        type="alert-circle"
+                        class="text-warning/40 hover:text-warning/75 h-[20px] w-[20px] mb-5"
                       />
-                      Back
-                    </button>
+                      <div class="tooltip w-[260px]">
+                        This address is already connected!
+                      </div>
+                    </div>
                     <button
-                      class="action_button w-full"
-                      @click="handleConfirmCreateAccountWithExistingSecondary"
+                      class="connect_wallet_btn"
+                      :disabled="checkIfAddressIsUsed(act)"
+                      @click="
+                        selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
+                          selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
+                          selectAddress(trimAndLowercaseAddress(act.address), undefined)
+                      "
                     >
-                      Create Account
+                      <div>
+                        {{ convertString(act.address) }}
+                      </div>
+                      <div>
+                        {{ formatEthersCasimir(parseFloat(act.balance)) }} ETH
+                      </div>
                     </button>
+                  </div> -->
+                </div>
+  
+                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
+                  <span v-show="errorMessage">
+                    {{ errorMessageText }}
+                  </span>
+                </div>
+                <div class="w-full">
+                  <small
+                    v-show="flowState === 'select_provider'"
+                    class="w-full text-[11.11px]"
+                  >
+                    Make sure you have the address that you want to connect active.
+                  </small>
+                </div>
+              </section>
+  
+              <!-- SECTION: LOADING -->
+              <section
+                v-else-if="flowState === 'loading'"
+                class="w-full h-full"
+              >
+                <div class="flex flex-col items-center justify-center h-full w-full gap-5">
+                  <div class="h-[150px] w-[150px]">
+                    <Loading :show-text="false" />
                   </div>
-                  <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
-                    <span v-show="errorMessage">
-                      Something went wrong, please try again later.
-                    </span>
+                  
+                  <div class="w-full text-center">
+                    <small
+                      class="w-full card_title"
+                    >
+                      Waiting on signature
+                    </small>
                   </div>
-                  <div>
-                    <p>
-                      Note: Connecting this address will create a new account, you can still access your previous account by
-                      connecting with said account primary address
-                    </p>
+                </div>
+              </section>
+  
+              <!-- SECTION: SUCCESS -->
+              <section
+                v-else-if="flowState === 'success'"
+                class="w-full h-full"
+              >
+                <div class="flex flex-col items-center justify-center h-full w-full gap-5">
+                  <div class="h-[150px] w-[150px]">
+                    <Success />
                   </div>
-                </section> -->
+                  
+                  <div class="w-full text-center">
+                    <small
+                      class="w-full card_title"
+                    >
+                      <span class="text-green">Wallet Connected!</span>
+                    </small>
+                  </div>
+                </div>
+              </section>
+  
+              <!-- SECTION: CONNECTION FAILED -->
+              <section
+                v-else-if="flowState === 'connection_failed'"
+                class="w-full h-full"
+              >
+                <div class="flex flex-col items-center justify-center h-full w-full gap-5">
+                  <div class="h-[150px] w-[150px]">
+                    <Failure />
+                  </div>
+                  
+                  <div class="w-full text-center">
+                    <small
+                      class="w-full card_title"
+                    >
+                      <span class="text-red">
+                        Something went wrong, try again later
+                      </span>
+                    </small>
+                  </div>
+                </div>
+              </section>
+  
+              <!-- SECTION: CONFIRMING SIGNAGE WITH AN EXISTING SECONDARY ACCOUNT -->
+              <section
+                v-else-if="flowState === 'confirm_signage_with_existing_secondary'"
+                class="w-full h-full"
+              >
+                <div>
+                  <h1 class="mb-[15px]">
+                    Confirm Signage
+                  </h1>
+                  <p>
+                    The current wallet you are trying to connect exists under another primary wallet or is a primary account.
+                  </p>
+                  <br>
+                  <p>Would you like to create a new account with this address as the primary wallet address?</p>
+                </div>
+  
+                <div class="mt-15 h-[220px] w-full flex items-center justify-center gap-5">
+                  <button
+                    class="action_button_cancel flex items-center justify-center gap-5 w-full"
+                    @click="flowState = 'select_address'"
+                  >
+                    <vue-feather
+                      type="arrow-left-circle"
+                      class="icon w-[16px] h-min"
+                    />
+                    Back
+                  </button>
+                  <button
+                    class="action_button w-full"
+                    @click="handleConfirmCreateAccountWithExistingSecondary"
+                  >
+                    Create Account
+                  </button>
+                </div>
+                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
+                  <span v-show="errorMessage">
+                    Something went wrong, please try again later.
+                  </span>
+                </div>
+                <div>
+                  <p>
+                    Note: Connecting this address will create a new account, you can still access your previous account by
+                    connecting with said account primary address
+                  </p>
+                </div>
+              </section>
             </DialogPanel>
           </TransitionChild>
         </div>

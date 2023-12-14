@@ -140,7 +140,7 @@ caption{
 }
 
 .nav_icon{
-  @apply text-gray_3 w-[20px] h-[20px] dark:text-white;
+  @apply text-gray_3 w-[18px] h-[18px] dark:text-white;
 }
 
 .nav_menu_bar{

@@ -45,6 +45,7 @@ export default {
 
                 // Functional Colors
                 red: "#FF8080",
+                green: "#26CB0B",
             },
             spacing: {
             }
