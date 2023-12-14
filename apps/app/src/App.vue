@@ -8,6 +8,9 @@ import useConnectWalletModal from "@/composables/state/connectWalletModal"
 const { openConnectWalletModal } = useConnectWalletModal()
 // const acceptTerms = ref(false)
 // const acceptTermsStorage = useStorage("acceptTerms", acceptTerms)
+
+// const skipWelcomePage = ref(false)
+// const skipWelcomePageStorage = useStorage("skipWelcomePage", skipWelcomePage)
 </script>
 
 <template>

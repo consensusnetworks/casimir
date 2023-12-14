@@ -45,6 +45,17 @@ const routes = [
     // },
 ]
 
+// import { ref } from "vue"
+// import { useDark, useToggle, useStorage } from "@vueuse/core"
+// const skipWelcomePage = ref(false)
+// const skipWelcomePageStorage = useStorage("skipWelcomePage", skipWelcomePage)
+
+// TODO: 
+// 1. Check user session 
+//      a. if user exists check for if user has skipWelcomePage on 
+//          - if user does, take them to /overview
+//          - if user does not, take them to /welcome-back
+//      b. if user does not exist take them to /welcome
 
 const router = createRouter({
     history: createWebHistory(),

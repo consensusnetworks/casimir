@@ -26,7 +26,7 @@ function closeModal() {
 //   | "connection_failed"
 
 
-const flowState = ref("connection_failed")
+const flowState = ref("select_provider")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
