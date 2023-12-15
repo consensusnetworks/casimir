@@ -78,7 +78,7 @@ const showCopyForSecondary = ref(-1)
         <Bars3Icon class="w-[28px] h-[32px]" />
       </button>
       <div
-        class="flex items-center gap-[24px] 700s:sr-only"
+        class="flex items-center gap-[24px] 700s:sr-only w-[300px]"
       >
         <router-link to="/">
           <img
@@ -101,9 +101,9 @@ const showCopyForSecondary = ref(-1)
       </div>
 
       <!-- TODO: Make these route to actual pages and check if they are active -->
-      <div class="flex items-center gap-[12px] 700s:sr-only">
+      <div class="flex items-center gap-[24px] w-full justify-center 700s:sr-only">
         <router-link
-          to="/"
+          to="/overview"
           class="nav_links"
           :class="{ 'nav_link_active': matchRoutes(['overview']) }"
         >
@@ -132,7 +132,7 @@ const showCopyForSecondary = ref(-1)
         </router-link>
       </div>
 
-      <div class="flex items-center gap-[12px]">
+      <div class="flex items-center gap-[24px] w-[300px]">
         <button @click="toggleDark()">
           <SunIcon
             v-if="isDark"
@@ -295,118 +295,151 @@ const showCopyForSecondary = ref(-1)
     </div>
 
     <!-- NavBar Menu when screen below 700px -->
-    <div
-      v-show="navMenuStatus"
-      class="nav_menu_container"
-      @click="handleOuterClick"
-    >
-      <div class="nav_menu_inner">
-        <div class="w-full">
-          <div class="flex items-center justify-between w-full mb-[24px] mt-[5px]">
-            <router-link
-              to="/"
-              @click="toggleNavMenu(false)"
-            >
-              <img
-                v-if="isDark"
-                src="/casimir.svg"
-                alt="Casimir Logo"
-                class="h-[16px] w-[19.56px];"
+    <transition name="slide">
+      <div
+        v-if="navMenuStatus"
+        class="nav_menu_container z-[999]"
+        @click="handleOuterClick"
+      >
+        <div class="nav_menu_inner">
+          <div class="w-full">
+            <div class="flex items-center justify-between w-full mb-[24px] mt-[5px] px-[12px]">
+              <router-link
+                to="/"
+                @click="toggleNavMenu(false)"
               >
-              <img
-                v-else
-                src="/casimir-dark.svg"
-                alt="Casimir Logo"
-                class="h-[16px] w-[19.56px];"
+                <img
+                  v-if="isDark"
+                  src="/casimir.svg"
+                  alt="Casimir Logo"
+                  class="h-[16px] w-[19.56px];"
+                >
+                <img
+                  v-else
+                  src="/casimir-dark.svg"
+                  alt="Casimir Logo"
+                  class="h-[16px] w-[19.56px];"
+                >
+              </router-link>
+
+              <button
+                class="nav_menu_bar"
+                @click="toggleNavMenu(false)"
               >
-            </router-link>
+                <XMarkIcon class="w-[20px] h-[20px]" />
+              </button>
+            </div>
 
-            <button
-              class="nav_menu_bar"
-              @click="toggleNavMenu(false)"
-            >
-              <XMarkIcon class="w-[20px] h-[20px]" />
-            </button>
+            <!-- TODO: Make these route to actual pages and check if they are active -->
+            <div class="flex flex-col items-start gap-[12px] pt-[20px]">
+              <router-link
+                to="/overview"
+                class="nav_menu_links"
+                :class="{ 'nav_menu_links_active': matchRoutes(['overview']) }"
+                @click="toggleNavMenu(false)"
+              >
+                <ChartBarSquareIcon class="nav_menu_links_icons" />
+                Overview
+              </router-link>
+              <router-link
+                to="/stake"
+                class="nav_menu_links"
+                :class="{ 'nav_menu_links_active': matchRoutes(['stake']) }"
+                @click="toggleNavMenu(false)"
+              >
+                <Square3Stack3DIcon class="nav_menu_links_icons" />
+                Stake
+              </router-link>
+              <router-link
+                to="/explore"
+                class="nav_menu_links"
+                :class="{ 'nav_menu_links_active': matchRoutes(['explore']) }"
+                @click="toggleNavMenu(false)"
+              >
+                <MagnifyingGlassCircleIcon class="nav_menu_links_icons" />
+                Explore
+              </router-link>
+              <router-link
+                to="/settings"
+                class="nav_menu_links"
+                :class="{ 'nav_menu_links_active': matchRoutes(['settings']) }"
+                @click="toggleNavMenu(false)"
+              >
+                <Cog8ToothIcon class="nav_menu_links_icons" />
+                Settings
+              </router-link>
+            </div>
+
+
+            <div class="px-[12px] w-full mt-[30px]">
+              <button class="pill_primary pill_primary_button w-full">
+                <small>Pro</small>
+                <ArrowTopRightOnSquareIcon class="pill_primary_icon" />
+              </button>
+            </div>
           </div>
 
-          <!-- TODO: Make these route to actual pages and check if they are active -->
-          <div class="flex flex-col items-start gap-[24px] pt-[30px]">
-            <router-link
-              to="/"
-              class="nav_menu_links"
-              :class="{ 'nav_menu_links_active': matchRoutes(['overview']) }"
-              @click="toggleNavMenu(false)"
-            >
-              <ChartBarSquareIcon class="nav_menu_links_icons" />
-              Overview
-            </router-link>
-            <router-link
-              to="/stake"
-              class="nav_menu_links"
-              :class="{ 'nav_menu_links_active': matchRoutes(['stake']) }"
-              @click="toggleNavMenu(false)"
-            >
-              <Square3Stack3DIcon class="nav_menu_links_icons" />
-              Stake
-            </router-link>
-            <router-link
-              to="/explore"
-              class="nav_menu_links"
-              :class="{ 'nav_menu_links_active': matchRoutes(['explore']) }"
-              @click="toggleNavMenu(false)"
-            >
-              <MagnifyingGlassCircleIcon class="nav_menu_links_icons" />
-              Explore
-            </router-link>
-            <router-link
-              to="/settings"
-              class="nav_menu_links"
-              :class="{ 'nav_menu_links_active': matchRoutes(['settings']) }"
-              @click="toggleNavMenu(false)"
-            >
-              <Cog8ToothIcon class="nav_menu_links_icons" />
-              Settings
-            </router-link>
-          </div>
-
-
-          <div>
-            <button class="pill_primary pill_primary_button mt-[30px] w-full">
-              <small>Pro</small>
-              <ArrowTopRightOnSquareIcon class="pill_primary_icon" />
-            </button>
-          </div>
-        </div>
-
-        <div class="w-full">
-          <div class="mb-[12px]">
-            <button
-              id="menu_footer_button"
-              @click.stop="toggleDark()"
-            >
-              <SunIcon
-                v-if="isDark"
-                class="nav_icon"
-              />
-              <MoonIcon
-                v-else
-                class="nav_icon"
-              />
-            </button>
-          </div>
-          <div>
-            <button
-              class="flex items-center gap-[12px] whitespace-nowrap
+          <div class="w-full px-[12px]">
+            <div class="mb-[12px]">
+              <button
+                id="menu_footer_button"
+                @click.stop="toggleDark()"
+              >
+                <SunIcon
+                  v-if="isDark"
+                  class="nav_icon"
+                />
+                <MoonIcon
+                  v-else
+                  class="nav_icon"
+                />
+              </button>
+            </div>
+            <div>
+              <button
+                class="flex items-center gap-[12px] whitespace-nowrap
             text-gray_3 dark:text-white;"
-            >
-              <InformationCircleIcon class="w-[18px] h-[18px]" />
-              <small class="font-[500]">Terms of Service</small>
-            </button>
+              >
+                <InformationCircleIcon class="w-[18px] h-[18px]" />
+                <small class="font-[500]">Terms of Service</small>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </transition>
+    <!-- Background blur -->
+    <div
+      v-if="navMenuStatus"
+      class="absolute top-0 left-0 w-screen h-screen 
+  bg-white/70 dark:bg-black/70 backdrop-blur-[1px] z-[10]"
+    />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.slide-enter, .slide-enter-active {
+  animation: slide_in 0.3s ease-in;
+}
+
+@keyframes slide_in {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.slide-leave, .slide-leave-to {
+  animation: slide_out 0.2s ease-in;
+}
+@keyframes slide_out {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+</style>

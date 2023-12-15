@@ -1,23 +1,16 @@
 import { createWebHistory, createRouter } from "vue-router"
 
+// Welcome Flow
+import LoadingApp from "@/pages/welcome/views/LoadingApp.vue"
+// import Welcome from "@/pages/welcome/views/Welcome.vue"
+// import WelcomeBack from "@/pages/welcome/views/WelcomeBack.vue"
+
 const routes = [
     { 
         path: "/", 
-        // name: Overview,
-        // component: Overview,
-        // children: [
-        // { 
-        //     path: "/welcome", 
-        //     name: Overview,
-        //     component: Overview,
-        // },
-        // { 
-        //     path: "/welcome-back", 
-        //     name: Overview,
-        //     component: Overview,
-        // },
-        // ]
-    },
+        name: LoadingApp,
+        component: LoadingApp,
+    }
     // { 
     // path: "/overview", 
     // name: Overview,

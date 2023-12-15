@@ -12,7 +12,7 @@ export default {
             colors: {
                 // Backgrounds
                 lightBg: "#FFF",
-                darkBg: "#09090B",
+                darkBg: "#1C1C1F",
 
                 // text-colors
                 mainLightText: "#FAFAFA",

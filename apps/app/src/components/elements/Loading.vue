@@ -49,7 +49,7 @@ const calculateFontSize = () => {
 <template>
   <div
     id="loading_container"
-    class="relative w-full h-full min-w-[100px] min-h-[100px]"
+    class="relative w-full h-full "
   >
     <img
       :src="isDark? '/loading_light.svg' :'/loading_dark.svg'"

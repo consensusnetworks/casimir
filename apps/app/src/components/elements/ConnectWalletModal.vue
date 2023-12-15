@@ -26,7 +26,7 @@ function closeModal() {
 //   | "connection_failed"
 
 
-const flowState = ref("select_provider")
+const flowState = ref("connection_failed")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
@@ -270,7 +270,7 @@ const handleOuterClick = (event) =>{
                 class="w-full h-full"
               >
                 <div class="flex flex-col items-center justify-center h-full w-full gap-5">
-                  <div class="h-[150px] w-[150px]">
+                  <div class="h-[74px] w-[74px]">
                     <Loading :show-text="false" />
                   </div>
                   
