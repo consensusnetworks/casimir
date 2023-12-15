@@ -229,5 +229,25 @@ caption{
 
 .page_container {
   @apply w-full h-max; 
-  min-height: calc(100vh - var(--navbar-height) - 48px);
+  min-height: calc(100vh - var(--navbar-height) - 48px);  
+}
+
+.toasts_container {
+  @apply fixed bottom-0 right-0 flex flex-col 
+  items-end pb-[24px];
+
+  @media screen and (min-width: 1275px) {
+    right: calc((100% - 1275px) / 2 + 24px);
+  }
+
+  @media screen and (max-width: 1275px) {
+    right: 48px;
+  }
+}
+
+.toast {
+  @apply rounded-[8px] p-[24px] min-w-[250px]
+  mt-[12px] bg-lightBg dark:bg-black
+  border border-lightBorder dark:border-lightBorder/40;
+  transition: all 0.3s ease-in;
 }

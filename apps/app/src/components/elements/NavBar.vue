@@ -78,19 +78,24 @@ const showCopyForSecondary = ref(-1)
         <Bars3Icon class="w-[28px] h-[32px]" />
       </button>
       <div
-        class="flex items-center gap-[24px] 700s:sr-only "
+        class="flex items-center gap-[24px] 700s:sr-only"
       >
         <!-- TODO: On click of this it should check if it should take the user to welcome or overview page -->
-        <router-link to="/">
+        <router-link
+          to="/"
+          class="h-[16px] w-[19.56px]"
+        >
           <img
             v-if="isDark"
             src="/casimir.svg"
             alt="Casimir Logo"
+            class="h-[16px] w-[19.56px];"
           >
           <img
             v-else
             src="/casimir-dark.svg"
             alt="Casimir Logo"
+            class="h-[16px] w-[19.56px];"
           >
         </router-link>
 

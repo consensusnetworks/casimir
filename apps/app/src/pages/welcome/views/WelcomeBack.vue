@@ -1,4 +1,9 @@
 <script setup>
+// import { ref } from "vue"
+// import { useDark, useToggle, useStorage } from "@vueuse/core"
+
+// const skipWelcomePage = ref(false)
+// const skipWelcomePageStorage = useStorage("skipWelcomePage", skipWelcomePage)
 </script>
 
 <template>
@@ -18,6 +23,12 @@
       </div>
       <div>
         checkbox (auto route to overview)
+
+        <!-- 
+    <button @click="acceptTerms = !acceptTerms">
+      toggle terms of service {{ acceptTermsStorage }}
+    </button>
+    -->
       </div>
       <div>
         route to overview button
