@@ -78,8 +78,9 @@ const showCopyForSecondary = ref(-1)
         <Bars3Icon class="w-[28px] h-[32px]" />
       </button>
       <div
-        class="flex items-center gap-[24px] 700s:sr-only w-[300px]"
+        class="flex items-center gap-[24px] 700s:sr-only "
       >
+        <!-- TODO: On click of this it should check if it should take the user to welcome or overview page -->
         <router-link to="/">
           <img
             v-if="isDark"
@@ -132,7 +133,7 @@ const showCopyForSecondary = ref(-1)
         </router-link>
       </div>
 
-      <div class="flex items-center gap-[24px] w-[300px]">
+      <div class="flex items-center gap-[24px]">
         <button @click="toggleDark()">
           <SunIcon
             v-if="isDark"

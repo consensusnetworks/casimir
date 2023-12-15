@@ -3,9 +3,9 @@
 
 <template>
   <div
-    class=""
+    class="page_container"
   >
-    Welcome Page
+    <router-view />
   </div>
 </template>
 
