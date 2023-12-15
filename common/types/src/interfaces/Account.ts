@@ -17,6 +17,8 @@ export interface Account {
     // snapshots?: BalanceSnapshot[]
     /** The account transactions */
     // transactions?: Transaction[]
+    /** The pathIndex of the user's HD Wallet */
+    pathIndex?: number
     /** The user id associated with the account */
     userId: string
     /** The wallet provider which helps us show user breakdown and connect when signing or sending TXs */

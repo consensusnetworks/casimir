@@ -1,6 +1,6 @@
 import { ethers } from "ethers"
 import { loadCredentials, getSecret } from "@casimir/aws"
-import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@casimir/env"
+import { ETHEREUM_CONTRACTS, ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL, ETHEREUM_WS_URL } from "@casimir/env"
 import { run, runSync } from "@casimir/shell"
 
 /**
@@ -8,7 +8,7 @@ import { run, runSync } from "@casimir/shell"
  * You can override the following configuration environment variables:
  * - PROJECT: casimir
  * - STAGE: local | dev | sandbox | prod
- * - APP: web | landing
+ * - APP: app | www
  * - NETWORK: mainnet | testnet
  * - FORK: mainnet | testnet
  * - USE_SECRETS: true | false
@@ -24,7 +24,7 @@ import { run, runSync } from "@casimir/shell"
  */
 async function root() {
     const apps = {
-        landing: {
+        www: {
             contracts: false,
             port: 3002,
             services: {
@@ -33,7 +33,7 @@ async function root() {
                 }
             }
         },
-        web: {
+        app: {
             contracts: true,
             port: 3001,
             services: {
@@ -41,10 +41,14 @@ async function root() {
                     port: 4000,
                 }
             }
+        },
+        mvp: {
+            contracts: false,
+            port: 3003
         }
     }
 
-    const app = process.env.APP || "web"
+    const app = process.env.APP || "app"
     if (!apps[app]) {
         throw new Error(`App ${app} is not supported`)
     }
@@ -95,6 +99,7 @@ async function root() {
         if (process.env.NETWORK) {
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
             process.env.ETHEREUM_RPC_URL = ETHEREUM_RPC_URL[networkKey]
+            process.env.ETHEREUM_WS_URL = ETHEREUM_WS_URL[networkKey]
             console.log(`Connecting to ${networkName} network at ${process.env.ETHEREUM_RPC_URL}`)
         } else {
             const networkName = ETHEREUM_NETWORK_NAME[networkKey]
@@ -117,6 +122,7 @@ async function root() {
     process.env.PUBLIC_BLOG_URL = process.env.BLOG_URL
     process.env.PUBLIC_USERS_URL = process.env.USERS_URL
     process.env.PUBLIC_ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL
+    process.env.PUBLIC_ETHEREUM_WS_URL = process.env.ETHEREUM_WS_URL
     process.env.PUBLIC_FACTORY_ADDRESS = process.env.FACTORY_ADDRESS
     process.env.PUBLIC_SSV_NETWORK_ADDRESS = process.env.SSV_NETWORK_ADDRESS
     process.env.PUBLIC_SSV_VIEWS_ADDRESS = process.env.SSV_VIEWS_ADDRESS
@@ -131,7 +137,11 @@ async function root() {
         run(`npm run dev --workspace @casimir/${app}`)
     }
 
-    if (process.env.MOCK_SERVICES === "true" && app === "web") {
+    if (process.env.RUN_MVP === "true" && app === "app") {
+        run("npm run dev --workspace @casimir/mvp")
+    }
+
+    if (process.env.MOCK_SERVICES === "true" && app === "app") {
         process.on("SIGINT", () => {
             console.log("🧹 Cleaning up users service")
             runSync("npm run clean --workspace @casimir/users")

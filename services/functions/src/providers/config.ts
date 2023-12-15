@@ -11,6 +11,7 @@ export class Config {
         "FUNCTIONS_BILLING_REGISTRY_ADDRESS",
         "FUNCTIONS_ORACLE_ADDRESS"
     ]
+    public readonly dryRun = process.env.DRY_RUN === "true"
 
     constructor() {
         this.requiredEnvVars.forEach(v => {

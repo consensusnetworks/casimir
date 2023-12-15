@@ -67,7 +67,7 @@ export class LandingStack extends cdk.Stack {
 
         new s3Deployment.BucketDeployment(this, config.getFullStackResourceName(this.name, "bucket-deployment"), {
             destinationBucket: bucket,
-            sources: [s3Deployment.Source.asset("../../apps/landing/dist")],
+            sources: [s3Deployment.Source.asset("../../apps/www/dist")],
             distribution,
             distributionPaths: ["/*"]
         })

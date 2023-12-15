@@ -16,8 +16,8 @@
   - [Configure](#configure)
     - [Environment Variables](#environment-variables)
   - [Apps](#apps)
-    - [@casimir/web](#casimirweb)
-    - [@casimir/landing](#casimirlanding)
+    - [@casimir/app](#casimirapp)
+    - [@casimir/www](#casimirwww)
   - [Contracts](#contracts)
     - [@casimir/ethereum](#casimirethereum)
   - [Common](#common)
@@ -37,77 +37,81 @@ Get started contributing to Casimir's codebase.
 
 ### Prerequisites
 
-Configure the following prerequisite global dependency versions.
+Configure the following prerequisite global dependency versions:
 
-1. [Docker (v24.x)](https://docs.docker.com/engine/install/).
+1. [Git (v2.x)](https://git-scm.com/downloads).
 
-2. [Go (v1.18.x)](https://golang.org/doc/install).
+    > 🚩 **GitHub submodule support:** You also need to make sure to have at least one SSH authentication key on your GitHub account (for the git cloning of submodules within submodules). See [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-3. [Node.js (v18.x)](https://nodejs.org/en/download/).
+2. [Docker (v24.x)](https://docs.docker.com/engine/install).
 
-4. [Optional: AWS CLI (v2.x)](https://aws.amazon.com/cli/)
+3. [Go (v1.20.x)](https://golang.org/doc/install).
+
+4. [Node.js (LTS)](https://nodejs.org/en/download).
+
+    > 🚩 **Using NVM**: Install [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run `nvm install --lts && nvm alias default lts/*` to set the default version to the latest LTS. You will need to rerun this command whenever the latest LTS changes.
+
+5. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
 
     > 🚩 **Consensus Networks team only**: Create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 
 ### Setup
 
-Clone the repository and checkout a new branch from develop.
+Clone the repository and checkout a new branch from develop:
 
-```zsh
-git clone https://github.com/consensusnetworks/casimir.git
-cd casimir
-git checkout -b <"feature || bug || enhancement">/<"your-branch-name" develop
-```
+  ```zsh
+  git clone https://github.com/consensusnetworks/casimir.git
+  cd casimir
+  git checkout -b <"feature || bug || enhancement">/<"your-branch-name" develop
+  ```
 
 We are using [npm workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces) to simplify monorepo development workflows while keeping project-wide resources accessible. The core commands are below.
 
-Install all repository dependencies and build necessary types.
+Install all repository dependencies and build necessary types:
 
-```zsh
-npm install
-```
+  ```zsh
+  npm install
+  ```
 
-  > 🚩 To see output from a npm preinstall or postinstall script on `npm i`, run `npm i --foreground-scripts`.
+Clean all repository dependencies and reinstall:
 
-Clean all repository dependencies and reinstall.
+  ```zsh
+  npm run clean
+  ```
 
-```zsh
-npm run clean
-```
+Install a dev dependency to the root:
 
-Install a dev dependency to the root.
+  ```zsh
+  npm install -D some-dev-dependency
+  ```
 
-```zsh
-npm install -D some-dev-dependency
-```
+Install a dependency or dev dependency to a specific workspace:
 
-Install a dependency or dev dependency to a specific workspace.
+  ```zsh
+  # dependency
+  npm install some-dependency --workspace @casimir/<"workspace-name">
 
-```zsh
-# dependency
-npm install some-dependency --workspace @casimir/<"workspace-name">
-
-# dev dependency
-npm install -D some-dev-dependency --workspace @casimir/<"workspace-name">
-```
+  # dev dependency
+  npm install -D some-dev-dependency --workspace @casimir/<"workspace-name">
+  ```
 
 ### Configure
 
 Customize and override the development environment configuration by creating a [.env](.env) file in the root directory.
 
-**If you are on the Consensus Networks organization**, make sure your AWS CLI and profile are configured correctly. By default, the scripts look for the `consensus-networks-dev` named profile, but you can override the `AWS_PROFILE` name to be used in the [.env](.env) file. Regardless, the profile must have access to the `consensus-networks-dev` account resources.
+**If you are on the Consensus Networks organization**, make sure your AWS CLI and profile are configured correctly. By default, the scripts look for the `consensus-networks-dev` named profile, but you can override the `AWS_PROFILE` name to be used in the [.env](.env) file. Optionally, override the `AWS_PROFILE` name in your [.env](.env) file:
 
-```zsh
-# From the root directory
-echo "AWS_PROFILE=<"your-aws-profile-name">" > .env
-```
+  ```zsh
+  # From the root directory
+  echo "AWS_PROFILE=<"your-aws-profile-name">" > .env
+  ```
 
-**If you are outside of the Consensus Networks organization**, make sure to set `USE_SECRETS` to `false`.
+**If you are outside of the Consensus Networks organization**, set `USE_SECRETS` to `false` in your [.env](.env) file:
 
-```zsh
-# From the root directory
-echo "USE_SECRETS=false" > .env
-```
+  ```zsh
+  # From the root directory
+  echo "USE_SECRETS=false" > .env
+  ```
 
 #### Environment Variables
 
@@ -131,27 +135,27 @@ echo "USE_SECRETS=false" > .env
 
 The apps packages provide a UI to end-users.
 
-#### @casimir/web
+#### @casimir/app
 
-Run the web app with an integrated development environment, including local contracts and services.
+Run the main web app with an integrated development environment, including local contracts and services:
 
-```zsh
-# From the root directory
-npm run dev
-```
+  ```zsh
+  # From the root directory
+  npm run dev
+  ```
 
-See the [@casimir/web README.md](apps/web/README.md) for detailed documentation.
+See the [@casimir/app README.md](apps/app/README.md) for detailed documentation.
 
-#### @casimir/landing
+#### @casimir/www
 
-Run the landing app.
+Run the landing page app:
 
-```zsh
-# From the root directory
-npm run dev:landing
-```
+  ```zsh
+  # From the root directory
+  npm run dev:www
+  ```
 
-See the [@casimir/landing README.md](apps/landing/README.md) for detailed documentation.
+See the [@casimir/www README.md](apps/www/README.md) for detailed documentation.
 
 ### Contracts
 
@@ -159,19 +163,12 @@ The contracts packages provide the smart contracts for the project.
 
 #### @casimir/ethereum
 
-Test the Ethereum contracts.
+Test the Ethereum contracts:
 
-```zsh
-# From the root directory
-npm run test --workspace @casimir/ethereum
-```
-
-Fork the Ethereum contracts to local network and simulate events and oracle handling.
-
-```zsh
-# From the root directory
-npm run dev --workspace @casimir/ethereum
-```
+  ```zsh
+  # From the root directory
+  npm run test --workspace @casimir/ethereum
+  ```
 
 See the [@casimir/ethereum README.md](contracts/ethereum/README.md) for detailed documentation.
 
@@ -194,12 +191,12 @@ The infrastructure packages provide the infrastructure as code for the project.
 
 #### @casimir/cdk
 
-Test the CDK infrastructure.
+Test the CDK infrastructure:
 
-```zsh
-# From the root directory
-npm run test:cdk
-```
+  ```zsh
+  # From the root directory
+  npm run test:cdk
+  ```
 
 See the [@casimir/cdk README.md](infrastructure/cdk/README.md) for detailed documentation.
 
@@ -221,8 +218,8 @@ Code is organized into work directories (apps, common, contracts, infrastructure
 ├── .github/ (workflows and issue templates)
 |   └── workflows/ (gh actions workflows)
 ├── apps/ (frontend apps)
-|   |── landing/ (landing page app)
-|   └── web/ (main web app)
+|   |── www/ (landing page app)
+|   └── app/ (main web app)
 ├── common/ (shared code)
 |   ├── data/ (data schemas and operational workflows)
 |   └── helpers/ (general utilities)
