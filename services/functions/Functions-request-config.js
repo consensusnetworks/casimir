@@ -30,7 +30,7 @@ const requestConfig = {
     // Code language (only JavaScript is currently supported)
     codeLanguage: CodeLanguage.JavaScript,
     // String containing the source code to be executed
-    source: fs.readFileSync(path.join(__dirname, 'API-request-source.js')).toString(),
+    source: fs.readFileSync(path.join(__dirname, "API-request-source.js")).toString(),
     // Secrets can be accessed within the source code with `secrets.varName` (ie: secrets.apiKey). The secrets object can only contain string values.
     secrets: {
         ethereumRpcUrl: process.env.ETHEREUM_RPC_URL ?? "",
@@ -42,16 +42,12 @@ const requestConfig = {
     walletPrivateKey: process.env.PRIVATE_KEY ?? "",
     // Args (string only array) can be accessed within the source code with `args[index]` (ie: args[0]).
     args: [
-        "1616508000", // genesisTimestamp
         "0x394042CBB8bF5444766496897982A5CDd01d5099", // viewsAddress
         "0x0812a9fe", // getCompoundablePoolIds(uint256,uint256)
-        "0x5d1e0780", // getDepositedPoolCount()
-        "0xdcf25c1d", // getDepositedPoolPublicKeys(uint256,uint256)
-        "0xb29a57e4", // getDepositedPoolStatuses(uint256,uint256)
+        "0x91cae538", // getStakedPoolCount()
+        "0x05601fe6", // getStakedPoolPublicKeys(uint256,uint256)
+        "0xca25993f", // getStakedPoolStatuses(uint256,uint256)
         "0x12c3456b", // getSweptBalance(uint256,uint256)
-        "0", // previousReportTimestamp
-        "0", // reportTimestamp
-        "0", // reportBlockNumber
         "0" // requestType
     ],
     // Expected type of the returned value

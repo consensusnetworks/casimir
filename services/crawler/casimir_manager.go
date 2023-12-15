@@ -39,7 +39,7 @@ type ISSVNetworkCoreCluster struct {
 
 // MainMetaData contains all meta data concerning the Main contract.
 var MainMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_oracleAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"beaconDepositAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"linkFunctionsAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"keeperRegistrarAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"keeperRegistryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"linkTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvNetworkAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvViewsAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"swapFactoryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"swapRouterAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"wethTokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"CompletedExitReportsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"PoolActivated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"PoolInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"InitiationRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ExitCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ExitRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"ForcedExitReportsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ReshareCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"operatorId\",\"type\":\"uint64\"}],\"name\":\"ResharesRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"RewardsDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"SlashedExitReportsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"StakeDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"StakeRebalanced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"TipsDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WithdrawalInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WithdrawalRequested\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestActivations\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32[5]\",\"name\":\"poolIds\",\"type\":\"uint32[5]\"}],\"name\":\"compoundRewards\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"depositClusterBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"depositExitedBalance\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"depositRecoveredBalance\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositReservedFees\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositRewards\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositStake\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"depositUpkeepBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feePercent\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"finalizableCompletedExits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"fulfillWithdrawals\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getBufferedBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"bufferedBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getExpectedEffectiveBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"expectedEffectiveBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPendingPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"getPendingWithdrawalEligibility\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"pendingWithdrawalEligibility\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"getPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReadyBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"readyBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReadyPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRegistryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"registryAddress\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReservedFeeBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getStakedPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"totalStake\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getUpkeepAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"upkeepAddress\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getUpkeepBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"upkeepBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"userAddress\",\"type\":\"address\"}],\"name\":\"getUserStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"userStake\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getWithdrawableBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"depositDataRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"publicKey\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"signature\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"withdrawalCredentials\",\"type\":\"bytes\"},{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"bytes\",\"name\":\"shares\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"initiatePool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"latestBeaconBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"beaconBalance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sweptBalance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activatedDeposits\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"completedExits\",\"type\":\"uint256\"}],\"name\":\"rebalanceStake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"poolIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint32[]\",\"name\":\"blamePercents\",\"type\":\"uint32[]\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"}],\"name\":\"reportCompletedExit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32[]\",\"name\":\"poolIds\",\"type\":\"uint32[]\"}],\"name\":\"reportForcedExits\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reportPeriod\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"},{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"oldOperatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64\",\"name\":\"newOperatorId\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"oldOperatorId\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"shares\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"oldCluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"reportReshare\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestCompletedExitReports\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestForcedExitReports\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"operatorId\",\"type\":\"uint64\"}],\"name\":\"requestReshares\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"requestWithdrawal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"requestedExits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"requestedWithdrawalBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"functionsAddress\",\"type\":\"address\"}],\"name\":\"setFunctionsAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"upkeepId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawLINKBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawReservedFees\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawSSVBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdrawUpkeepBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_oracleAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"beaconDepositAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"linkFunctionsAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"keeperRegistrarAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"keeperRegistryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"linkTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvNetworkAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvViewsAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ssvTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"swapFactoryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"swapRouterAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"wethTokenAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"ValidatorWithdrawalsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ValidatorActivated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ValidatorInititated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ValidatorInitiationRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ExitCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ValidatorExitRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"ForcedExitReportsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"ReshareCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint64\",\"name\":\"operatorId\",\"type\":\"uint64\"}],\"name\":\"ResharesRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"RewardsDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"SlashedExitReportsRequested\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"StakeDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"StakeRebalanced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"TipsDeposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WithdrawalInitiated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WithdrawalRequested\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestActivations\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32[5]\",\"name\":\"poolIds\",\"type\":\"uint32[5]\"}],\"name\":\"compoundRewards\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"depositClusterBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"depositWithdrawnBalance\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"depositRecoveredBalance\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositReservedFees\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositRewards\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"depositStake\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"depositUpkeepBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feePercent\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"finalizableValidatorWithdrawals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"fulfillWithdrawals\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getBufferedBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"bufferedBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getExpectedEffectiveBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"expectedEffectiveBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPendingPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"getPendingWithdrawalEligibility\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"pendingWithdrawalEligibility\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"}],\"name\":\"getPoolAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReadyBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"readyBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReadyPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRegistryAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"registryAddress\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getReservedFeeBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getStakedPoolIds\",\"outputs\":[{\"internalType\":\"uint32[]\",\"name\":\"\",\"type\":\"uint32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"totalStake\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getUpkeepAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"upkeepAddress\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getUpkeepBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"upkeepBalance\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"userAddress\",\"type\":\"address\"}],\"name\":\"getUserStake\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"userStake\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getWithdrawableBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"depositDataRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"publicKey\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"signature\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"withdrawalCredentials\",\"type\":\"bytes\"},{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"bytes\",\"name\":\"shares\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"initiatePool\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"latestBeaconBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"beaconBalance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sweptBalance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activatedDeposits\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"completedExits\",\"type\":\"uint256\"}],\"name\":\"rebalanceStake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"poolIndex\",\"type\":\"uint256\"},{\"internalType\":\"uint32[]\",\"name\":\"blamePercents\",\"type\":\"uint32[]\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"}],\"name\":\"withdrawValidator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32[]\",\"name\":\"poolIds\",\"type\":\"uint32[]\"}],\"name\":\"flagValidators\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reportPeriod\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"poolId\",\"type\":\"uint32\"},{\"internalType\":\"uint64[]\",\"name\":\"operatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"oldOperatorIds\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64\",\"name\":\"newOperatorId\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"oldOperatorId\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"shares\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"cluster\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint32\",\"name\":\"validatorCount\",\"type\":\"uint32\"},{\"internalType\":\"uint64\",\"name\":\"networkFeeIndex\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"index\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"active\",\"type\":\"bool\"}],\"internalType\":\"structISSVNetworkCore.Cluster\",\"name\":\"oldCluster\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"feeAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"processed\",\"type\":\"bool\"}],\"name\":\"reshareValidator\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestCompletedExitReports\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"count\",\"type\":\"uint256\"}],\"name\":\"requestForcedExitReports\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"operatorId\",\"type\":\"uint64\"}],\"name\":\"requestReshares\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"requestWithdrawal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"requestedExits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"requestedWithdrawalBalance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"functionsAddress\",\"type\":\"address\"}],\"name\":\"setFunctionsAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"upkeepId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawLINKBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawReservedFees\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawSSVBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdrawUpkeepBalance\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
 }
 
 // MainABI is the input ABI used to generate the binding from.
@@ -221,10 +221,10 @@ func (_Main *MainCallerSession) FeePercent() (uint32, error) {
 
 // FinalizableCompletedExits is a free data retrieval call binding the contract method 0xecd3fc9b.
 //
-// Solidity: function finalizableCompletedExits() view returns(uint256)
+// Solidity: function finalizableValidatorWithdrawals() view returns(uint256)
 func (_Main *MainCaller) FinalizableCompletedExits(opts *bind.CallOpts) (*big.Int, error) {
 	var out []interface{}
-	err := _Main.contract.Call(opts, &out, "finalizableCompletedExits")
+	err := _Main.contract.Call(opts, &out, "finalizableValidatorWithdrawals")
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -238,14 +238,14 @@ func (_Main *MainCaller) FinalizableCompletedExits(opts *bind.CallOpts) (*big.In
 
 // FinalizableCompletedExits is a free data retrieval call binding the contract method 0xecd3fc9b.
 //
-// Solidity: function finalizableCompletedExits() view returns(uint256)
+// Solidity: function finalizableValidatorWithdrawals() view returns(uint256)
 func (_Main *MainSession) FinalizableCompletedExits() (*big.Int, error) {
 	return _Main.Contract.FinalizableCompletedExits(&_Main.CallOpts)
 }
 
 // FinalizableCompletedExits is a free data retrieval call binding the contract method 0xecd3fc9b.
 //
-// Solidity: function finalizableCompletedExits() view returns(uint256)
+// Solidity: function finalizableValidatorWithdrawals() view returns(uint256)
 func (_Main *MainCallerSession) FinalizableCompletedExits() (*big.Int, error) {
 	return _Main.Contract.FinalizableCompletedExits(&_Main.CallOpts)
 }
@@ -966,21 +966,21 @@ func (_Main *MainTransactorSession) DepositClusterBalance(operatorIds []uint64, 
 
 // DepositExitedBalance is a paid mutator transaction binding the contract method 0x457cf6ae.
 //
-// Solidity: function depositExitedBalance(uint32 poolId) payable returns()
+// Solidity: function depositWithdrawnBalance(uint32 poolId) payable returns()
 func (_Main *MainTransactor) DepositExitedBalance(opts *bind.TransactOpts, poolId uint32) (*types.Transaction, error) {
-	return _Main.contract.Transact(opts, "depositExitedBalance", poolId)
+	return _Main.contract.Transact(opts, "depositWithdrawnBalance", poolId)
 }
 
 // DepositExitedBalance is a paid mutator transaction binding the contract method 0x457cf6ae.
 //
-// Solidity: function depositExitedBalance(uint32 poolId) payable returns()
+// Solidity: function depositWithdrawnBalance(uint32 poolId) payable returns()
 func (_Main *MainSession) DepositExitedBalance(poolId uint32) (*types.Transaction, error) {
 	return _Main.Contract.DepositExitedBalance(&_Main.TransactOpts, poolId)
 }
 
 // DepositExitedBalance is a paid mutator transaction binding the contract method 0x457cf6ae.
 //
-// Solidity: function depositExitedBalance(uint32 poolId) payable returns()
+// Solidity: function depositWithdrawnBalance(uint32 poolId) payable returns()
 func (_Main *MainTransactorSession) DepositExitedBalance(poolId uint32) (*types.Transaction, error) {
 	return _Main.Contract.DepositExitedBalance(&_Main.TransactOpts, poolId)
 }
@@ -1176,63 +1176,63 @@ func (_Main *MainTransactorSession) RenounceOwnership() (*types.Transaction, err
 
 // ReportCompletedExit is a paid mutator transaction binding the contract method 0x7277d07c.
 //
-// Solidity: function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
+// Solidity: function withdrawValidator(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
 func (_Main *MainTransactor) ReportCompletedExit(opts *bind.TransactOpts, poolIndex *big.Int, blamePercents []uint32, cluster ISSVNetworkCoreCluster) (*types.Transaction, error) {
-	return _Main.contract.Transact(opts, "reportCompletedExit", poolIndex, blamePercents, cluster)
+	return _Main.contract.Transact(opts, "withdrawValidator", poolIndex, blamePercents, cluster)
 }
 
 // ReportCompletedExit is a paid mutator transaction binding the contract method 0x7277d07c.
 //
-// Solidity: function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
+// Solidity: function withdrawValidator(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
 func (_Main *MainSession) ReportCompletedExit(poolIndex *big.Int, blamePercents []uint32, cluster ISSVNetworkCoreCluster) (*types.Transaction, error) {
 	return _Main.Contract.ReportCompletedExit(&_Main.TransactOpts, poolIndex, blamePercents, cluster)
 }
 
 // ReportCompletedExit is a paid mutator transaction binding the contract method 0x7277d07c.
 //
-// Solidity: function reportCompletedExit(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
+// Solidity: function withdrawValidator(uint256 poolIndex, uint32[] blamePercents, (uint32,uint64,uint64,uint256,bool) cluster) returns()
 func (_Main *MainTransactorSession) ReportCompletedExit(poolIndex *big.Int, blamePercents []uint32, cluster ISSVNetworkCoreCluster) (*types.Transaction, error) {
 	return _Main.Contract.ReportCompletedExit(&_Main.TransactOpts, poolIndex, blamePercents, cluster)
 }
 
 // ReportForcedExits is a paid mutator transaction binding the contract method 0xf3bf9499.
 //
-// Solidity: function reportForcedExits(uint32[] poolIds) returns()
+// Solidity: function flagValidators(uint32[] poolIds) returns()
 func (_Main *MainTransactor) ReportForcedExits(opts *bind.TransactOpts, poolIds []uint32) (*types.Transaction, error) {
-	return _Main.contract.Transact(opts, "reportForcedExits", poolIds)
+	return _Main.contract.Transact(opts, "flagValidators", poolIds)
 }
 
 // ReportForcedExits is a paid mutator transaction binding the contract method 0xf3bf9499.
 //
-// Solidity: function reportForcedExits(uint32[] poolIds) returns()
+// Solidity: function flagValidators(uint32[] poolIds) returns()
 func (_Main *MainSession) ReportForcedExits(poolIds []uint32) (*types.Transaction, error) {
 	return _Main.Contract.ReportForcedExits(&_Main.TransactOpts, poolIds)
 }
 
 // ReportForcedExits is a paid mutator transaction binding the contract method 0xf3bf9499.
 //
-// Solidity: function reportForcedExits(uint32[] poolIds) returns()
+// Solidity: function flagValidators(uint32[] poolIds) returns()
 func (_Main *MainTransactorSession) ReportForcedExits(poolIds []uint32) (*types.Transaction, error) {
 	return _Main.Contract.ReportForcedExits(&_Main.TransactOpts, poolIds)
 }
 
 // ReportReshare is a paid mutator transaction binding the contract method 0x8ad6cc36.
 //
-// Solidity: function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
+// Solidity: function reshareValidator(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
 func (_Main *MainTransactor) ReportReshare(opts *bind.TransactOpts, poolId uint32, operatorIds []uint64, oldOperatorIds []uint64, newOperatorId uint64, oldOperatorId uint64, shares []byte, cluster ISSVNetworkCoreCluster, oldCluster ISSVNetworkCoreCluster, feeAmount *big.Int, processed bool) (*types.Transaction, error) {
-	return _Main.contract.Transact(opts, "reportReshare", poolId, operatorIds, oldOperatorIds, newOperatorId, oldOperatorId, shares, cluster, oldCluster, feeAmount, processed)
+	return _Main.contract.Transact(opts, "reshareValidator", poolId, operatorIds, oldOperatorIds, newOperatorId, oldOperatorId, shares, cluster, oldCluster, feeAmount, processed)
 }
 
 // ReportReshare is a paid mutator transaction binding the contract method 0x8ad6cc36.
 //
-// Solidity: function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
+// Solidity: function reshareValidator(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
 func (_Main *MainSession) ReportReshare(poolId uint32, operatorIds []uint64, oldOperatorIds []uint64, newOperatorId uint64, oldOperatorId uint64, shares []byte, cluster ISSVNetworkCoreCluster, oldCluster ISSVNetworkCoreCluster, feeAmount *big.Int, processed bool) (*types.Transaction, error) {
 	return _Main.Contract.ReportReshare(&_Main.TransactOpts, poolId, operatorIds, oldOperatorIds, newOperatorId, oldOperatorId, shares, cluster, oldCluster, feeAmount, processed)
 }
 
 // ReportReshare is a paid mutator transaction binding the contract method 0x8ad6cc36.
 //
-// Solidity: function reportReshare(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
+// Solidity: function reshareValidator(uint32 poolId, uint64[] operatorIds, uint64[] oldOperatorIds, uint64 newOperatorId, uint64 oldOperatorId, bytes shares, (uint32,uint64,uint64,uint256,bool) cluster, (uint32,uint64,uint64,uint256,bool) oldCluster, uint256 feeAmount, bool processed) returns()
 func (_Main *MainTransactorSession) ReportReshare(poolId uint32, operatorIds []uint64, oldOperatorIds []uint64, newOperatorId uint64, oldOperatorId uint64, shares []byte, cluster ISSVNetworkCoreCluster, oldCluster ISSVNetworkCoreCluster, feeAmount *big.Int, processed bool) (*types.Transaction, error) {
 	return _Main.Contract.ReportReshare(&_Main.TransactOpts, poolId, operatorIds, oldOperatorIds, newOperatorId, oldOperatorId, shares, cluster, oldCluster, feeAmount, processed)
 }
@@ -1468,9 +1468,9 @@ func (_Main *MainTransactorSession) Receive() (*types.Transaction, error) {
 	return _Main.Contract.Receive(&_Main.TransactOpts)
 }
 
-// MainCompletedExitReportsRequestedIterator is returned from FilterCompletedExitReportsRequested and is used to iterate over the raw logs and unpacked data for CompletedExitReportsRequested events raised by the Main contract.
-type MainCompletedExitReportsRequestedIterator struct {
-	Event *MainCompletedExitReportsRequested // Event containing the contract specifics and raw log
+// MainValidatorWithdrawalsRequestedIterator is returned from FilterValidatorWithdrawalsRequested and is used to iterate over the raw logs and unpacked data for ValidatorWithdrawalsRequested events raised by the Main contract.
+type MainValidatorWithdrawalsRequestedIterator struct {
+	Event *MainValidatorWithdrawalsRequested // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1484,7 +1484,7 @@ type MainCompletedExitReportsRequestedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *MainCompletedExitReportsRequestedIterator) Next() bool {
+func (it *MainValidatorWithdrawalsRequestedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1493,7 +1493,7 @@ func (it *MainCompletedExitReportsRequestedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(MainCompletedExitReportsRequested)
+			it.Event = new(MainValidatorWithdrawalsRequested)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1508,7 +1508,7 @@ func (it *MainCompletedExitReportsRequestedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(MainCompletedExitReportsRequested)
+		it.Event = new(MainValidatorWithdrawalsRequested)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1524,41 +1524,41 @@ func (it *MainCompletedExitReportsRequestedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *MainCompletedExitReportsRequestedIterator) Error() error {
+func (it *MainValidatorWithdrawalsRequestedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *MainCompletedExitReportsRequestedIterator) Close() error {
+func (it *MainValidatorWithdrawalsRequestedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// MainCompletedExitReportsRequested represents a CompletedExitReportsRequested event raised by the Main contract.
-type MainCompletedExitReportsRequested struct {
+// MainValidatorWithdrawalsRequested represents a ValidatorWithdrawalsRequested event raised by the Main contract.
+type MainValidatorWithdrawalsRequested struct {
 	Count *big.Int
 	Raw   types.Log // Blockchain specific contextual infos
 }
 
-// FilterCompletedExitReportsRequested is a free log retrieval operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
+// FilterValidatorWithdrawalsRequested is a free log retrieval operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
 //
-// Solidity: event CompletedExitReportsRequested(uint256 count)
-func (_Main *MainFilterer) FilterCompletedExitReportsRequested(opts *bind.FilterOpts) (*MainCompletedExitReportsRequestedIterator, error) {
+// Solidity: event ValidatorWithdrawalsRequested(uint256 count)
+func (_Main *MainFilterer) FilterValidatorWithdrawalsRequested(opts *bind.FilterOpts) (*MainValidatorWithdrawalsRequestedIterator, error) {
 
-	logs, sub, err := _Main.contract.FilterLogs(opts, "CompletedExitReportsRequested")
+	logs, sub, err := _Main.contract.FilterLogs(opts, "ValidatorWithdrawalsRequested")
 	if err != nil {
 		return nil, err
 	}
-	return &MainCompletedExitReportsRequestedIterator{contract: _Main.contract, event: "CompletedExitReportsRequested", logs: logs, sub: sub}, nil
+	return &MainValidatorWithdrawalsRequestedIterator{contract: _Main.contract, event: "ValidatorWithdrawalsRequested", logs: logs, sub: sub}, nil
 }
 
-// WatchCompletedExitReportsRequested is a free log subscription operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
+// WatchValidatorWithdrawalsRequested is a free log subscription operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
 //
-// Solidity: event CompletedExitReportsRequested(uint256 count)
-func (_Main *MainFilterer) WatchCompletedExitReportsRequested(opts *bind.WatchOpts, sink chan<- *MainCompletedExitReportsRequested) (event.Subscription, error) {
+// Solidity: event ValidatorWithdrawalsRequested(uint256 count)
+func (_Main *MainFilterer) WatchValidatorWithdrawalsRequested(opts *bind.WatchOpts, sink chan<- *MainValidatorWithdrawalsRequested) (event.Subscription, error) {
 
-	logs, sub, err := _Main.contract.WatchLogs(opts, "CompletedExitReportsRequested")
+	logs, sub, err := _Main.contract.WatchLogs(opts, "ValidatorWithdrawalsRequested")
 	if err != nil {
 		return nil, err
 	}
@@ -1568,8 +1568,8 @@ func (_Main *MainFilterer) WatchCompletedExitReportsRequested(opts *bind.WatchOp
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(MainCompletedExitReportsRequested)
-				if err := _Main.contract.UnpackLog(event, "CompletedExitReportsRequested", log); err != nil {
+				event := new(MainValidatorWithdrawalsRequested)
+				if err := _Main.contract.UnpackLog(event, "ValidatorWithdrawalsRequested", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1590,21 +1590,21 @@ func (_Main *MainFilterer) WatchCompletedExitReportsRequested(opts *bind.WatchOp
 	}), nil
 }
 
-// ParseCompletedExitReportsRequested is a log parse operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
+// ParseValidatorWithdrawalsRequested is a log parse operation binding the contract event 0x2e85588e294368bbb2102d8b8bd81e952c30f94956f69d2e9a6a2da5a690c919.
 //
-// Solidity: event CompletedExitReportsRequested(uint256 count)
-func (_Main *MainFilterer) ParseCompletedExitReportsRequested(log types.Log) (*MainCompletedExitReportsRequested, error) {
-	event := new(MainCompletedExitReportsRequested)
-	if err := _Main.contract.UnpackLog(event, "CompletedExitReportsRequested", log); err != nil {
+// Solidity: event ValidatorWithdrawalsRequested(uint256 count)
+func (_Main *MainFilterer) ParseValidatorWithdrawalsRequested(log types.Log) (*MainValidatorWithdrawalsRequested, error) {
+	event := new(MainValidatorWithdrawalsRequested)
+	if err := _Main.contract.UnpackLog(event, "ValidatorWithdrawalsRequested", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// MainPoolActivatedIterator is returned from FilterPoolActivated and is used to iterate over the raw logs and unpacked data for PoolActivated events raised by the Main contract.
-type MainPoolActivatedIterator struct {
-	Event *MainPoolActivated // Event containing the contract specifics and raw log
+// MainValidatorActivatedIterator is returned from FilterValidatorActivated and is used to iterate over the raw logs and unpacked data for ValidatorActivated events raised by the Main contract.
+type MainValidatorActivatedIterator struct {
+	Event *MainValidatorActivated // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1618,7 +1618,7 @@ type MainPoolActivatedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *MainPoolActivatedIterator) Next() bool {
+func (it *MainValidatorActivatedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1627,7 +1627,7 @@ func (it *MainPoolActivatedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(MainPoolActivated)
+			it.Event = new(MainValidatorActivated)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1642,7 +1642,7 @@ func (it *MainPoolActivatedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(MainPoolActivated)
+		it.Event = new(MainValidatorActivated)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1658,51 +1658,51 @@ func (it *MainPoolActivatedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *MainPoolActivatedIterator) Error() error {
+func (it *MainValidatorActivatedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *MainPoolActivatedIterator) Close() error {
+func (it *MainValidatorActivatedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// MainPoolActivated represents a PoolActivated event raised by the Main contract.
-type MainPoolActivated struct {
+// MainValidatorActivated represents a ValidatorActivated event raised by the Main contract.
+type MainValidatorActivated struct {
 	PoolId uint32
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterPoolActivated is a free log retrieval operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
+// FilterValidatorActivated is a free log retrieval operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
 //
-// Solidity: event PoolActivated(uint32 indexed poolId)
-func (_Main *MainFilterer) FilterPoolActivated(opts *bind.FilterOpts, poolId []uint32) (*MainPoolActivatedIterator, error) {
+// Solidity: event ValidatorActivated(uint32 indexed poolId)
+func (_Main *MainFilterer) FilterValidatorActivated(opts *bind.FilterOpts, poolId []uint32) (*MainValidatorActivatedIterator, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.FilterLogs(opts, "PoolActivated", poolIdRule)
+	logs, sub, err := _Main.contract.FilterLogs(opts, "ValidatorActivated", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &MainPoolActivatedIterator{contract: _Main.contract, event: "PoolActivated", logs: logs, sub: sub}, nil
+	return &MainValidatorActivatedIterator{contract: _Main.contract, event: "ValidatorActivated", logs: logs, sub: sub}, nil
 }
 
-// WatchPoolActivated is a free log subscription operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
+// WatchValidatorActivated is a free log subscription operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
 //
-// Solidity: event PoolActivated(uint32 indexed poolId)
-func (_Main *MainFilterer) WatchPoolActivated(opts *bind.WatchOpts, sink chan<- *MainPoolActivated, poolId []uint32) (event.Subscription, error) {
+// Solidity: event ValidatorActivated(uint32 indexed poolId)
+func (_Main *MainFilterer) WatchValidatorActivated(opts *bind.WatchOpts, sink chan<- *MainValidatorActivated, poolId []uint32) (event.Subscription, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.WatchLogs(opts, "PoolActivated", poolIdRule)
+	logs, sub, err := _Main.contract.WatchLogs(opts, "ValidatorActivated", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1712,8 +1712,8 @@ func (_Main *MainFilterer) WatchPoolActivated(opts *bind.WatchOpts, sink chan<- 
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(MainPoolActivated)
-				if err := _Main.contract.UnpackLog(event, "PoolActivated", log); err != nil {
+				event := new(MainValidatorActivated)
+				if err := _Main.contract.UnpackLog(event, "ValidatorActivated", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1734,21 +1734,21 @@ func (_Main *MainFilterer) WatchPoolActivated(opts *bind.WatchOpts, sink chan<- 
 	}), nil
 }
 
-// ParsePoolActivated is a log parse operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
+// ParseValidatorActivated is a log parse operation binding the contract event 0x47cc13c0d0733c86b121e1efaaf1554a8e2fa62e4db238e28f492d837b3b0cbf.
 //
-// Solidity: event PoolActivated(uint32 indexed poolId)
-func (_Main *MainFilterer) ParsePoolActivated(log types.Log) (*MainPoolActivated, error) {
-	event := new(MainPoolActivated)
-	if err := _Main.contract.UnpackLog(event, "PoolActivated", log); err != nil {
+// Solidity: event ValidatorActivated(uint32 indexed poolId)
+func (_Main *MainFilterer) ParseValidatorActivated(log types.Log) (*MainValidatorActivated, error) {
+	event := new(MainValidatorActivated)
+	if err := _Main.contract.UnpackLog(event, "ValidatorActivated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// MainPoolInitiatedIterator is returned from FilterPoolInitiated and is used to iterate over the raw logs and unpacked data for PoolInitiated events raised by the Main contract.
-type MainPoolInitiatedIterator struct {
-	Event *MainPoolInitiated // Event containing the contract specifics and raw log
+// MainValidatorInititatedIterator is returned from FilterValidatorInititated and is used to iterate over the raw logs and unpacked data for ValidatorInititated events raised by the Main contract.
+type MainValidatorInititatedIterator struct {
+	Event *MainValidatorInititated // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1762,7 +1762,7 @@ type MainPoolInitiatedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *MainPoolInitiatedIterator) Next() bool {
+func (it *MainValidatorInititatedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1771,7 +1771,7 @@ func (it *MainPoolInitiatedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(MainPoolInitiated)
+			it.Event = new(MainValidatorInititated)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1786,7 +1786,7 @@ func (it *MainPoolInitiatedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(MainPoolInitiated)
+		it.Event = new(MainValidatorInititated)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1802,51 +1802,51 @@ func (it *MainPoolInitiatedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *MainPoolInitiatedIterator) Error() error {
+func (it *MainValidatorInititatedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *MainPoolInitiatedIterator) Close() error {
+func (it *MainValidatorInititatedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// MainPoolInitiated represents a PoolInitiated event raised by the Main contract.
-type MainPoolInitiated struct {
+// MainValidatorInititated represents a ValidatorInititated event raised by the Main contract.
+type MainValidatorInititated struct {
 	PoolId uint32
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterPoolInitiated is a free log retrieval operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
+// FilterValidatorInititated is a free log retrieval operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
 //
-// Solidity: event PoolInitiated(uint32 indexed poolId)
-func (_Main *MainFilterer) FilterPoolInitiated(opts *bind.FilterOpts, poolId []uint32) (*MainPoolInitiatedIterator, error) {
+// Solidity: event ValidatorInititated(uint32 indexed poolId)
+func (_Main *MainFilterer) FilterValidatorInititated(opts *bind.FilterOpts, poolId []uint32) (*MainValidatorInititatedIterator, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.FilterLogs(opts, "PoolInitiated", poolIdRule)
+	logs, sub, err := _Main.contract.FilterLogs(opts, "ValidatorInititated", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &MainPoolInitiatedIterator{contract: _Main.contract, event: "PoolInitiated", logs: logs, sub: sub}, nil
+	return &MainValidatorInititatedIterator{contract: _Main.contract, event: "ValidatorInititated", logs: logs, sub: sub}, nil
 }
 
-// WatchPoolInitiated is a free log subscription operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
+// WatchValidatorInititated is a free log subscription operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
 //
-// Solidity: event PoolInitiated(uint32 indexed poolId)
-func (_Main *MainFilterer) WatchPoolInitiated(opts *bind.WatchOpts, sink chan<- *MainPoolInitiated, poolId []uint32) (event.Subscription, error) {
+// Solidity: event ValidatorInititated(uint32 indexed poolId)
+func (_Main *MainFilterer) WatchValidatorInititated(opts *bind.WatchOpts, sink chan<- *MainValidatorInititated, poolId []uint32) (event.Subscription, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.WatchLogs(opts, "PoolInitiated", poolIdRule)
+	logs, sub, err := _Main.contract.WatchLogs(opts, "ValidatorInititated", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1856,8 +1856,8 @@ func (_Main *MainFilterer) WatchPoolInitiated(opts *bind.WatchOpts, sink chan<- 
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(MainPoolInitiated)
-				if err := _Main.contract.UnpackLog(event, "PoolInitiated", log); err != nil {
+				event := new(MainValidatorInititated)
+				if err := _Main.contract.UnpackLog(event, "ValidatorInititated", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1878,21 +1878,21 @@ func (_Main *MainFilterer) WatchPoolInitiated(opts *bind.WatchOpts, sink chan<- 
 	}), nil
 }
 
-// ParsePoolInitiated is a log parse operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
+// ParseValidatorInititated is a log parse operation binding the contract event 0xcb269e0cb51e3b2e94cbce3ed406b42b7b3f9506eda093aac04fe3023f71005f.
 //
-// Solidity: event PoolInitiated(uint32 indexed poolId)
-func (_Main *MainFilterer) ParsePoolInitiated(log types.Log) (*MainPoolInitiated, error) {
-	event := new(MainPoolInitiated)
-	if err := _Main.contract.UnpackLog(event, "PoolInitiated", log); err != nil {
+// Solidity: event ValidatorInititated(uint32 indexed poolId)
+func (_Main *MainFilterer) ParseValidatorInititated(log types.Log) (*MainValidatorInititated, error) {
+	event := new(MainValidatorInititated)
+	if err := _Main.contract.UnpackLog(event, "ValidatorInititated", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// MainInitiationRequestedIterator is returned from FilterInitiationRequested and is used to iterate over the raw logs and unpacked data for InitiationRequested events raised by the Main contract.
-type MainInitiationRequestedIterator struct {
-	Event *MainInitiationRequested // Event containing the contract specifics and raw log
+// MainValidatorInitiationRequestedIterator is returned from FilterValidatorInitiationRequested and is used to iterate over the raw logs and unpacked data for ValidatorInitiationRequested events raised by the Main contract.
+type MainValidatorInitiationRequestedIterator struct {
+	Event *MainValidatorInitiationRequested // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1906,7 +1906,7 @@ type MainInitiationRequestedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *MainInitiationRequestedIterator) Next() bool {
+func (it *MainValidatorInitiationRequestedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1915,7 +1915,7 @@ func (it *MainInitiationRequestedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(MainInitiationRequested)
+			it.Event = new(MainValidatorInitiationRequested)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1930,7 +1930,7 @@ func (it *MainInitiationRequestedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(MainInitiationRequested)
+		it.Event = new(MainValidatorInitiationRequested)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1946,51 +1946,51 @@ func (it *MainInitiationRequestedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *MainInitiationRequestedIterator) Error() error {
+func (it *MainValidatorInitiationRequestedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *MainInitiationRequestedIterator) Close() error {
+func (it *MainValidatorInitiationRequestedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// MainInitiationRequested represents a InitiationRequested event raised by the Main contract.
-type MainInitiationRequested struct {
+// MainValidatorInitiationRequested represents a ValidatorInitiationRequested event raised by the Main contract.
+type MainValidatorInitiationRequested struct {
 	PoolId uint32
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterInitiationRequested is a free log retrieval operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
+// FilterValidatorInitiationRequested is a free log retrieval operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
 //
-// Solidity: event InitiationRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) FilterInitiationRequested(opts *bind.FilterOpts, poolId []uint32) (*MainInitiationRequestedIterator, error) {
+// Solidity: event ValidatorInitiationRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) FilterValidatorInitiationRequested(opts *bind.FilterOpts, poolId []uint32) (*MainValidatorInitiationRequestedIterator, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.FilterLogs(opts, "InitiationRequested", poolIdRule)
+	logs, sub, err := _Main.contract.FilterLogs(opts, "ValidatorInitiationRequested", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &MainInitiationRequestedIterator{contract: _Main.contract, event: "InitiationRequested", logs: logs, sub: sub}, nil
+	return &MainValidatorInitiationRequestedIterator{contract: _Main.contract, event: "ValidatorInitiationRequested", logs: logs, sub: sub}, nil
 }
 
-// WatchInitiationRequested is a free log subscription operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
+// WatchValidatorInitiationRequested is a free log subscription operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
 //
-// Solidity: event InitiationRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) WatchInitiationRequested(opts *bind.WatchOpts, sink chan<- *MainInitiationRequested, poolId []uint32) (event.Subscription, error) {
+// Solidity: event ValidatorInitiationRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) WatchValidatorInitiationRequested(opts *bind.WatchOpts, sink chan<- *MainValidatorInitiationRequested, poolId []uint32) (event.Subscription, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.WatchLogs(opts, "InitiationRequested", poolIdRule)
+	logs, sub, err := _Main.contract.WatchLogs(opts, "ValidatorInitiationRequested", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -2000,8 +2000,8 @@ func (_Main *MainFilterer) WatchInitiationRequested(opts *bind.WatchOpts, sink c
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(MainInitiationRequested)
-				if err := _Main.contract.UnpackLog(event, "InitiationRequested", log); err != nil {
+				event := new(MainValidatorInitiationRequested)
+				if err := _Main.contract.UnpackLog(event, "ValidatorInitiationRequested", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -2022,12 +2022,12 @@ func (_Main *MainFilterer) WatchInitiationRequested(opts *bind.WatchOpts, sink c
 	}), nil
 }
 
-// ParseInitiationRequested is a log parse operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
+// ParseValidatorInitiationRequested is a log parse operation binding the contract event 0xcb5c918897d5a5273152963ee11ce1564cf0b651342e29f8fe161ee52ba04630.
 //
-// Solidity: event InitiationRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) ParseInitiationRequested(log types.Log) (*MainInitiationRequested, error) {
-	event := new(MainInitiationRequested)
-	if err := _Main.contract.UnpackLog(event, "InitiationRequested", log); err != nil {
+// Solidity: event ValidatorInitiationRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) ParseValidatorInitiationRequested(log types.Log) (*MainValidatorInitiationRequested, error) {
+	event := new(MainValidatorInitiationRequested)
+	if err := _Main.contract.UnpackLog(event, "ValidatorInitiationRequested", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -2178,9 +2178,9 @@ func (_Main *MainFilterer) ParseExitCompleted(log types.Log) (*MainExitCompleted
 	return event, nil
 }
 
-// MainExitRequestedIterator is returned from FilterExitRequested and is used to iterate over the raw logs and unpacked data for ExitRequested events raised by the Main contract.
-type MainExitRequestedIterator struct {
-	Event *MainExitRequested // Event containing the contract specifics and raw log
+// MainValidatorExitRequestedIterator is returned from FilterValidatorExitRequested and is used to iterate over the raw logs and unpacked data for ValidatorExitRequested events raised by the Main contract.
+type MainValidatorExitRequestedIterator struct {
+	Event *MainValidatorExitRequested // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -2194,7 +2194,7 @@ type MainExitRequestedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *MainExitRequestedIterator) Next() bool {
+func (it *MainValidatorExitRequestedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -2203,7 +2203,7 @@ func (it *MainExitRequestedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(MainExitRequested)
+			it.Event = new(MainValidatorExitRequested)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -2218,7 +2218,7 @@ func (it *MainExitRequestedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(MainExitRequested)
+		it.Event = new(MainValidatorExitRequested)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -2234,51 +2234,51 @@ func (it *MainExitRequestedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *MainExitRequestedIterator) Error() error {
+func (it *MainValidatorExitRequestedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *MainExitRequestedIterator) Close() error {
+func (it *MainValidatorExitRequestedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// MainExitRequested represents a ExitRequested event raised by the Main contract.
-type MainExitRequested struct {
+// MainValidatorExitRequested represents a ValidatorExitRequested event raised by the Main contract.
+type MainValidatorExitRequested struct {
 	PoolId uint32
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterExitRequested is a free log retrieval operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
+// FilterValidatorExitRequested is a free log retrieval operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
 //
-// Solidity: event ExitRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) FilterExitRequested(opts *bind.FilterOpts, poolId []uint32) (*MainExitRequestedIterator, error) {
+// Solidity: event ValidatorExitRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) FilterValidatorExitRequested(opts *bind.FilterOpts, poolId []uint32) (*MainValidatorExitRequestedIterator, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.FilterLogs(opts, "ExitRequested", poolIdRule)
+	logs, sub, err := _Main.contract.FilterLogs(opts, "ValidatorExitRequested", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &MainExitRequestedIterator{contract: _Main.contract, event: "ExitRequested", logs: logs, sub: sub}, nil
+	return &MainValidatorExitRequestedIterator{contract: _Main.contract, event: "ValidatorExitRequested", logs: logs, sub: sub}, nil
 }
 
-// WatchExitRequested is a free log subscription operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
+// WatchValidatorExitRequested is a free log subscription operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
 //
-// Solidity: event ExitRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) WatchExitRequested(opts *bind.WatchOpts, sink chan<- *MainExitRequested, poolId []uint32) (event.Subscription, error) {
+// Solidity: event ValidatorExitRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) WatchValidatorExitRequested(opts *bind.WatchOpts, sink chan<- *MainValidatorExitRequested, poolId []uint32) (event.Subscription, error) {
 
 	var poolIdRule []interface{}
 	for _, poolIdItem := range poolId {
 		poolIdRule = append(poolIdRule, poolIdItem)
 	}
 
-	logs, sub, err := _Main.contract.WatchLogs(opts, "ExitRequested", poolIdRule)
+	logs, sub, err := _Main.contract.WatchLogs(opts, "ValidatorExitRequested", poolIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -2288,8 +2288,8 @@ func (_Main *MainFilterer) WatchExitRequested(opts *bind.WatchOpts, sink chan<- 
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(MainExitRequested)
-				if err := _Main.contract.UnpackLog(event, "ExitRequested", log); err != nil {
+				event := new(MainValidatorExitRequested)
+				if err := _Main.contract.UnpackLog(event, "ValidatorExitRequested", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -2310,12 +2310,12 @@ func (_Main *MainFilterer) WatchExitRequested(opts *bind.WatchOpts, sink chan<- 
 	}), nil
 }
 
-// ParseExitRequested is a log parse operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
+// ParseValidatorExitRequested is a log parse operation binding the contract event 0x22f0bbd39772e68a16caa935d437e997aea4854e3db82046a9edf222c0065345.
 //
-// Solidity: event ExitRequested(uint32 indexed poolId)
-func (_Main *MainFilterer) ParseExitRequested(log types.Log) (*MainExitRequested, error) {
-	event := new(MainExitRequested)
-	if err := _Main.contract.UnpackLog(event, "ExitRequested", log); err != nil {
+// Solidity: event ValidatorExitRequested(uint32 indexed poolId)
+func (_Main *MainFilterer) ParseValidatorExitRequested(log types.Log) (*MainValidatorExitRequested, error) {
+	event := new(MainValidatorExitRequested)
+	if err := _Main.contract.UnpackLog(event, "ValidatorExitRequested", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

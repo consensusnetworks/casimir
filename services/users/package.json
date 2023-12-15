@@ -3,7 +3,7 @@
     "private": "true",
     "main": "src/index.ts",
     "scripts": {
-        "build": "node build.js",
+        "build": "npx esno -r dotenv/config scripts/build.ts",
         "predev": "npx esno -r dotenv/config scripts/db.ts",
         "dev": "npx esno -r dotenv/config src/index.ts",
         "clean": "npx esno -r dotenv/config scripts/clean.ts",

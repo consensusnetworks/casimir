@@ -6,15 +6,14 @@ import "../vendor/interfaces/ISSVNetworkCore.sol";
 
 interface ICasimirManager is ICasimirCore {
     event ClusterBalanceDeposited(uint256 amount);
-    event PoolActivated(uint32 indexed poolId);
-    event PoolInitiated(uint32 indexed poolId);
-    event InitiationRequested(uint32 indexed poolId);
-    event PoolReshared(uint32 indexed poolId);
-    event ExitRequested(uint32 indexed poolId);
-    event ForcedExitsReported(uint32[] poolIds);
+    event ValidatorActivated(uint32 indexed poolId);
+    event ValidatorInititated(uint32 indexed poolId);
+    event ValidatorInitiationRequested(uint32 indexed poolId);
+    event ValidatorReshared(uint32 indexed poolId);
+    event ValidatorExited(uint32 indexed poolId);
+    event ValidatorWithdrawn(uint32 indexed poolId);
     event LINKBalanceWithdrawn(uint256 amount);
-    event ExitedBalanceDeposited(uint32 indexed poolId, uint256 amount);
-    event ExitCompleted(uint32 indexed poolId);
+    event WithdrawnBalanceDeposited(uint32 indexed poolId, uint256 amount);
     event StakeDeposited(address indexed sender, uint256 amount);
     event StakeRebalanced(uint256 amount);
     event RecoveredBalanceDeposited(uint32 indexed poolId, uint256 amount);
@@ -29,13 +28,12 @@ interface ICasimirManager is ICasimirCore {
     event UpkeepCancelled();
     event WithdrawalFulfilled(address indexed sender, uint256 amount);
     event WithdrawalRequested(address indexed sender, uint256 amount);
-    event WithdrawalInitiated(address indexed sender, uint256 amount);
 
     error Paused();
     error InvalidRebalance();
-    error ForcedExitAlreadyReported();
     error InsufficientLiquidity();
     error NoReadyPools();
+    error ReportInProgress();
 
     /// @notice Deposit user stake
     function depositStake() external payable;
@@ -47,10 +45,10 @@ interface ICasimirManager is ICasimirCore {
     function depositRewards(uint32 poolId) external payable;
 
     /**
-     * @notice Deposit pool exited balance
+     * @notice Deposit pool withdrawn balance
      * @param poolId Pool ID
      */
-    function depositExitedBalance(uint32 poolId) external payable;
+    function depositWithdrawnBalance(uint32 poolId) external payable;
 
     /**
      * @notice Deposit pool operator recovered balance
@@ -97,28 +95,13 @@ interface ICasimirManager is ICasimirCore {
      * @notice Rebalance the rewards to stake ratio and redistribute swept rewards
      * @param beaconBalance Beacon chain balance
      * @param sweptBalance Swept balance
-     * @param activatedDeposits Activated deposit count
-     * @param completedExits Withdrawn exit count
+     * @param withdrawnValidators Withdrawn validator count
      */
     function rebalanceStake(
         uint256 beaconBalance,
         uint256 sweptBalance,
-        uint256 activatedDeposits,
-        uint256 completedExits
+        uint256 withdrawnValidators
     ) external;
-
-    /**
-     * @notice Undo or redo a rebalance of the rewards to stake ratio (will be removed in the next release)
-     * @param rebalance Rebalance amount (will be removed in the next release)
-     */
-    function unbalanceStake(int256 rebalance) external;
-
-    /**
-     * @notice Set the latest beacon chain balance after fees
-     * @dev Beta-only, will be removed in the next release
-     * @param newLatestBeaconBalanceAfterFees New latest beacon chain balance after fees
-     */
-    function setLatestBeaconBalanceAfterFees(uint256 newLatestBeaconBalanceAfterFees) external;
 
     /**
      * @notice Compound pool rewards
@@ -139,7 +122,7 @@ interface ICasimirManager is ICasimirCore {
     function fulfillWithdrawals(uint256 count) external;
 
     /**
-     * @notice Initiate the next ready pool
+     * @notice Initiate a validator with deposit data
      * @param depositDataRoot Deposit data root
      * @param publicKey Validator public key
      * @param signature Deposit signature
@@ -147,7 +130,7 @@ interface ICasimirManager is ICasimirCore {
      * @param operatorIds Operator IDs
      * @param shares Operator shares
      */
-    function initiatePool(
+    function initiateValidator(
         bytes32 depositDataRoot,
         bytes memory publicKey,
         bytes memory signature,
@@ -163,14 +146,14 @@ interface ICasimirManager is ICasimirCore {
     function withdrawReservedFees(uint256 amount) external;
 
     /**
-     * @notice Activate a pool
+     * @notice Activate a validator with a cluster
      * @param pendingPoolIndex Pending pool index
      * @param cluster SSV cluster
      * @param feeAmount Fee amount
      * @param minTokenAmount Minimum token amount
      * @param processed Whether the fee has been processed
      */
-    function activatePool(
+    function activateValidator(
         uint256 pendingPoolIndex,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
@@ -179,7 +162,7 @@ interface ICasimirManager is ICasimirCore {
     ) external;
 
     /**
-     * @notice Report a reshare
+     * @notice Reshare a validator with a new cluster
      * @param poolId Pool ID
      * @param operatorIds Operator IDs
      * @param newOperatorId New operator ID
@@ -191,7 +174,7 @@ interface ICasimirManager is ICasimirCore {
      * @param minTokenAmount Minimum SSV token amount out after processing fees
      * @param processed Whether the fee amount is already processed
      */
-    function resharePool(
+    function reshareValidator(
         uint32 poolId,
         uint64[] memory operatorIds,
         uint64 newOperatorId,
@@ -205,18 +188,12 @@ interface ICasimirManager is ICasimirCore {
     ) external;
 
     /**
-     * @notice Report forced exits
-     * @param poolIds Pool IDs
-     */
-    function reportForcedExits(uint32[] memory poolIds) external;
-
-    /**
-     * @notice Report a completed exit
+     * @notice Deactivate a withdrawn validator
      * @param stakedPoolIndex Staked pool index
      * @param blamePercents Operator blame percents (0 if balance is 32 ether)
      * @param cluster Cluster snapshot
      */
-    function reportCompletedExit(
+    function withdrawValidator(
         uint256 stakedPoolIndex,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
@@ -292,12 +269,12 @@ interface ICasimirManager is ICasimirCore {
 
     /// @notice Requested exit count
     function requestedExits() external view returns (uint256);
-
-    /// @notice Fully reported activations in the current period
-    function finalizableActivations() external view returns (uint256);
+    
+    /// @notice Fully reported activations in the current period (remove in the next deployment)
+    function finalizableActivatedValidators() external view returns (uint256);
 
     /// @notice Fully reported completed exits in the current period
-    function finalizableCompletedExits() external view returns (uint256);
+    function finalizableWithdrawnValidators() external view returns (uint256);
 
     /// @notice Current report period
     function reportPeriod() external view returns (uint32);
@@ -318,7 +295,7 @@ interface ICasimirManager is ICasimirCore {
      */
     function getPendingWithdrawalEligibility(uint256 index, uint256 period) external view returns (bool);
 
-    /// @notice Get the withdrawable balance (prepool + exited)
+    /// @notice Get the withdrawable balance (prepool + withdrawn)
     function getWithdrawableBalance() external view returns (uint256);
 
     /// @notice Get the stake ratio sum

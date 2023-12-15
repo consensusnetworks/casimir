@@ -58,7 +58,7 @@ export default function useBreakdownMetrics() {
             const addresses = (user.value as UserWithAccountsAndOperators).accounts.map((account: Account) => account.address) as string[]
             const currentUserStakePromises = [] as Array<Promise<ethers.BigNumber>>
             addresses.forEach(address => currentUserStakePromises.push((baseManager as CasimirManager).getUserStake(address)))
-            addresses.forEach(address => currentUserStakePromises.push((eigenManager as CasimirManager).getUserStake(address)))
+            // addresses.forEach(address => currentUserStakePromises.push((eigenManager as CasimirManager).getUserStake(address)))
             const settledCurrentUserStakePromises = await Promise.allSettled(currentUserStakePromises) as Array<PromiseFulfilledResult<ethers.BigNumber>>
             const currentUserStake = settledCurrentUserStakePromises.filter(result => result.status === "fulfilled").map(result => result.value)
             const currentUserStakeSum = currentUserStake.reduce((acc, curr) => acc.add(curr), ethers.BigNumber.from(0))
@@ -67,33 +67,27 @@ export default function useBreakdownMetrics() {
             /* Get User's All Time Deposits and Withdrawals */
             const userEventTotalsPromises = [] as Array<Promise<ContractEventsByAddress>>
             addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, baseManager))})
-            addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, eigenManager))})
+            // addresses.forEach(address => {userEventTotalsPromises.push(getContractEventsTotalsByAddress(address, eigenManager))})
             const userEventTotals = await Promise.all(userEventTotalsPromises) as Array<ContractEventsByAddress>
             const userEventTotalsSum = userEventTotals.reduce((acc, curr) => {
-                const { StakeDeposited, WithdrawalInitiated, WithdrawalRequested, WithdrawalFulfilled } = curr
+                const { StakeDeposited/*, WithdrawalRequested*/, WithdrawalFulfilled } = curr
                 return {
                     StakeDeposited: acc.StakeDeposited + (StakeDeposited || 0),
-                    WithdrawalInitiated: acc.WithdrawalInitiated + (WithdrawalInitiated || 0),
-                    WithdrawalRequested: acc.WithdrawalRequested + (WithdrawalRequested || 0),
+                    // WithdrawalRequested: acc.WithdrawalRequested + (WithdrawalRequested || 0),
                     WithdrawalFulfilled: acc.WithdrawalFulfilled + (WithdrawalFulfilled || 0)
                 }
             }, { 
-                StakeDeposited: 0, 
-                WithdrawalInitiated: 0, 
-                WithdrawalRequested: 0, 
+                StakeDeposited: 0,
+                // WithdrawalRequested: 0,
                 WithdrawalFulfilled: 0 
-            } as { StakeDeposited: number; WithdrawalInitiated: number, WithdrawalRequested: number, WithdrawalFulfilled: number })
-              
+            } as { StakeDeposited: number/*, WithdrawalRequested: number*/, WithdrawalFulfilled: number })
               
             const stakedDepositedETH = userEventTotalsSum.StakeDeposited
-            const withdrawalInitiatedETH = userEventTotalsSum.WithdrawalInitiated
-            const withdrawalRequestedETH = userEventTotalsSum.WithdrawalRequested
+            // const withdrawalRequestedETH = userEventTotalsSum.WithdrawalRequested
             const withdrawalFulfilledETH = userEventTotalsSum.WithdrawalFulfilled
-            
 
             /* Get User's All Time Rewards */
-            const currentUserStakeMinusEvents = 
-        currentUserStakeETH - stakedDepositedETH + ((withdrawalInitiatedETH) + (withdrawalRequestedETH) + (withdrawalFulfilledETH))
+            const currentUserStakeMinusEvents = currentUserStakeETH - (stakedDepositedETH - withdrawalFulfilledETH)
 
             return {
                 eth: `${formatNumber(currentUserStakeMinusEvents)} ETH`,
@@ -113,8 +107,7 @@ export default function useBreakdownMetrics() {
             const eventList = [
                 "StakeDeposited",
                 "StakeRebalanced",
-                "WithdrawalInitiated",
-                "WithdrawalRequested",
+                // "WithdrawalRequested",
                 "WithdrawalFulfilled"
             ]
             const eventFilters = eventList.map(event => {
@@ -145,8 +138,7 @@ export default function useBreakdownMetrics() {
             return {
                 StakeDeposited: 0,
                 StakeRebalanced: 0,
-                WithdrawalInitiated: 0,
-                WithdrawalRequested: 0,
+                // WithdrawalRequested: 0,
                 WithdrawalFulfilled: 0
             }
         }
@@ -175,7 +167,7 @@ export default function useBreakdownMetrics() {
         } catch (error) {
             console.log("Error occurred while fetching stake:", error)
             return {
-                eth: "0ETH",
+                eth: "0 ETH",
                 usd: "$0.00"
             }
         }
@@ -238,10 +230,10 @@ export default function useBreakdownMetrics() {
         try {
             (baseManager as CasimirManager).on("StakeDeposited", stakeDepositedListener);
             (baseManager as CasimirManager).on("StakeRebalanced", stakeRebalancedListener);
-            (baseManager as CasimirManager).on("WithdrawalInitiated", withdrawalInitiatedListener);
+            (baseManager as CasimirManager).on("WithdrawalFulfilled", withdrawalFulfilledListener);
             (eigenManager as CasimirManager).on("StakeDeposited", stakeDepositedListener);
             (eigenManager as CasimirManager).on("StakeRebalanced", stakeRebalancedListener);
-            (eigenManager as CasimirManager).on("WithdrawalInitiated", withdrawalInitiatedListener)
+            (eigenManager as CasimirManager).on("WithdrawalFulfilled", withdrawalFulfilledListener)
         } catch (err) {
             console.log(`There was an error in listenForContractEvents: ${err}`)
         }
@@ -250,15 +242,15 @@ export default function useBreakdownMetrics() {
     function stopListeningForContractEvents() {
         (baseManager as CasimirManager).removeListener("StakeDeposited", stakeDepositedListener);
         (baseManager as CasimirManager).removeListener("StakeRebalanced", stakeRebalancedListener);
-        (baseManager as CasimirManager).removeListener("WithdrawalInitiated", withdrawalInitiatedListener);
+        (baseManager as CasimirManager).removeListener("WithdrawalFulfilled", withdrawalFulfilledListener);
         (eigenManager as CasimirManager).removeListener("StakeDeposited", stakeDepositedListener);
         (eigenManager as CasimirManager).removeListener("StakeRebalanced", stakeRebalancedListener);
-        (eigenManager as CasimirManager).removeListener("WithdrawalInitiated", withdrawalInitiatedListener)
+        (eigenManager as CasimirManager).removeListener("WithdrawalFulfilled", withdrawalFulfilledListener)
     }
 
     const stakeDepositedListener = async () => await refreshBreakdown()
     const stakeRebalancedListener = async () => await refreshBreakdown()
-    const withdrawalInitiatedListener = async () => await refreshBreakdown()
+    const withdrawalFulfilledListener = async () => await refreshBreakdown()
 
     async function blockListener(blockNumber: number) {
         if (!user.value) return

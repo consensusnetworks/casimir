@@ -12,11 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
   },
-  "exclude": [
-    "node_modules",
-    "build.js"
-  ],
   "include": [
+    "./scripts/*",
     "./src/*"
   ]
 }

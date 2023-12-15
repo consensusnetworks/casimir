@@ -7,7 +7,7 @@ import { waitForNetwork } from "@casimir/ethereum/helpers/network"
 /**
  * Start the Chainlink functions service
  */
-async function dev() {
+async function main() {
     if (process.env.USE_SECRETS !== "false") {
         await loadCredentials()
         process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
@@ -28,7 +28,7 @@ async function dev() {
     console.log("🔗 Functions service started")
 }
 
-dev().catch(error => {
+main().catch(error => {
     console.error(error)
     process.exit(1)
 })

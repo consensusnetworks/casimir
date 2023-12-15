@@ -55,9 +55,11 @@ contract CasimirManager is
     /// @inheritdoc ICasimirManager
     uint256 public latestBeaconBalance;
     /// @inheritdoc ICasimirManager
-    uint256 public finalizableActivations;
+    /// @custom:oz-renamed-from finalizableValidatorActivations
+    uint256 public finalizableActivatedValidators;
     /// @inheritdoc ICasimirManager
-    uint256 public finalizableCompletedExits;
+    /// @custom:oz-renamed-from finalizableValidatorWithdrawals
+    uint256 public finalizableWithdrawnValidators;
     /// @inheritdoc ICasimirManager
     uint256 public requestedWithdrawalBalance;
     /// @inheritdoc ICasimirManager
@@ -114,7 +116,7 @@ contract CasimirManager is
     /// @dev Scale factor for each rewards to stake ratio
     uint256 private constant SCALE_FACTOR = 1 ether;
     /// @dev Uniswap 0.3% fee tier
-    uint24 private constant UNISWAP_FEE_TIER = 3000;
+    uint24 private constant SWAP_FEE_TIER = 3000;
     /// @dev Pool capacity
     uint256 private constant POOL_CAPACITY = 32 ether;
     /// @dev DAO oracle address
@@ -131,8 +133,11 @@ contract CasimirManager is
     uint256 private latestBeaconBalanceAfterFees;
     /// @dev Latest active rewards
     int256 private latestActiveRewardBalance;
-    /// @dev Report finalizable exited balance
-    uint256 private finalizableExitedBalance;
+    /**
+     * @dev Report finalizable withdrawn balance
+     * @custom:oz-renamed-from finalizableExitedBalance
+     */
+    uint256 private finalizableWithdrawnBalance;
     /// @dev Report finalizable recovered balance
     uint256 private finalizableRecoveredBalance;
     /// @dev All users
@@ -149,17 +154,20 @@ contract CasimirManager is
     uint256 private tipBalance;
     /// @dev Pool recovered balances
     mapping(uint32 => uint256) private recoveredBalances;
-    /// @dev Total deposits not yet in pools
+    /// @dev Total prepool balance
     uint256 private prepoolBalance;
-    /// @dev Total exited deposits
-    uint256 private exitedBalance;
+    /**
+     * @dev Total withdrawn balance
+     * @custom:oz-renamed-from exitedBalance
+     */
+    uint256 private withdrawnBalance;
     /// @dev IDs of pools ready for initiation
     uint32[] private readyPoolIds;
     /// @dev IDS of pools pending deposit confirmation
     uint32[] private pendingPoolIds;
     /// @dev IDs of pools staked
     uint32[] private stakedPoolIds;
-    /// @dev Slashed pool count
+    /// @dev Force-exited pool validator count (remove or replace in the next deployment)
     uint256 private forcedExits;
     /// @dev Whether the contract is paused
     bool private paused;
@@ -258,7 +266,7 @@ contract CasimirManager is
 
     /// @inheritdoc ICasimirManager
     function depositStake() external payable nonReentrant {
-        onlyUnpaused();
+        whenUnpaused();
         User storage user = users[msg.sender];
         uint256 depositAfterFees = subtractFees(msg.value);
         reservedFeeBalance += msg.value - depositAfterFees;
@@ -284,15 +292,15 @@ contract CasimirManager is
     }
 
     /// @inheritdoc ICasimirManager
-    function depositExitedBalance(uint32 poolId) external payable {
+    function depositWithdrawnBalance(uint32 poolId) external payable {
         onlyPool(poolAddresses[poolId]);
         uint256 balance = msg.value + recoveredBalances[poolId];
         delete recoveredBalances[poolId];
         delete poolAddresses[poolId];
-        exitedBalance += balance;
-        finalizableExitedBalance += balance;
-        finalizableCompletedExits++;
-        emit ExitedBalanceDeposited(poolId, msg.value);
+        withdrawnBalance += balance;
+        finalizableWithdrawnBalance += balance;
+        finalizableWithdrawnValidators++;
+        emit WithdrawnBalanceDeposited(poolId, msg.value);
     }
 
     /// @inheritdoc ICasimirManager
@@ -383,16 +391,15 @@ contract CasimirManager is
     function rebalanceStake(
         uint256 beaconBalance,
         uint256 sweptBalance,
-        uint256 activatedDeposits,
-        uint256 completedExits
+        uint256 withdrawnValidators
     ) external {
         onlyUpkeep();
         reportPeriod++;
-        uint256 expectedActivatedBalance = activatedDeposits * POOL_CAPACITY;
-        uint256 expectedExitedBalance = completedExits * POOL_CAPACITY;
+        uint256 expectedActivatedBalance = finalizableActivatedValidators * POOL_CAPACITY;
+        uint256 expectedWithdrawnBalance = withdrawnValidators * POOL_CAPACITY;
         uint256 expectedEffectiveBalance = stakedPoolIds.length * POOL_CAPACITY;
         int256 rewards = int256(beaconBalance + sweptBalance + finalizableRecoveredBalance) -
-            int256(expectedEffectiveBalance + expectedExitedBalance);
+            int256(expectedEffectiveBalance + expectedWithdrawnBalance);
         int256 change = rewards - latestActiveRewardBalance;
         uint256 absoluteChange = change > 0 ? uint256(change) : uint256(-change);
         if (absoluteChange > (stakedPoolIds.length * POOL_CAPACITY) / 2) {
@@ -417,35 +424,19 @@ contract CasimirManager is
                 latestBeaconBalanceAfterFees -= loss;
                 emit StakeRebalanced(loss);
             }
-            int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableExitedBalance);
+            int256 sweptRewards = int256(sweptBalance + finalizableRecoveredBalance) - int256(finalizableWithdrawnBalance);
             if (sweptRewards > 0) {
                 latestBeaconBalanceAfterFees -= subtractFees(uint256(sweptRewards));
             }
-            latestBeaconBalanceAfterFees -= finalizableExitedBalance;
+            latestBeaconBalanceAfterFees -= finalizableWithdrawnBalance;
             latestActiveRewardBalance = rewards - sweptRewards;
         }
         latestBeaconBalanceAfterFees += expectedActivatedBalance;
         latestBeaconBalance = beaconBalance;
-        finalizableExitedBalance = 0;
+        finalizableWithdrawnBalance = 0;
         finalizableRecoveredBalance = 0;
-        finalizableActivations = 0;
-        finalizableCompletedExits = 0;
-    }
-
-    /// @inheritdoc ICasimirManager
-    function unbalanceStake(int256 rebalance) external {
-        onlyFactoryOwner();
-        if (rebalance > 0) {
-            stakeRatioSum += uint256(rebalance);
-        } else if (rebalance < 0) {
-            stakeRatioSum -= uint256(-rebalance);
-        }
-    }
-
-    /// @inheritdoc ICasimirManager
-    function setLatestBeaconBalanceAfterFees(uint256 newLatestBeaconBalanceAfterFees) external {
-        onlyFactoryOwner();
-        latestBeaconBalanceAfterFees = newLatestBeaconBalanceAfterFees;
+        finalizableActivatedValidators = 0;
+        finalizableWithdrawnValidators = 0;
     }
 
     /// @inheritdoc ICasimirManager
@@ -463,7 +454,7 @@ contract CasimirManager is
 
     /// @inheritdoc ICasimirManager
     function requestWithdrawal(uint256 amount) external nonReentrant {
-        onlyUnpaused();
+        whenUnpaused();
         User storage user = users[msg.sender];
         user.stake0 = getUserStake(msg.sender);
         if (user.stake0 < amount) {
@@ -471,12 +462,13 @@ contract CasimirManager is
         }
         user.stakeRatioSum0 = stakeRatioSum;
         user.stake0 -= amount;
+        emit WithdrawalRequested(msg.sender, amount);
         if (amount <= getWithdrawableBalance()) {
-            if (amount <= exitedBalance) {
-                exitedBalance -= amount;
+            if (amount <= withdrawnBalance) {
+                withdrawnBalance -= amount;
             } else {
-                uint256 remainder = amount - exitedBalance;
-                exitedBalance = 0;
+                uint256 remainder = amount - withdrawnBalance;
+                withdrawnBalance = 0;
                 prepoolBalance -= remainder;
             }
             fulfillWithdrawal(msg.sender, amount);
@@ -484,15 +476,14 @@ contract CasimirManager is
             requestedWithdrawalQueue.push(Withdrawal({userAddress: msg.sender, amount: amount, period: reportPeriod}));
             requestedWithdrawalBalance += amount;
             requestedWithdrawals++;
-            uint256 coveredExitBalance = requestedExits * POOL_CAPACITY;
-            if (requestedWithdrawalBalance > coveredExitBalance) {
-                uint256 exitsRequired = (requestedWithdrawalBalance - coveredExitBalance) / POOL_CAPACITY;
-                if ((requestedWithdrawalBalance - coveredExitBalance) % POOL_CAPACITY > 0) {
+            uint256 exitingBalance = requestedExits * POOL_CAPACITY;
+            if (requestedWithdrawalBalance > exitingBalance) {
+                uint256 exitsRequired = (requestedWithdrawalBalance - exitingBalance) / POOL_CAPACITY;
+                if ((requestedWithdrawalBalance - exitingBalance) % POOL_CAPACITY > 0) {
                     exitsRequired++;
                 }
-                requestExits(exitsRequired);
+                exitValidators(exitsRequired);
             }
-            emit WithdrawalInitiated(msg.sender, amount);
         }
     }
 
@@ -515,11 +506,11 @@ contract CasimirManager is
             withdrawalCount++;
             fulfillWithdrawal(withdrawal.userAddress, withdrawal.amount);
         }
-        if (withdrawalAmount <= exitedBalance) {
-            exitedBalance -= withdrawalAmount;
+        if (withdrawalAmount <= withdrawnBalance) {
+            withdrawnBalance -= withdrawalAmount;
         } else {
-            uint256 remainder = withdrawalAmount - exitedBalance;
-            exitedBalance = 0;
+            uint256 remainder = withdrawalAmount - withdrawnBalance;
+            withdrawnBalance = 0;
             prepoolBalance -= remainder;
         }
         requestedWithdrawalBalance -= withdrawalAmount;
@@ -527,7 +518,7 @@ contract CasimirManager is
     }
 
     /// @inheritdoc ICasimirManager
-    function initiatePool(
+    function initiateValidator(
         bytes32 depositDataRoot,
         bytes memory publicKey,
         bytes memory signature,
@@ -560,11 +551,11 @@ contract CasimirManager is
                 registry.addOperatorPool(operatorIds[i], poolId);
             }
         }
-        emit PoolInitiated(poolId);
+        emit ValidatorInititated(poolId);
     }
 
     /// @inheritdoc ICasimirManager
-    function activatePool(
+    function activateValidator(
         uint256 pendingPoolIndex,
         ISSVNetworkCore.Cluster memory cluster,
         uint256 feeAmount,
@@ -572,13 +563,14 @@ contract CasimirManager is
         bool processed
     ) external {
         onlyOracle();
+        whenFinalized();
         uint32 poolId = pendingPoolIds[pendingPoolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         PoolRegistration memory poolRegistration = pool.getRegistration();
         if (poolRegistration.status != PoolStatus.PENDING) {
             revert PoolNotPending();
         }
-        finalizableActivations++;
+        finalizableActivatedValidators++;
         pool.setStatus(PoolStatus.ACTIVE);
         uint256 ssvAmount = retrieveFees(feeAmount, minTokenAmount, address(ssvToken), processed);
         ssvToken.approve(address(ssvClusters), ssvAmount);
@@ -591,11 +583,11 @@ contract CasimirManager is
         );
         pendingPoolIds.removeUint32Item(pendingPoolIndex);
         stakedPoolIds.push(poolId);
-        emit PoolActivated(poolId);
+        emit ValidatorActivated(poolId);
     }
 
     /// @inheritdoc ICasimirManager
-    function resharePool(
+    function reshareValidator(
         uint32 poolId,
         uint64[] memory operatorIds,
         uint64 newOperatorId,
@@ -626,34 +618,11 @@ contract CasimirManager is
         pool.setReshares(poolReshares + 1);
         registry.removeOperatorPool(oldOperatorId, poolId, 0);
         registry.addOperatorPool(newOperatorId, poolId);
-        emit PoolReshared(poolId);
+        emit ValidatorReshared(poolId);
     }
 
     /// @inheritdoc ICasimirManager
-    function reportForcedExits(uint32[] memory poolIds) external {
-        onlyOracle();
-        uint256 newForcedExits;
-        uint256 newRequestedExits;
-        for (uint256 i; i < poolIds.length; i++) {
-            uint32 poolId = poolIds[i];
-            ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            PoolStatus poolStatus = pool.status();
-            if (poolStatus == PoolStatus.EXITING_FORCED) {
-                revert ForcedExitAlreadyReported();
-            }
-            newForcedExits++;
-            if (poolStatus == PoolStatus.EXITING_REQUESTED) {
-                newRequestedExits++;
-            }
-            pool.setStatus(PoolStatus.EXITING_FORCED);
-        }
-        forcedExits += newForcedExits;
-        requestedExits -= newRequestedExits;
-        emit ForcedExitsReported(poolIds);
-    }
-
-    /// @inheritdoc ICasimirManager
-    function reportCompletedExit(
+    function withdrawValidator(
         uint256 stakedPoolIndex,
         uint32[] memory blamePercents,
         ISSVNetworkCore.Cluster memory cluster
@@ -662,18 +631,16 @@ contract CasimirManager is
         uint32 poolId = stakedPoolIds[stakedPoolIndex];
         ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
         PoolStatus poolStatus = pool.status();
-        if (poolStatus != PoolStatus.EXITING_FORCED && poolStatus != PoolStatus.EXITING_REQUESTED) {
-            revert PoolNotExiting();
+        if (poolStatus != PoolStatus.EXITING_REQUESTED) {
+            revert NotExiting();
         }
         stakedPoolIds.removeUint32Item(stakedPoolIndex);
         if (poolStatus == PoolStatus.EXITING_REQUESTED) {
             requestedExits--;
-        } else if (poolStatus == PoolStatus.EXITING_FORCED) {
-            forcedExits--;
         }
         pool.withdrawBalance(blamePercents);
         ssvClusters.removeValidator(pool.publicKey(), pool.getOperatorIds(), cluster);
-        emit ExitCompleted(poolId);
+        emit ValidatorWithdrawn(poolId);
     }
 
     /// @inheritdoc ICasimirManager
@@ -782,7 +749,7 @@ contract CasimirManager is
 
     /// @inheritdoc ICasimirManager
     function getWithdrawableBalance() public view returns (uint256 withdrawableBalance) {
-        withdrawableBalance = prepoolBalance + exitedBalance;
+        withdrawableBalance = prepoolBalance + withdrawnBalance;
     }
 
     /// @inheritdoc ICasimirManager
@@ -813,7 +780,7 @@ contract CasimirManager is
                 prepoolBalance = 0;
                 amount -= remainingCapacity;
                 readyPoolIds.push(++lastPoolId);
-                emit InitiationRequested(lastPoolId);
+                emit ValidatorInitiationRequested(lastPoolId);
             }
         }
     }
@@ -832,21 +799,22 @@ contract CasimirManager is
     }
 
     /**
-     * @notice Request a given count of staked pool exits
+     * @notice Exit a given count of staked pool validators
      * @param count Count of exits to request
      */
-    function requestExits(uint256 count) private {
+    function exitValidators(uint256 count) private {
         uint256 index = 0;
         while (count > 0) {
             uint32 poolId = stakedPoolIds[index];
             ICasimirPool pool = ICasimirPool(poolAddresses[poolId]);
-            PoolStatus poolStatus = pool.status();
-            if (poolStatus == PoolStatus.PENDING || poolStatus == PoolStatus.ACTIVE) {
+            PoolRegistration memory poolRegistration = pool.getRegistration();
+            if (poolRegistration.status == PoolStatus.ACTIVE) {
                 count--;
                 index++;
-                pool.setStatus(PoolStatus.EXITING_REQUESTED);
                 requestedExits++;
-                emit ExitRequested(poolId);
+                pool.setStatus(PoolStatus.EXITING_REQUESTED);
+                ssvClusters.exitValidator(poolRegistration.publicKey, poolRegistration.operatorIds);
+                emit ValidatorExited(poolId);
             }
         }
     }
@@ -871,7 +839,7 @@ contract CasimirManager is
             wethToken.deposit{value: amount}();
             wethToken.approve(address(swapRouter), wethToken.balanceOf(address(this)));
             IUniswapV3PoolState swapPool = IUniswapV3PoolState(
-                swapFactory.getPool(address(wethToken), token, UNISWAP_FEE_TIER)
+                swapFactory.getPool(address(wethToken), token, SWAP_FEE_TIER)
             );
             if (swapPool.liquidity() < amount) {
                 revert InsufficientLiquidity();
@@ -879,7 +847,7 @@ contract CasimirManager is
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
                 tokenIn: address(wethToken),
                 tokenOut: token,
-                fee: UNISWAP_FEE_TIER,
+                fee: SWAP_FEE_TIER,
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amount,
@@ -920,17 +888,24 @@ contract CasimirManager is
         }
     }
 
-    /// @dev Validate the contract is unpaused
-    function onlyUnpaused() private view {
-        if (paused) {
-            revert Paused();
-        }
-    }
-
     /// @dev Validate the caller is the upkeep
     function onlyUpkeep() private view {
         if (msg.sender != address(upkeep)) {
             revert Unauthorized();
+        }
+    }
+
+    /// @dev Validate that a report is not in progress
+    function whenFinalized() private view {
+        if (upkeep.reportStatus() != ICasimirUpkeep.ReportStatus.FINALIZED) {
+            revert ReportInProgress();
+        }
+    }
+
+    /// @dev Validate the contract is unpaused
+    function whenUnpaused() private view {
+        if (paused) {
+            revert Paused();
         }
     }
 }

@@ -81,7 +81,7 @@ interface ICasimirCore {
     error PoolMaxReshared();
     error PoolNotActive();
     error PoolNotPending();
-    error PoolNotExiting();
+    error NotExiting();
     error TransferFailed();
     error Unauthorized();
 }

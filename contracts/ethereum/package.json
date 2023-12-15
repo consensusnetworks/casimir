@@ -8,7 +8,6 @@
         "dev": "npx hardhat run scripts/dev.ts",
         "docgen": "npx hardhat docgen",
         "predev": "npx hardhat node &",
-        "report": "npx hardhat run scripts/report.ts",
         "size": "npx hardhat size-contracts",
         "test": "npx esno -r dotenv/config scripts/test.ts",
         "upgrade:all": "npx hardhat run scripts/upgrade-all.ts",
@@ -20,7 +19,7 @@
         "@openzeppelin/contracts": "^4.9.3",
         "@openzeppelin/contracts-upgradeable": "^4.9.3",
         "@uniswap/v3-core": "1.0.1",
-        "@uniswap/v3-periphery": "^1.4.3"
+        "@uniswap/v3-periphery": "^1.4.4"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-network-helpers": "^1.0.6",

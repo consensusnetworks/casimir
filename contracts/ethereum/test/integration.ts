@@ -4,7 +4,6 @@ import { expect } from "chai"
 import { firstUserDepositFixture, rewardsPostSecondUserDepositFixture, secondUserDepositFixture, thirdUserDepositFixture, rewardsPostThirdUserDepositFixture, simulationFixture, firstUserPartialWithdrawalFixture, fourthUserDepositFixture, sweepPostSecondUserDepositFixture, sweepPostThirdUserDepositFixture, beaconBalanceLossFixture, beaconBalanceRecoveryFixture, thirdUserFullWithdrawalFixture } from "./fixtures/shared"
 
 describe("Integration", async function () {
-
     it("First user's 16.0 stake increases the total stake to 16.0", async function () {
         const { manager } = await loadFixture(firstUserDepositFixture)
         const stake = await manager.getTotalStake()

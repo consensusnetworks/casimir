@@ -3,7 +3,7 @@ import { ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@casimir/env"
 import { run } from "@casimir/shell"
 import { getSecret, loadCredentials } from "@casimir/aws"
 
-async function simulate() {
+async function main() {
     if (process.env.USE_SECRETS !== "false") {
         await loadCredentials()
         process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
@@ -25,13 +25,11 @@ async function simulate() {
     process.env.SIMULATE_UPGRADES = "true"
     process.env.SIMULATE_UPKEEP = "true"
 
-    await run("npm run build --workspace @casimir/ethereum")
     run("npm run dev --workspace @casimir/ethereum -- --network localhost")
-    run("npm run report --workspace @casimir/ethereum -- --network localhost")    
     run("npm run dev --workspace @casimir/functions")
 }
 
-simulate().catch(error => {
+main().catch(error => {
     console.error(error)
     process.exit(1)
 })

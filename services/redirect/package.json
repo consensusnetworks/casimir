@@ -2,11 +2,13 @@
     "name": "@casimir/redirect",
     "private": true,
     "scripts": {
-        "build": "node build.js"
+        "build": "npx esno -r dotenv/config scripts/build.ts"
     },
     "devDependencies": {
         "@types/aws-cloudfront-function": "^1.0.3",
         "@types/node": "^17.0.38",
-        "esbuild": "^0.18.20"
+        "esbuild": "^0.18.20",
+        "esno": "^0.17.0",
+        "dotenv": "^16.3.1"
     }
 }

@@ -5,6 +5,7 @@ import { AnalyticsData } from "./interfaces/AnalyticsData"
 import { ApiResponse } from "./interfaces/ApiResponse"
 import { Article } from "./interfaces/Article"
 import { BalanceSnapshot } from "./interfaces/BalanceSnapshot"
+import { BeaconValidator } from "./interfaces/BeaconValidator"
 import { BreakdownAmount } from "./interfaces/BreakdownAmount"
 import { BreakdownString } from "./interfaces/BreakdownString"
 import { BrowserProviders } from "./interfaces/BrowserProviders"
@@ -26,7 +27,6 @@ import { MessageRequest } from "./interfaces/MessageRequest"
 import { Operator } from "./interfaces/Operator"
 import { OperatorAddedSuccess } from "./interfaces/OperatorAddedSuccess"
 import { PoolConfig } from "./interfaces/PoolConfig"
-import { PoolStatus } from "./interfaces/PoolStatus"
 import { ProviderString } from "./interfaces/ProviderString"
 import { SignInWithEthereumCredentials } from "./interfaces/SignInWithEthereumCredentials"
 import { SSVOperator } from "./interfaces/SSVOperator"
@@ -50,6 +50,7 @@ export type {
     AnalyticsData,
     Article,
     BalanceSnapshot,
+    BeaconValidator,
     BreakdownAmount,
     BreakdownString,
     BrowserProviders,
@@ -85,8 +86,4 @@ export type {
     UserAuthState,
     UserWithAccountsAndOperators,
     Validator
-}
-
-export {
-    PoolStatus
 }

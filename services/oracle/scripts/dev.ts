@@ -5,7 +5,7 @@ import { run } from "@casimir/shell"
 /**
  * Start development DAO oracle service
  */
-void async function () {
+async function main() {
     process.env.CLI_PATH = process.env.CLI_PATH || "./lib/dkg/bin/ssv-dkg"
     process.env.CONFIG_PATH = process.env.CONFIG_PATH || "./config/example.dkg.initiator.yaml"
 
@@ -16,7 +16,7 @@ void async function () {
         process.env.BIP39_SEED = process.env.BIP39_SEED || "inflict ball claim confirm cereal cost note dad mix donate traffic patient"
     }
 
-    const networkKey = process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || "TESTNET"
+    const networkKey = (process.env.NETWORK?.toUpperCase() || process.env.FORK?.toUpperCase() || "TESTNET") as keyof typeof ETHEREUM_RPC_URL & keyof typeof ETHEREUM_CONTRACTS
     
     process.env.ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || ETHEREUM_RPC_URL[networkKey]
     process.env.FACTORY_ADDRESS = process.env.FACTORY_ADDRESS || ETHEREUM_CONTRACTS[networkKey]?.FACTORY_ADDRESS
@@ -46,4 +46,9 @@ void async function () {
     process.env.USE_LOGS = process.env.USE_LOGS || "false"
     run("npx esno -r dotenv/config src/index.ts")
     console.log("🔮 Oracle service started")
-}()
+}
+
+main().catch(error => {
+    console.error(error)
+    process.exit(1)
+})

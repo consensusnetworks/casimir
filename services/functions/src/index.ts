@@ -1,14 +1,14 @@
-import { getConfig } from "./providers/config"
+import { Config } from "./providers/config"
 import { getEventsIterable } from "@casimir/events"
 import { getStartBlock, updateErrorLog, updateStartBlock } from "@casimir/logs"
-import { fulfillRequestHandler } from "./providers/handlers"
+import { fulfillRequestHandler } from "./handlers/fulfill-request"
 import { ethers } from "ethers"
 import { HandlerInput } from "./interfaces/HandlerInput"
 import FunctionsOracleAbi from "@casimir/ethereum/build/abi/FunctionsOracle.json"
 
-const config = getConfig()
 
 async function run() {
+    const config = new Config()
     const contracts = {
         FunctionsOracle: {
             abi: FunctionsOracleAbi,

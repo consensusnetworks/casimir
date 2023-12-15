@@ -126,14 +126,14 @@ FunctionsModule.encodeInt256 = (result) => {
     return _a.encodePosSignedInt(result)
 }
 FunctionsModule.encodeUint128 = (result) => {
-    if (typeof result === 'number') {
+    if (typeof result === "number") {
         if (!Number.isInteger(result) || result < 0) {
-            throw Error('encodeUint128 invalid input')
+            throw Error("encodeUint128 invalid input")
         }
         result = BigInt(result)
     }
     if (result < 0 || result > FunctionsModule.maxUint128) {
-        throw Error('encodeUint128 out of range')
+        throw Error("encodeUint128 out of range")
     }
     return FunctionsModule.encodeUint256(result)
 }
@@ -155,13 +155,13 @@ FunctionsModule.encodeNegSignedInt = (int) => {
 FunctionsModule.gweiToWei = (result) => {
     if (typeof result === "number") {
         if (!Number.isInteger(result) || result < 0) {
-            throw Error('gweiToWei invalid input');
+            throw Error("gweiToWei invalid input")
         }
         return _a.gweiToWei(BigInt(result))
     }
     return result * BigInt(1000000000)
 }
-FunctionsModule.maxUint128 = BigInt('340282366920938463463374607431768211455');
+FunctionsModule.maxUint128 = BigInt("340282366920938463463374607431768211455")
 FunctionsModule.maxUint256 = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935")
 FunctionsModule.maxPosInt256 = BigInt("57896044618658097711785492504343953926634992332820282019728792003956564819967")
 FunctionsModule.maxNegInt256 = BigInt("-57896044618658097711785492504343953926634992332820282019728792003956564819968")

@@ -18,6 +18,7 @@
         "./helpers/*.ts",
         "./lib/*.ts",
         "./scripts/*.ts",
+        "./tasks/*.ts",
         "./test/*.ts"  
     ],
     "typeRoots": [

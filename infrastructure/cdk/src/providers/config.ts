@@ -13,13 +13,19 @@ export class Config implements ProjectConfig {
     public readonly subdomains
     public readonly dataVersion
 
-    public readonly requiredEnvVars = ["PROJECT",
+    public readonly requiredEnvVars = [
+        "PROJECT",
         "STAGE",
         "AWS_ACCOUNT",
-        "AWS_REGION"]
+        "AWS_REGION"
+    ]
 
     constructor() {
-        this.checkEnvVars()
+        this.requiredEnvVars.forEach(v => {
+            if (!process.env[v]) {
+                throw new Error(`No environment variable set for ${v}`)
+            }
+        })
         this.project = process.env.PROJECT as string
         this.stage = process.env.STAGE as string
         this.env = {
@@ -37,19 +43,6 @@ export class Config implements ProjectConfig {
             wildcard: "*"
         }
         this.dataVersion = Number(dataPackage.version.split(".")[0])
-    }
-
-    /**
-     * Check for required environment variables and exit if any are missing
-     * @returns void
-     */
-    checkEnvVars(): void {
-        this.requiredEnvVars.forEach(v => {
-            if (!process.env[v]) {
-                console.log("No value provided for", v)
-                process.exit(1)
-            }
-        })
     }
 
     /**

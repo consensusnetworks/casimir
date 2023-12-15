@@ -11,22 +11,32 @@ interface ICasimirViews is ICasimirCore {
      */
     function getCompoundablePoolIds(uint256 startIndex, uint256 endIndex) external view returns (uint32[5] memory);
 
-    /// @notice Get the deposited pool count
-    function getDepositedPoolCount() external view returns (uint256);
+    /// @notice Get the pending pool count
+    function getPendingPoolCount() external view returns (uint256);
 
-    /**
-     * @notice Get the deposited pool public keys
+    /** 
+     * @notice Get the pending pool public keys
      * @param startIndex Start index
      * @param endIndex End index
      */
-    function getDepositedPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory);
+    function getPendingPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory);
+
+    /// @notice Get the staked pool count
+    function getStakedPoolCount() external view returns (uint256);
 
     /**
-     * @notice Get the deposited pool statuses
+     * @notice Get the staked pool public keys
      * @param startIndex Start index
      * @param endIndex End index
      */
-    function getDepositedPoolStatuses(uint256 startIndex, uint256 endIndex) external view returns (PoolStatus[] memory);
+    function getStakedPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory);
+
+    /**
+     * @notice Get the staked pool statuses
+     * @param startIndex Start index
+     * @param endIndex End index
+     */
+    function getStakedPoolStatuses(uint256 startIndex, uint256 endIndex) external view returns (PoolStatus[] memory);
 
     /**
      * @notice Get operators

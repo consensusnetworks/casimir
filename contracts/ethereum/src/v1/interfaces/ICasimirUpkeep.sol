@@ -19,13 +19,10 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
         PROCESSING
     }
 
-    event ActivationsRequested(uint256 count);
-    event CompletedExitReportsRequested(uint256 count);
-    event ForcedExitReportsRequested(uint256 count);
+    event ValidatorWithdrawalsRequested(uint256 count);
     event FunctionsOracleAddressSet(address newFunctionsOracleAddress);
     event FunctionsRequestSet(string newRequestSource, string[] newRequestArgs, uint32 newFulfillGasLimit);
     event OCRResponse(bytes32 indexed requestId, bytes result, bytes err);
-    event NewReportRequested();
     event ReportRequestSent(bytes32 requestId, string[] requestArgs);
     event UpkeepPerformed(ReportStatus indexed status);
 
@@ -34,25 +31,6 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
 
     /// @notice Perform the upkeep
     function performUpkeep(bytes calldata) external;
-
-    /// @notice Request an early report
-    function requestReport() external;
-
-    /**
-     * @notice Reset the report
-     * @param resetReportPeriod Reset report period
-     * @param resetReportBlock Reset report block 
-     * @param resetReportTimestamp Reset report timestamp
-     * @param resetPreviousReportBlock Reset previous report block
-     * @param resetPreviousReportTimestamp Reset previous report timestamp
-     */
-    function resetReport(
-        uint32 resetReportPeriod,
-        uint256 resetReportBlock,
-        uint256 resetReportTimestamp,
-        uint256 resetPreviousReportBlock,
-        uint256 resetPreviousReportTimestamp
-    ) external;
 
     /**
      * @notice Set a new Chainlink functions request
@@ -77,4 +55,7 @@ interface ICasimirUpkeep is ICasimirCore, AutomationCompatibleInterface {
 
     /// @notice Whether compound stake is enabled
     function compoundStake() external view returns (bool);
+
+    /// @notice Current report status
+    function reportStatus() external view returns (ReportStatus);
 }

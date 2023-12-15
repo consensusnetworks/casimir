@@ -3,7 +3,7 @@ import { loadFixture, setBalance, time } from "@nomicfoundation/hardhat-network-
 import { expect } from "chai"
 import { preregistrationFixture, secondUserDepositFixture } from "./fixtures/shared"
 import { round } from "../helpers/math"
-import { initiatePoolHandler, reportCompletedExitsHandler } from "../helpers/oracle"
+import { initiateValidatorHandler, updateValidatorsHandler, withdrawValidatorsHandler } from "../helpers/oracle"
 import { fulfillReport, runUpkeep } from "../helpers/upkeep"
 
 describe("Operators", async function () {
@@ -25,7 +25,11 @@ describe("Operators", async function () {
             await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiatePoolHandler({ manager, signer: daoOracle })
+        await initiateValidatorHandler({ 
+            manager, 
+            provider: ethers.provider,
+            signer: daoOracle 
+        })
 
         const operatorIds = await registry.getOperatorIds()
         const startIndex = 0
@@ -45,7 +49,11 @@ describe("Operators", async function () {
             await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
         await deposit.wait()
 
-        await initiatePoolHandler({ manager, signer: daoOracle })
+        await initiateValidatorHandler({ 
+            manager, 
+            provider: ethers.provider,
+            signer: daoOracle 
+        })
 
         const operatorIds = await registry.getOperatorIds()
         const deregisteringOperatorId = operatorIds[0]
@@ -78,7 +86,8 @@ describe("Operators", async function () {
             await registry.connect(operatorOwnerSigner).requestDeactivation(deregisteringOperatorId)
         await requestDeactivation.wait()
         const deregisteringOperator = await registry.getOperator(deregisteringOperatorId)
-        const deactivationRequestedEvents = await registry.queryFilter(registry.filters.DeactivationRequested(), -1)
+        const deactivationRequestedFilter = registry.filters.OperatorDeactivationRequested()
+        const deactivationRequestedEvents = (await registry.queryFilter(deactivationRequestedFilter)).slice(-1)
 
         expect(deregisteringOperator.active).equal(false)
         expect(deregisteringOperator.resharing).equal(false)
@@ -118,19 +127,14 @@ describe("Operators", async function () {
         await setBalance(withdrawnPoolAddress, nextBalance)
 
         await time.increase(time.duration.days(1))
+        
         await runUpkeep({ donTransmitter, upkeep })
 
         const reportValues = {
             beaconBalance: 0,
             sweptBalance: sweptExitedBalance,
-            activatedDeposits: 0,
-            forcedExits: 0,
-            completedExits: 1,
-            compoundablePoolIds: [0,
-                0,
-                0,
-                0,
-                0]
+            compoundablePoolIds: [0, 0, 0, 0, 0],
+            withdrawnValidators: 1
         }
 
         await fulfillReport({
@@ -140,7 +144,13 @@ describe("Operators", async function () {
             values: reportValues
         })
 
-        await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
+        await withdrawValidatorsHandler({ 
+            manager, 
+            provider: ethers.provider,
+            views, 
+            signer: daoOracle, 
+            args: { count: 1 } 
+        })
         await runUpkeep({ donTransmitter, upkeep })
 
         const stake = await manager.getTotalStake()

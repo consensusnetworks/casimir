@@ -1,25 +1,132 @@
 import fs from "fs"
-import { ethers } from "hardhat"
+import { ethers } from "ethers"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { CasimirManager, CasimirViews } from "../build/@types"
-import { PoolStatus, Reshare, Validator } from "@casimir/types"
+import { CasimirManager, CasimirPool, CasimirViews, IAutomationRegistry, IERC20, IFunctionsBillingRegistry } from "../build/@types"
+import { POOL_STATUS } from "@casimir/env"
+import { Validator/*, Reshare*/ } from "@casimir/types"
 import { Scanner } from "@casimir/ssv"
-import { Factory } from "@casimir/uniswap"
+import { Swap } from "@casimir/uniswap"
+import { Config } from "./config"
+import ICasimirPoolAbi from "../build/abi/ICasimirPool.json"
+import IAutomationRegistryAbi from "../build/abi/IAutomationRegistry.json"
+import IERC20Abi from "../build/abi/IERC20.json"
 
-const linkTokenAddress = process.env.LINK_TOKEN_ADDRESS as string
-if (!linkTokenAddress) throw new Error("No link token address provided")
-const ssvNetworkAddress = process.env.SSV_NETWORK_ADDRESS as string
-if (!ssvNetworkAddress) throw new Error("No ssv network address provided")
-const ssvViewsAddress = process.env.SSV_VIEWS_ADDRESS as string
-if (!ssvViewsAddress) throw new Error("No ssv views address provided")
-const ssvTokenAddress = process.env.SSV_TOKEN_ADDRESS as string
-if (!ssvTokenAddress) throw new Error("No ssv token address provided")
-const uniswapV3FactoryAddress = process.env.SWAP_FACTORY_ADDRESS as string
-if (!uniswapV3FactoryAddress) throw new Error("No uniswap v3 factory address provided")
-const wethTokenAddress = process.env.WETH_TOKEN_ADDRESS as string
-if (!wethTokenAddress) throw new Error("No weth token address provided")
+export async function fundAccountsHandler({ 
+    manager, 
+    functionsBillingRegistry,
+    provider, 
+    signer 
+}: { 
+    manager: CasimirManager,
+    functionsBillingRegistry: IFunctionsBillingRegistry,
+    provider: ethers.providers.JsonRpcProvider,
+    signer: SignerWithAddress 
+}) {
+    const config = new Config()
+    const linkToken = new ethers.Contract(config.linkTokenAddress, IERC20Abi, provider) as IERC20
 
-export async function initiatePoolHandler({ manager, signer }: { manager: CasimirManager, signer: SignerWithAddress }) {
+    const functionsMinimumBalance = ethers.utils.parseEther("0.2")
+    const functionsRefreshBalance = ethers.utils.parseEther("5")
+    const functionsId = await manager.functionsId()
+    let functionsBalance = ethers.utils.parseEther("0")
+    if (functionsId.gt(0)) {
+        const subscription = await functionsBillingRegistry.getSubscription(functionsId)
+        functionsBalance = ethers.utils.parseEther(
+            ethers.utils.formatEther(subscription.balance).split(".").map((part, index) => {
+                if (index === 0) return part
+                return part.slice(0, 1)
+            }).join(".")
+        )
+    }
+
+    if (functionsBalance.lt(functionsMinimumBalance)) {
+        let feeAmount = functionsRefreshBalance
+        let processed = true
+        const managerLinkBalance = await linkToken.balanceOf(manager.address)
+        if (managerLinkBalance.lt(functionsRefreshBalance)) {
+            const tokenBalance = await linkToken.balanceOf(signer.address)
+            if (tokenBalance.lt(functionsRefreshBalance)) {
+                const swap = new Swap({ provider })
+                feeAmount = await swap.getOutQuote({
+                    tokenIn: config.wethTokenAddress,
+                    tokenOut: config.linkTokenAddress,
+                    feeTier: 3000,
+                    amountOut: functionsRefreshBalance
+                })
+                processed = false
+            } else {
+                const transfer = await linkToken.connect(signer).transfer(manager.address, functionsRefreshBalance)
+                await transfer.wait()
+            }
+        }
+        const minTokenAmount = functionsRefreshBalance.mul(9).div(10)
+        const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
+            feeAmount,
+            minTokenAmount,
+            processed
+        )
+        await depositFunctionsBalance.wait()
+    }
+
+    const keeperRegistry = new ethers.Contract(
+        config.keeperRegistryAddress, IAutomationRegistryAbi, provider
+    ) as IAutomationRegistry
+
+    const upkeepMinimumBalance = ethers.utils.parseEther("6.5")
+    const upkeepRefreshBalance = ethers.utils.parseEther("13")
+    const upkeepId = await manager.upkeepId()
+    let upkeepBalance = ethers.utils.parseEther("0")
+    if (upkeepId.gt(0)) {
+        const subscription = await keeperRegistry.getUpkeep(upkeepId)
+        upkeepBalance = ethers.utils.parseEther(
+            ethers.utils.formatEther(subscription.balance).split(".").map((part, index) => {
+                if (index === 0) return part
+                return part.slice(0, 1)
+            }).join(".")
+        )
+    }
+
+    if (upkeepBalance.lt(upkeepMinimumBalance)) {
+        let feeAmount = upkeepRefreshBalance
+        let processed = true
+        const managerLinkBalance = await linkToken.balanceOf(manager.address)
+        if (managerLinkBalance.lt(upkeepRefreshBalance)) {
+            const tokenBalance = await linkToken.balanceOf(signer.address)
+            if (tokenBalance.lt(upkeepRefreshBalance)) {
+                const swap = new Swap({ provider })
+                feeAmount = await swap.getOutQuote({
+                    tokenIn: config.wethTokenAddress,
+                    tokenOut: config.linkTokenAddress,
+                    feeTier: 3000,
+                    amountOut: upkeepRefreshBalance
+                })
+                processed = false
+            } else {
+                const transfer = await linkToken.connect(signer).transfer(manager.address, upkeepRefreshBalance)
+                await transfer.wait()
+            }
+        }
+        const minTokenAmount = upkeepRefreshBalance.mul(9).div(10)
+        const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
+            feeAmount,
+            minTokenAmount,
+            processed
+        )
+        await depositUpkeepBalance.wait()
+    }
+
+    // Todo fund or rebalance SSV clusters
+}
+
+export async function initiateValidatorHandler({ 
+    manager,
+    provider,
+    signer 
+}: { 
+    manager: CasimirManager,
+    provider: ethers.providers.JsonRpcProvider,
+    signer: SignerWithAddress 
+}) {
     const keysDir = process.env.KEYS_DIR || "keys"
     let mockValidators: Record<string, Validator[]> = {}
     try {
@@ -28,7 +135,7 @@ export async function initiatePoolHandler({ manager, signer }: { manager: Casimi
         throw new Error("No mock validator data found")
     }
     const signerMockValidators: Validator[] = mockValidators[signer.address]
-    const nonce = await ethers.provider.getTransactionCount(manager.address)
+    const nonce = await provider.getTransactionCount(manager.address)
     const poolAddress = ethers.utils.getContractAddress({
         from: manager.address,
         nonce
@@ -48,7 +155,7 @@ export async function initiatePoolHandler({ manager, signer }: { manager: Casimi
         shares,
     } = validator
 
-    const initiatePool = await manager.connect(signer).initiatePool(
+    const initiateValidator = await manager.connect(signer).initiateValidator(
         depositDataRoot,
         publicKey,
         signature,
@@ -56,33 +163,40 @@ export async function initiatePoolHandler({ manager, signer }: { manager: Casimi
         operatorIds,
         shares
     )
-    await initiatePool.wait()
+    await initiateValidator.wait()
 }
 
-export async function activatePoolsHandler(
-    { manager, views, signer, args }: 
-    { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
-) {
-    const count = args.count as number
-    if (!count) throw new Error("No count provided")
+export async function updateValidatorsHandler({ 
+    manager,
+    provider,
+    signer,
+    activatableValidators
+}: { 
+    manager: CasimirManager, 
+    provider: ethers.providers.JsonRpcProvider,
+    signer: SignerWithAddress, 
+    activatableValidators: number
+}) {
+    const config = new Config()
 
-    for (let i = 0; i < count; i++) {
+    /**
+     * In production, we check the pending pool status on Beacon before activating
+     * Here, we're just grabbing the pending pools in order for the activatable validators
+     */
+    for (let i = 0; i < activatableValidators; i++) {
         const pendingPoolIds = await manager.getPendingPoolIds()
         if (!pendingPoolIds.length) throw new Error("No pending pools")
-
-        /**
-         * In production, we check the pending pool status on Beacon before activating
-         * Here, we're just grabbing the next pending pool
-         */
         const pendingPoolIndex = 0
         const poolId = pendingPoolIds[pendingPoolIndex]
-        const poolConfig = await views.getPoolConfig(poolId)
-        const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
+        const poolAddress = await manager.getPoolAddress(poolId)
+        const pool = new ethers.Contract(poolAddress, ICasimirPoolAbi, provider) as CasimirPool
+        const poolRegistration = await pool.getRegistration()
+        const operatorIds = poolRegistration.operatorIds.map((operatorId) => operatorId.toNumber())
 
         const scanner = new Scanner({
-            provider: ethers.provider,
-            ssvNetworkAddress,
-            ssvViewsAddress
+            provider,
+            ssvNetworkAddress: config.ssvNetworkAddress,
+            ssvViewsAddress: config.ssvViewsAddress
         })
 
         const cluster = await scanner.getCluster({ 
@@ -90,193 +204,54 @@ export async function activatePoolsHandler(
             operatorIds
         })
 
-        const requiredFee = await scanner.getRequiredFee(operatorIds)
-
-        const uniswapFactory = new Factory({
-            provider: ethers.provider,
-            uniswapV3FactoryAddress
-        })
-
-        const price = await uniswapFactory.getSwapPrice({ 
-            tokenIn: wethTokenAddress,
-            tokenOut: ssvTokenAddress,
-            uniswapFeeTier: 3000
-        })
-
-        const feeAmount = ethers.utils.parseEther(
-            (Number(ethers.utils.formatEther(requiredFee)) * price).toPrecision(9)
-        )
-        const minTokenAmount = ethers.utils.parseEther(
-            (Number(ethers.utils.formatEther(requiredFee)) * 0.99).toPrecision(9)
-        )
-
-        const activatePool = await manager.connect(signer).activatePool(
+        const requiredBalance = await scanner.getRequiredBalance(operatorIds)
+        const ssvToken = new ethers.Contract(config.ssvTokenAddress, IERC20Abi, provider) as IERC20
+        
+        let feeAmount = requiredBalance
+        let processed = true
+        const managerTokenBalance = await ssvToken.balanceOf(manager.address)
+        if (managerTokenBalance.lt(requiredBalance)) {
+            const tokenBalance = await ssvToken.balanceOf(signer.address)
+            if (tokenBalance.lt(requiredBalance)) {
+                const swap = new Swap({ provider })
+                feeAmount = await swap.getOutQuote({ 
+                    tokenIn: config.wethTokenAddress,
+                    tokenOut: config.ssvTokenAddress,
+                    feeTier: 3000,
+                    amountOut: requiredBalance
+                })
+                processed = false
+            } else {
+                const transfer = await ssvToken.connect(signer).transfer(manager.address, requiredBalance)
+                await transfer.wait()
+            }
+        }
+        const minTokenAmount = requiredBalance.mul(9).div(10)
+        const activateValidator = await manager.connect(signer).activateValidator(
             pendingPoolIndex,
             cluster,
             feeAmount,
             minTokenAmount,
-            false
+            processed
         )
-        await activatePool.wait()
+        await activateValidator.wait()
     }
 }
 
-export async function resharePoolHandler(
-    { manager, views, signer, args }: 
-    { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
-) {
-    const keysDir = process.env.KEYS_DIR || "keys"
-    let mockReshares: Record<number, Reshare[]> = {}
-    try {
-        mockReshares = JSON.parse(fs.readFileSync(`${keysDir}/mock.reshares.json`).toString())
-    } catch (error) {
-        throw new Error("No mock reshare data found")
-    }
-    const operatorId = args.operatorId as number
-    if (!operatorId) throw new Error("No operator id provided")
-    
-    const poolIds = [
-        ...await manager.getPendingPoolIds(), ...await manager.getStakedPoolIds()
-    ]
-
-    for (const poolId of poolIds) {
-        const poolConfig = await views.getPoolConfig(poolId)
-        const oldOperatorIds = poolConfig.operatorIds.map(id => id.toNumber())
-        if (oldOperatorIds.includes(operatorId)) {
-            const poolMockReshares: Reshare[] = mockReshares[poolId]
-            const poolReshareCount = poolConfig.reshares.toNumber()
-            if (poolMockReshares.length && poolReshareCount < 2) {
-                const reshare = poolMockReshares.find((reshare) => {
-                    return JSON.stringify(reshare.oldOperatorIds) === JSON.stringify(oldOperatorIds)
-                })
-                if (!reshare) throw new Error(`No reshare found for pool ${poolId} with old operator ids ${oldOperatorIds}`)
-
-                const newOperatorId = reshare.operatorIds.find((id) => !oldOperatorIds.includes(id)) as number
-
-                const scanner = new Scanner({ 
-                    provider: ethers.provider,
-                    ssvNetworkAddress,
-                    ssvViewsAddress
-                })
-    
-                const oldCluster = await scanner.getCluster({
-                    operatorIds: oldOperatorIds,
-                    ownerAddress: manager.address
-                })
-            
-                const cluster = await scanner.getCluster({ 
-                    operatorIds: reshare.operatorIds,
-                    ownerAddress: manager.address
-                })
-                        
-                const requiredFee = await scanner.getRequiredFee(reshare.operatorIds)
-    
-                const uniswapFactory = new Factory({
-                    provider: ethers.provider,
-                    uniswapV3FactoryAddress
-                })
-            
-                const price = await uniswapFactory.getSwapPrice({ 
-                    tokenIn: wethTokenAddress,
-                    tokenOut: ssvTokenAddress,
-                    uniswapFeeTier: 3000
-                })
-            
-                const unformattedFeeAmount = (
-                    Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) 
-                    * Number(price)).toPrecision(9)
-                const feeAmount = ethers.utils.parseEther(unformattedFeeAmount)
-                const minTokenAmount = ethers.utils.parseEther(
-                    (Number(ethers.utils.formatEther(requiredFee.sub(oldCluster.balance))) 
-                    * 0.99).toPrecision(9))
-
-                const reportReshare = await manager.connect(signer).resharePool(
-                    poolId,
-                    reshare.operatorIds,
-                    newOperatorId,
-                    operatorId,
-                    reshare.shares,
-                    cluster,
-                    oldCluster,
-                    feeAmount,
-                    minTokenAmount,
-                    false
-                )
-                await reportReshare.wait()
-            } else {
-                // Exit pool
-            }
-        }
-    }
-}
-
-export async function depositFunctionsBalanceHandler({ manager, signer }:
-     { manager: CasimirManager, signer: SignerWithAddress }) {
-    /**
-     * In production, we check the functions balance before reporting
-     * We can set processed to true if the manager has enough LINK tokens
-     * Here, we're just depositing double the Chainlink registration minimum
-     */
-    const requiredBalance = 5
-
-    const uniswapFactory = new Factory({
-        provider: ethers.provider,
-        uniswapV3FactoryAddress
-    })
-
-    const price = await uniswapFactory.getSwapPrice({
-        tokenIn: wethTokenAddress,
-        tokenOut: linkTokenAddress,
-        uniswapFeeTier: 3000
-    })
-
-    const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    const minTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
-
-    const depositFunctionsBalance = await manager.connect(signer).depositFunctionsBalance(
-        feeAmount,
-        minTokenAmount,
-        false
-    )
-    await depositFunctionsBalance.wait()
-}
-
-
-export async function depositUpkeepBalanceHandler({ manager, signer }: 
-    { manager: CasimirManager, signer: SignerWithAddress }) {
-    /**
-     * In production, we check the upkeep balance before reporting
-     * We can set processed to true if the manager has enough LINK tokens
-     * Here, we're just depositing double the Chainlink registration minimum
-     */
-    const requiredBalance = 5
-
-    const uniswapFactory = new Factory({
-        provider: ethers.provider,
-        uniswapV3FactoryAddress
-    })
-
-    const price = await uniswapFactory.getSwapPrice({ 
-        tokenIn: wethTokenAddress,
-        tokenOut: linkTokenAddress,
-        uniswapFeeTier: 3000
-    })
-    
-    const feeAmount = ethers.utils.parseEther((requiredBalance * price).toPrecision(9))
-    const minTokenAmount = ethers.utils.parseEther((requiredBalance * 0.99).toPrecision(9))
-
-    const depositUpkeepBalance = await manager.connect(signer).depositUpkeepBalance(
-        feeAmount,
-        minTokenAmount,
-        false
-    )
-    await depositUpkeepBalance.wait()
-}
-
-export async function reportCompletedExitsHandler(
-    { manager, views, signer, args }: 
-    { manager: CasimirManager, views: CasimirViews, signer: SignerWithAddress, args: Record<string, any> }
-) {
+export async function withdrawValidatorsHandler({ 
+    manager, 
+    provider,
+    views, 
+    signer, 
+    args 
+}: { 
+    manager: CasimirManager, 
+    provider: ethers.providers.JsonRpcProvider,
+    views: CasimirViews, 
+    signer: SignerWithAddress, 
+    args: Record<string, any> 
+}) {
+    const config = new Config()
     const { count } = args
 
     /**
@@ -291,7 +266,7 @@ export async function reportCompletedExitsHandler(
     while (remaining > 0) {
         const poolId = stakedPoolIds[poolIndex]
         const poolConfig = await views.getPoolConfig(poolId)
-        if (poolConfig.status === PoolStatus.EXITING_FORCED || poolConfig.status === PoolStatus.EXITING_REQUESTED) {
+        if (poolConfig.status === POOL_STATUS.EXITING_FORCED || poolConfig.status === POOL_STATUS.EXITING_REQUESTED) {
             remaining--
             
             /**
@@ -302,21 +277,15 @@ export async function reportCompletedExitsHandler(
              */
             const operatorIds = poolConfig.operatorIds.map((operatorId) => operatorId.toNumber())
 
-            let blamePercents = [0,
-                0,
-                0,
-                0]
+            let blamePercents = [0, 0, 0, 0]
             if (poolConfig.balance.lt(ethers.utils.parseEther("32"))) {
-                blamePercents = [100,
-                    0,
-                    0,
-                    0]
+                blamePercents = [100, 0, 0, 0]
             }
 
             const scanner = new Scanner({
-                provider: ethers.provider,
-                ssvNetworkAddress,
-                ssvViewsAddress
+                provider,
+                ssvNetworkAddress: config.ssvNetworkAddress,
+                ssvViewsAddress: config.ssvViewsAddress
             })
 
             const cluster = await scanner.getCluster({ 
@@ -324,12 +293,12 @@ export async function reportCompletedExitsHandler(
                 operatorIds
             })
 
-            const reportCompletedExit = await manager.connect(signer).reportCompletedExit(
+            const withdrawValidator = await manager.connect(signer).withdrawValidator(
                 poolIndex,
                 blamePercents,
                 cluster
             )
-            await reportCompletedExit.wait()
+            await withdrawValidator.wait()
         }
         poolIndex++
     }

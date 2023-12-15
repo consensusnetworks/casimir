@@ -11,7 +11,6 @@ const rm = promisify(fs.rm)
  * Clean all repository dependencies
  */
 void async function () {
-
     const { workspaces } = JSON.parse(await readFile("package.json", "utf8"))
     const packageDirs: string[] = []
     for (const workspace of workspaces) {
