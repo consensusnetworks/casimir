@@ -28,8 +28,8 @@ export class Beacon {
                 }
             }
         }
-        const response = await fetch(url, requestInit)
-        const json = await response.json()
+        const request = await fetch(url, requestInit)
+        const json = await request.json()
         return json.data?.[0] as BeaconValidator | undefined
     }
 }

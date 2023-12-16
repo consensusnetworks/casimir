@@ -10,7 +10,7 @@ const rm = promisify(fs.rm)
 /**
  * Clean all repository dependencies
  */
-void async function () {
+async function main() {
     const { workspaces } = JSON.parse(await readFile("package.json", "utf8"))
     const packageDirs: string[] = []
     for (const workspace of workspaces) {
@@ -39,4 +39,9 @@ void async function () {
     }
     console.log("Reinstalling dependencies")
     await run("npm i")
-}()
+}
+
+main().catch(error => {
+    console.error(error)
+    process.exit(1)
+})

@@ -5,7 +5,7 @@ import { fulfillReport, runUpkeep } from "../../helpers/upkeep"
 import { updateValidatorsHandler, fundAccountsHandler, initiateValidatorHandler, withdrawValidatorsHandler } from "../../helpers/oracle"
 import { round } from "../../helpers/math"
 import ISSVViewsAbi from "../../build/abi/ISSVViews.json"
-import requestConfig from "@casimir/functions/Functions-request-config"
+import requestConfig from "@casimir/functions/request/config"
 import { Config } from "../../helpers/config"
 
 upgrades.silenceWarnings()

@@ -22,7 +22,7 @@ import { run, runSync } from "@casimir/shell"
  * - ETHEREUM_FORK_RPC_URL: string
  * - ETHEREUM_FORK_BLOCK: string
  */
-async function root() {
+async function main() {
     const apps = {
         www: {
             contracts: false,
@@ -150,7 +150,7 @@ async function root() {
     }
 }
 
-root().catch(error => {
+main().catch(error => {
     console.error(error)
     process.exit(1)
 })

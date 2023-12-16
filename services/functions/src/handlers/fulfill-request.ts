@@ -1,7 +1,7 @@
 import { ethers } from "ethers"
 import { decodeDietCBOR } from "../providers/format"
-import requestConfig from "@casimir/functions/Functions-request-config"
-import { simulateRequest } from "../../FunctionsSandboxLibrary"
+import requestConfig from "../../request/config"
+import { simulateScript } from "@chainlink/functions-toolkit"
 import { Config } from "../providers/config"
 import { FunctionsBillingRegistry } from "@casimir/ethereum/build/@types"
 import { updateExecutionLog } from "@casimir/logs"
@@ -25,30 +25,32 @@ export async function fulfillRequestHandler(input: HandlerInput): Promise<void> 
         args
     }
 
-    const { result, resultLog, success } = await simulateRequest(currentRequestConfig)
-    if (success) {
+    const { capturedTerminalOutput, errorString, responseBytesHexstring } = await simulateScript(currentRequestConfig)
+    if (!errorString) {
         if (!config.dryRun) {
             const signer = config.wallet.connect(provider)        
-            const dummySigners = Array(31).fill(signer.address)    
+            const dummySigners = Array(31).fill(signer.address)  
+            const reportValidationGas = 100000
+            const initialGas = 500000
             const fulfillAndBill = await functionsBillingRegistry.connect(signer).fulfillAndBill(
                 requestId,
-                result,
+                responseBytesHexstring as string,
                 "0x",
                 signer.address,
                 dummySigners,
                 4,
-                100_000,
-                500_000,
+                reportValidationGas,
+                initialGas,
                 {
-                    gasLimit: 500_000,
+                    gasLimit: initialGas
                 }
             )
             await fulfillAndBill.wait()
             if (process.env.USE_LOGS === "true") {
-                updateExecutionLog("execution.log", resultLog)
+                updateExecutionLog("execution.log", capturedTerminalOutput)
             }
         }
     } else {
-        throw new Error(resultLog)
+        throw new Error(errorString)
     }
 }

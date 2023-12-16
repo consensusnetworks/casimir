@@ -6,7 +6,7 @@ import { updateValidatorsHandler } from "../helpers/oracle"
 import { POOL_STATUS } from "@casimir/env"
 import { run } from "@casimir/shell"
 import { waitForNetwork } from "../helpers/network"
-import requestConfig from "@casimir/functions/Functions-request-config"
+import requestConfig from "@casimir/functions/request/config"
 import { CasimirFactory, CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle } from "../build/@types"
 import { Config } from "../helpers/config"
 

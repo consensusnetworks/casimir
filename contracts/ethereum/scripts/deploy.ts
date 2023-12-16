@@ -1,5 +1,5 @@
 import { ethers, upgrades } from "hardhat"
-import requestConfig from "@casimir/functions/Functions-request-config"
+import requestConfig from "@casimir/functions/request/config"
 import { CasimirFactory, CasimirUpkeep } from "../build/@types"
 
 upgrades.silenceWarnings()

@@ -19,5 +19,10 @@
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features"
     },
-    "volar.inlayHints.eventArgumentInInlineHandlers": false
+    "volar.inlayHints.eventArgumentInInlineHandlers": false,
+    "deno.enable": true,
+    "deno.enablePaths": [
+        "./services/functions/request/scripts",
+        "./services/functions/request/src"
+    ]
 }
