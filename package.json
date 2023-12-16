@@ -19,7 +19,7 @@
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
-    "postinstall": "npx esno scripts/root/check.ts",
+    "postinstall": "npx esno scripts/root/postinstall.ts",
     "preinstall": "git submodule sync && git submodule update --init --recursive",
     "prepare": "husky install",
     "release": "release-it",
