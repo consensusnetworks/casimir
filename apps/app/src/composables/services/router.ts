@@ -6,6 +6,9 @@ import LoadingApp from "@/pages/welcome/views/LoadingApp.vue"
 import Welcome from "@/pages/welcome/views/Welcome.vue"
 import WelcomeBack from "@/pages/welcome/views/WelcomeBack.vue"
 
+// 404
+import PageNotFound from "@/pages/404/PageNotFound.vue"
+
 const routes = [
     { 
         path: "/onboarding", 
@@ -28,7 +31,9 @@ const routes = [
                 component: WelcomeBack,
             },
         ]
-    }
+    },
+    { path: "/:pathMatch(.*)*", name: PageNotFound, component: PageNotFound },
+
     // { 
     // path: "/overview", 
     // name: Overview,

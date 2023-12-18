@@ -27,55 +27,55 @@ body {
   @apply bg-lightBg dark:bg-darkBg text-mainDarkText dark:text-mainLightText;
 }
 
-h1 {
+body h1 {
   font-size: 32.44px;
   font-weight: 600;
   letter-spacing: -0.032em;
 }
 
-h2 {
+body h2 {
   font-size: 28.83px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
-h3 {
+body h3 {
   font-size: 25.63px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
-h4 {
+body h4 {
   font-size: 22.78px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
-h5 {
+body h5 {
   font-size: 20.25px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
-h6 {
+body h6 {
   font-size: 18px;
   font-weight: 500;
   letter-spacing: -0.022em; 
 }
 
-p {
+body p {
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.022em;
 }
 
-small {
+body small {
   font-size: 14.22px;
   font-weight: 400;
   letter-spacing: -0.022em;
 }
 
-caption{
+body caption{
   font-size: 12.64px;
   font-weight: 300;
   letter-spacing: -0.022em;

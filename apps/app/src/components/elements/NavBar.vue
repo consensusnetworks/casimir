@@ -111,7 +111,7 @@ const showCopyForSecondary = ref(-1)
         <router-link
           to="/overview"
           class="nav_links"
-          :class="{ 'nav_link_active': matchRoutes(['overview']) }"
+          :class="{ 'nav_link_active': matchRoutes(['overview', '']) }"
         >
           Overview
         </router-link>
@@ -341,7 +341,7 @@ const showCopyForSecondary = ref(-1)
               <router-link
                 to="/overview"
                 class="nav_menu_links"
-                :class="{ 'nav_menu_links_active': matchRoutes(['overview']) }"
+                :class="{ 'nav_menu_links_active': matchRoutes(['overview', '']) }"
                 @click="toggleNavMenu(false)"
               >
                 <ChartBarSquareIcon class="nav_menu_links_icons" />
