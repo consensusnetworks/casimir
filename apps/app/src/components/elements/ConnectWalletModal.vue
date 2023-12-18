@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue"
 import {
     TransitionRoot,
@@ -10,11 +10,13 @@ import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import Loading from "@/components/elements/Loading.vue"
 import Success from "@/components/elements/Success.vue"
 import Failure from "@/components/elements/Failure.vue"
-const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
+import useAuth from "@/composables/services/auth"
+import useWallets from "@/composables/services/wallets"
+import { CryptoAddress, ProviderString } from "@casimir/types"
 
-function closeModal() {
-    toggleConnectWalletModal(false)
-}
+const { login } = useAuth()
+const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
+const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 
 // type UserAuthFlowState = 
 //   "select_provider"
@@ -26,11 +28,13 @@ function closeModal() {
 //   | "connection_failed"
 
 
-const flowState = ref("connection_failed")
+const flowState = ref("select_provider")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
 const selectProviderLoading = ref(false)
+const selectedProvider = ref<ProviderString>("")
+const walletProviderAddresses = ref([] as CryptoAddress[])
 
 const supportedWalletProviders = [
     "MetaMask",
@@ -42,7 +46,72 @@ const supportedWalletProviders = [
     // 'IoPay',
 ]
 
-const handleOuterClick = (event) =>{
+async function selectProvider(provider: ProviderString): Promise<void> {
+    console.clear()
+    try {
+        selectedProvider.value = provider
+        selectProviderLoading.value = true
+    
+        // Hard Goerli Check
+        // TODO: Make this dynamic
+        if (provider !== "WalletConnect") {
+            const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
+            if (activeNetwork !== 5) {
+                await switchEthersNetwork(selectedProvider.value, "0x5")
+                return window.location.reload()
+            }
+        }
+
+        if (provider === "WalletConnect") {
+            // TODO: @@cali1 - pass in the network id dynamically
+            walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
+        } else if (browserProvidersList.includes(provider)) {
+            walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
+        } else if (provider === "Ledger") {
+            walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
+        } else if (provider === "Trezor") {
+            walletProviderAddresses.value = await getEthersTrezorAddresses() as CryptoAddress[]
+        } else {
+            throw new Error("Provider not supported")
+        }
+        errorMessage.value = false
+        errorMessageText.value = ""
+        selectProviderLoading.value = false
+        flowState.value = "select_address"
+    } catch (error: any) {
+        errorMessage.value = true
+        if (provider === "Ledger") {
+            const { message, name, statusCode } = error
+            if (
+                message === "Ledger device: UNKNOWN_ERROR (0x6511)" 
+              && name === "TransportStatusError" 
+              && statusCode === 25873
+            ) {
+                errorMessageText.value = "Unlock your Ledger and open Ethereum Goerli app."
+                selectProviderLoading.value = false
+            }
+        } else if (provider === "Trezor") {
+            if (error.message.includes("Trezor Suite is not open")) {
+                errorMessageText.value = "Open your Trezor Suite desktop app."
+                selectProviderLoading.value = false
+            } else {
+                console.log("Error in selectProvider :>> ", error)
+                errorMessageText.value = "Something went wrong with your Trezor connection, please try again later."
+                selectProviderLoading.value = false
+            }
+        } else {
+            console.log("error in selectProvider in ConnectWalletsFlow.vue :>> ", error)
+            errorMessageText.value = "Something went wrong, please try again later."
+            selectProviderLoading.value = false
+        }
+    }
+}
+
+function closeModal() {
+    toggleConnectWalletModal(false)
+}
+
+function handleOuterClick(event) {
     const modal_container = document.getElementById("connect_wallet_modal")
     if (
         modal_container && 
@@ -51,7 +120,6 @@ const handleOuterClick = (event) =>{
         closeModal()
     }
 }
-
 </script>
 
 <template>
@@ -347,10 +415,10 @@ const handleOuterClick = (event) =>{
                     class="action_button_cancel flex items-center justify-center gap-5 w-full"
                     @click="flowState = 'select_address'"
                   >
-                    <vue-feather
+                    <!-- <vue-feather
                       type="arrow-left-circle"
                       class="icon w-[16px] h-min"
-                    />
+                    /> -->
                     Back
                   </button>
                   <button

@@ -13,6 +13,7 @@
     "@heroicons/vue": "^2.0.18",
     "init": "^0.1.2",
     "npx": "^10.2.2",
+    "supertokens-web-js": "^0.8.0",
     "vue": "^3.3.8",
     "vue-router": "^4.2.5"
   },
