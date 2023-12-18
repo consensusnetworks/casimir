@@ -14,8 +14,8 @@ const { openConnectWalletModal } = useConnectWalletModal()
 
 <template>
   <div class="app_container">
-    <NavBar />
-    <div class="app_container_inner">
+    <NavBar class="z-[999]" />
+    <div class="app_container_inner z-[888]">
       <div>
         <router-view />
       </div>

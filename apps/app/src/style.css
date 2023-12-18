@@ -151,7 +151,7 @@ caption{
 }
 
 .nav_menu_container {
-  @apply absolute top-0 left-0 w-screen h-screen overflow-hidden;
+  @apply absolute top-0 left-0 w-screen h-screen overflow-hidden z-[999];
 }
 
 .nav_menu_inner {
@@ -232,10 +232,23 @@ caption{
   min-height: calc(100vh - var(--navbar-height) - 48px);  
 }
 
-.toasts_container {
+.toasts_container_vertical {
   @apply fixed bottom-0 right-0 flex flex-col 
-  items-end pb-[24px];
+  items-end pb-[24px] z-[10];
+  max-height: calc(100% - var(--navbar-height) - 48px);
 
+  @media screen and (min-width: 1275px) {
+    right: calc((100% - 1275px) / 2 + 24px);
+  }
+
+  @media screen and (max-width: 1275px) {
+    right: 48px;
+  }
+}
+
+.toasts_container_horizontal{
+  @apply fixed bottom-0 right-0 flex flex-col
+  items-end pb-[24px] z-[10];
   @media screen and (min-width: 1275px) {
     right: calc((100% - 1275px) / 2 + 24px);
   }
@@ -248,6 +261,13 @@ caption{
 .toast {
   @apply rounded-[8px] p-[24px] min-w-[250px]
   mt-[12px] bg-lightBg dark:bg-black
-  border border-lightBorder dark:border-lightBorder/40;
+  border border-lightBorder dark:border-lightBorder/40 z-[10] shadow-md;
   transition: all 0.3s ease-in;
+}
+
+.toast_mini {
+  @apply rounded-[8px] bg-lightBg dark:bg-black w-[40px] h-[40px]
+  border border-lightBorder dark:border-lightBorder/40 z-[10] 
+  flex items-center justify-center shadow-md;
+  transition: all 0.3s ease-in;  
 }
