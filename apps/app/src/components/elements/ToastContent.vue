@@ -32,7 +32,7 @@ const props = defineProps({
           v-if="props.toast.type === 'info'"
           :src="props.toast.iconUrl"
           :alt="props.toast.iconUrl + ' icon'"
-          class="w-full h-full"
+          class="w-[38px] h-[38px]"
         >
         <div 
           v-else-if="props.toast.type === 'success'"
@@ -53,7 +53,7 @@ const props = defineProps({
         <h1 class="card_title">
           {{ props.toast.title }}
         </h1>
-        <h2 class="card_subtitle">
+        <h2 class="card_subtitle max-w-[200px]">
           {{ props.toast.subtitle }}
         </h2>
       </div>

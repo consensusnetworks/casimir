@@ -19,7 +19,6 @@ export default function useToasts() {
     }
 
     const removeToast = (toastId: string) => {
-        console.log(toastId)
         const updatedToasts = toasts.value.filter((toast) => toast.id !== toastId)
         toasts.value = updatedToasts
     }
