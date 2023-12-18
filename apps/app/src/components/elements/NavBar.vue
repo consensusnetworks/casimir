@@ -207,7 +207,7 @@ const showCopyForSecondary = ref(-1)
             >
               <MenuItems
                 v-show="userMenu"
-                class="absolute right-0 mt-2 origin-top-right shadow-lg 
+                class="absolute right-0 mt-2 origin-top-right shadow-lg dark:shadow-sm dark:shadow-white/30
                 ring-1 ring-black/5 focus:outline-none w-full card"
               >
                 <!-- TODO: Connect this to open connect wallet modal-->

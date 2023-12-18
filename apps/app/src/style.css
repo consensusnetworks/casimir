@@ -261,7 +261,8 @@ caption{
 .toast {
   @apply rounded-[8px] p-[24px] min-w-[250px]
   mt-[12px] bg-lightBg dark:bg-black
-  border border-lightBorder dark:border-lightBorder/40 z-[10] shadow-md;
+  border border-lightBorder dark:border-lightBorder/40 z-[10] 
+  shadow-md dark:shadow-sm dark:shadow-white/40;
   transition: all 0.3s ease-in;
 }
 

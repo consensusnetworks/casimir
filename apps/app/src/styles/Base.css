@@ -1,0 +1,13 @@
+/* This file is ment to be for base component styling  */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.primary_btn{
+    @apply rounded-[6px] px-[12px] py-[6px] flex items-center gap-[8px]
+    text-white dark:text-black bg-black hover:bg-black/80
+    active:bg-black/75 dark:bg-white  dark:hover:bg-white/80
+    dark:active:bg-white/75;    
+    ;
+}
