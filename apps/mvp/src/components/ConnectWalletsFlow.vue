@@ -104,7 +104,6 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
 */
 async function selectAddress(address: string, pathIndex?: number): Promise<void> {
     selectedAddress.value = address
-    console.log("selectedAddress.value :>> ", selectedAddress.value)
     flowState.value = "loading"
     const loginCredentials: LoginCredentials = 
       pathIndex !== undefined ? 
