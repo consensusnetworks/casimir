@@ -123,6 +123,7 @@ export default function useAuth() {
         loginCredentials: LoginCredentials
     ): Promise<UserAuthState> {
         const { address, provider } = loginCredentials
+        console.log("loginCredentials :>> ", loginCredentials)
         try {
             if (user.value) {
                 // If address already exists on user, do nothing
@@ -174,6 +175,7 @@ export default function useAuth() {
                 const browserWallet = browserProvidersList.includes(provider as ProviderString)
 
                 if (provider === "WalletConnect") {
+                    console.log("got to wallet connect login")
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
                     return "Successfully logged in"
@@ -265,6 +267,7 @@ export default function useAuth() {
             } else if (provider === "Trezor") {
                 await loginWithTrezor(loginCredentials)
             } else if (provider === "WalletConnect") {
+                console.log("logging in with wallet connect")
                 await loginWithWalletConnectV2(loginCredentials)
             } else {
                 console.log("Sign up not yet supported for this wallet provider")
@@ -308,12 +311,7 @@ export default function useAuth() {
             }
         }
     })
-
-    onUnmounted(() => {
-        initializedAuthComposable.value = false
-        uninitializeWalletConnect()
-    })
-
+    
     // TODO: Re-enable once we have a way to remove accounts in UI
     // async function removeConnectedAccount() {
     //     if (!user?.value?.address) {

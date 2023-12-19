@@ -40,7 +40,7 @@ const { getEthersLedgerAddresses } = useLedger()
 const { getEthersTrezorAddresses } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
-const { connectWalletConnectV2 } = useWalletConnect()
+const { connectWalletConnectV2, walletConnectSelectedAccount } = useWalletConnect()
 // const { installedWallets, detectInstalledWalletProviders } = useWallets()
 
 // eslint-disable-next-line no-undef
@@ -104,6 +104,7 @@ async function handleConfirmCreateAccountWithExistingSecondary() {
 */
 async function selectAddress(address: string, pathIndex?: number): Promise<void> {
     selectedAddress.value = address
+    console.log("selectedAddress.value :>> ", selectedAddress.value)
     flowState.value = "loading"
     const loginCredentials: LoginCredentials = 
       pathIndex !== undefined ? 
@@ -224,6 +225,12 @@ onUnmounted(() => {
         flowState.value = "add_account"
     } else {
         flowState.value = "select_provider"
+    }
+})
+
+watch(walletConnectSelectedAccount, () => {
+    if (selectedProvider.value === "WalletConnect") {
+        walletProviderAddresses.value = walletConnectSelectedAccount.value as CryptoAddress[]
     }
 })
 </script>
@@ -374,7 +381,7 @@ onUnmounted(() => {
             @click="
               selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
                 selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
-                selectAddress(trimAndLowercaseAddress(act.address), undefined)
+                selectAddress(act.address, undefined)
             "
           >
             <div>
