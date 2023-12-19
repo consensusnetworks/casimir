@@ -20,7 +20,7 @@ const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
@@ -132,9 +132,8 @@ export default function useAuth() {
                 if (addressExistsOnUser) return "Address already exists on this account"
 
                 // Check if it exists as a primary address of a different user
-                const {
-                    data: { sameAddress, walletProvider },
-                } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+                const { data: { sameAddress } } = 
+                    await checkIfPrimaryUserExists(provider as ProviderString, address)
                 // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
                 if (sameAddress) {
                     return "Address already exists as a primary address on another account"
