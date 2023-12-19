@@ -123,7 +123,6 @@ export default function useAuth() {
         loginCredentials: LoginCredentials
     ): Promise<UserAuthState> {
         const { address, provider } = loginCredentials
-        console.log("loginCredentials :>> ", loginCredentials)
         try {
             if (user.value) {
                 // If address already exists on user, do nothing
