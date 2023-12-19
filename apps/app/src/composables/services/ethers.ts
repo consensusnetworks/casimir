@@ -1,9 +1,9 @@
 import { ethers } from "ethers"
 import { CryptoAddress, EthersProvider } from "@casimir/types"
 import { LoginCredentials, ProviderString } from "@casimir/types"
-import useEnvironment from "@/composables/environment"
-import useSiwe from "@/composables/siwe"
-import useWallets from "@/composables/wallets"
+import useEnvironment from "@/composables/services/environment"
+import useSiwe from "@/composables/services/siwe"
+import useWallets from "@/composables/services/wallets"
 
 interface ethereumWindow extends Window {
   ethereum: any;

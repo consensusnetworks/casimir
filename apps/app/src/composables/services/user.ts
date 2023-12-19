@@ -1,6 +1,6 @@
 import { readonly, ref, watch } from "vue"
 import { Account, ProviderString, UserWithAccountsAndOperators } from "@casimir/types"
-import useEnvironment from "@/composables/environment"
+import useEnvironment from "@/composables/services/environment"
 import { ethers } from "ethers"
 
 const { usersUrl, batchProvider } = useEnvironment()

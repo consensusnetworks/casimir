@@ -11,12 +11,18 @@ import Loading from "@/components/elements/Loading.vue"
 import Success from "@/components/elements/Success.vue"
 import Failure from "@/components/elements/Failure.vue"
 import useAuth from "@/composables/services/auth"
+import useEthers from "@/composables/services/ethers"
+import useEnvironment from "@/composables/services/environment"
 import useWallets from "@/composables/services/wallets"
+import useWalletConnectV2 from "@/composables/services/walletConnectV2"
 import { CryptoAddress, ProviderString } from "@casimir/types"
 
 const { login } = useAuth()
+const { getEthersAddressesWithBalances, browserProvidersList } = useEthers()
+const { requiredNetwork } = useEnvironment()
 const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
+const { connectWalletConnectV2 } = useWalletConnectV2()
 
 // type UserAuthFlowState = 
 //   "select_provider"
@@ -68,9 +74,9 @@ async function selectProvider(provider: ProviderString): Promise<void> {
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
         } else if (provider === "Ledger") {
-            walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
+            // walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
         } else if (provider === "Trezor") {
-            walletProviderAddresses.value = await getEthersTrezorAddresses() as CryptoAddress[]
+            // walletProviderAddresses.value = await getEthersTrezorAddresses() as CryptoAddress[]
         } else {
             throw new Error("Provider not supported")
         }

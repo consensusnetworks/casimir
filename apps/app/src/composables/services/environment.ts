@@ -3,23 +3,23 @@ import { CasimirFactory } from "@casimir/ethereum/build/@types"
 import ICasimirFactoryAbi from "@casimir/ethereum/build/abi/ICasimirFactory.json"
 
 /* Browser environment */
-// const domain = window.location.host
+const domain = window.location.host
 // const origin = window.location.origin
 
 /* Ethereum environment */
-// const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || "http://127.0.0.1:8545"
+const ethereumUrl = import.meta.env.PUBLIC_ETHEREUM_RPC_URL || "http://127.0.0.1:8545"
 // const ethereumWsUrl = import.meta.env.PUBLIC_ETHEREUM_WS_URL
-// const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
-// const batchProvider: ethers.providers.JsonRpcBatchProvider = new ethers.providers.JsonRpcBatchProvider(ethereumUrl)
+const provider = new ethers.providers.JsonRpcProvider(ethereumUrl)
+const batchProvider: ethers.providers.JsonRpcBatchProvider = new ethers.providers.JsonRpcBatchProvider(ethereumUrl)
 // const wsProvider: ethers.providers.WebSocketProvider | null = ethereumWsUrl !== "undefined" ? new ethers.providers.WebSocketProvider(ethereumWsUrl) : null
 
 /* Casimir environment */
 // const docsUrl = import.meta.env.PUBLIC_DOCS_URL || "https://docs.dev.casimir.co"
 const usersUrl = import.meta.env.PUBLIC_USERS_URL || "http://localhost:4000"
-// const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
+const walletConnectProjectId = import.meta.env.PUBLIC_WALLET_CONNECT_PROJECT_ID
 
 /** Network */
-// const requiredNetwork: "1" | "5" = origin.includes("localhost") ? "5" : origin.includes("app.dev") ? "5" : "1"
+const requiredNetwork: "1" | "5" = origin.includes("localhost") ? "5" : origin.includes("app.dev") ? "5" : "1"
 
 /* Addresses */
 // const factoryAddress = import.meta.env.PUBLIC_FACTORY_ADDRESS
@@ -37,21 +37,21 @@ const usersUrl = import.meta.env.PUBLIC_USERS_URL || "http://localhost:4000"
 export default function useEnvironment() {
 
     return {
-        // batchProvider,
-        // domain,
+        batchProvider,
+        domain,
         // cryptoCompareApiKey,
-        // ethereumUrl,
+        ethereumUrl,
         // factory,
-        // provider,
+        provider,
         // origin,
         // ledgerType,
-        // requiredNetwork,
+        requiredNetwork,
         // speculosUrl,
         // ssvNetworkAddress,
         // ssvViewsAddress,
         // docsUrl,
         usersUrl,
-        // walletConnectProjectId,
+        walletConnectProjectId,
         // wsProvider,
     }
 }

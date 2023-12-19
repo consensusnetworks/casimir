@@ -2,8 +2,8 @@ import { onMounted, onUnmounted, ref } from "vue"
 import * as Session from "supertokens-web-js/recipe/session"
 import useEnvironment from "@/composables/services/environment"
 import useEthers from "@/composables/services/ethers"
-import useLedger from "@/composables/services/ledger"
-import useTrezor from "@/composables/services/trezor"
+// import useLedger from "@/composables/services/ledger"
+// import useTrezor from "@/composables/services/trezor"
 import useUser from "@/composables/services/user"
 import useWalletConnect from "@/composables/services/walletConnectV2"
 import useWallets from "@/composables/services/wallets"
@@ -18,8 +18,8 @@ import {
 
 const { usersUrl } = useEnvironment()
 const { browserProvidersList, loginWithEthers } = useEthers()
-const { loginWithLedger } = useLedger()
-const { loginWithTrezor } = useTrezor()
+// const { loginWithLedger } = useLedger()
+// const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
 const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
