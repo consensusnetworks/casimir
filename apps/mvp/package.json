@@ -25,7 +25,7 @@
     "vue": "^3.3.13",
     "vue-feather": "^2.0.0",
     "vue-router": "^4.2.5",
-    "web3": "^1.8.1"
+    "web3": "^4.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
