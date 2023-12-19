@@ -265,7 +265,6 @@ export default function useAuth() {
             } else if (provider === "Trezor") {
                 await loginWithTrezor(loginCredentials)
             } else if (provider === "WalletConnect") {
-                console.log("logging in with wallet connect")
                 await loginWithWalletConnectV2(loginCredentials)
             } else {
                 console.log("Sign up not yet supported for this wallet provider")

@@ -42,6 +42,7 @@ export default function useWalletConnectV2() {
             }
             const rpcUrl = customRpcs[chainId]
             if (!rpcUrl) throw new Error(`RPC URL not found for chainId: ${chainId}`)
+            if (ethereumProvider.value.accounts.length > 0) throw new Error("Prompt user to simply change accounts to add it to their account")
             await ethereumProvider.value.connect()
             createEthersProvider()
             // const _accounts = await ethereumProvider.value.enable()
@@ -181,6 +182,22 @@ export default function useWalletConnectV2() {
         const handleAccountsChanged = async (walletConnectAccounts: Array<string>) => {
             console.log("ACCOUNTS CHANGED EVENT", walletConnectAccounts)
             if (!user.value && accounts.value.length > 0) return window.location.reload()
+            
+            // Check which accounts are new
+            const userAccounts = user.value?.accounts.map((account) => account.address.toLowerCase().trim())
+            const newAccounts = walletConnectAccounts.filter((account) => !userAccounts?.includes(account.toLowerCase().trim()))
+            
+            // Add new accounts to user
+            if (newAccounts.length > 0) {
+                // await addAccountToUser(newAccounts) // TODO: Enable this (review with @DemogorGod)
+                const newAccountsWithBalances = await Promise.all(newAccounts.map(async (account) => {
+                    return {
+                        address: account,
+                        balance: (await getEthersBalance(account)).toString()
+                    }
+                }))
+                walletConnectSelectedAccount.value = [...walletConnectSelectedAccount.value, ...newAccountsWithBalances]
+            }
         }
 
         // Event handler for chainChanged

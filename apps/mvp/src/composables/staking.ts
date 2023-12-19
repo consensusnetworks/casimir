@@ -50,7 +50,9 @@ export default function useStaking() {
     async function deposit({ amount, walletProvider, type, pathIndex }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen", pathIndex: number | undefined}) {
         stakeWithdrawError.value = ""
         try {
+            // This is currently handling the connectWalletConnectV2 if no current session
             const activeNetwork = await detectActiveNetwork(walletProvider)
+            console.log("activeNetwork :>> ", activeNetwork)
             if (activeNetwork !== 5) {
                 await switchEthersNetwork(walletProvider, "0x5")
                 return window.location.reload()
@@ -184,6 +186,7 @@ export default function useStaking() {
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
         try {
             stakeWithdrawError.value = ""
+            // This is currently handling the connectWalletConnectV2 if no current session
             const activeNetwork = await detectActiveNetwork(walletProvider)
             if (activeNetwork !== 5) {
                 await switchEthersNetwork(walletProvider, "0x5")
