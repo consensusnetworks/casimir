@@ -1,4 +1,3 @@
-import os from "os"
 import { ethers } from "ethers"
 import { loadCredentials, getSecret } from "@casimir/aws"
 import { ETHEREUM_CONTRACTS, ETHEREUM_RPC_URL } from "@casimir/env"
@@ -9,16 +8,6 @@ import { waitForNetwork } from "@casimir/ethereum/helpers/network"
  * Start the Chainlink functions service
  */
 async function main() {
-    const deno = await run("which deno") as string
-    if (!deno || deno.includes("not found")) {
-        if (os.platform() === "darwin") {
-            await run("echo y | brew install deno")
-        } else {
-            throw new Error("Please install deno using `curl -fsSL https://deno.land/x/install/install.sh | sh`")
-        }
-    }
-    await run("deno run --allow-read --allow-write --allow-net --allow-env ./request/scripts/build.ts")
-
     if (process.env.USE_SECRETS !== "false") {
         await loadCredentials()
         process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string

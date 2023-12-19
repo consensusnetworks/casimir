@@ -51,7 +51,9 @@ Configure the following prerequisite global dependency versions:
 
     > 🚩 **Using NVM**: Install [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) and run `nvm install --lts && nvm alias default lts/*` to set the default version to the latest LTS. You will need to rerun this command whenever the latest LTS changes.
 
-5. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
+5. [Deno (v1.39.x)](https://docs.deno.com/runtime/manual/getting_started/installation).
+
+6. [AWS CLI (v2.x)](https://aws.amazon.com/cli).
 
     > 🚩 **Consensus Networks team only**: Create an [AWS profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) named `consensus-networks-dev`.
 

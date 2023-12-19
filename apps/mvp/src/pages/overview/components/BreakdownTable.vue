@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted } from "vue"
-import * as XLSX from "xlsx"
 import VueFeather from "vue-feather"
 import useUser from "@/composables/user"
 import useFormat from "@/composables/format"
@@ -234,69 +233,6 @@ watch([searchInput,
     currentPage], () => {
     filterData()
 })
-
-const convertJsonToCsv = (jsonData: any[]) => {
-    const separator = ","
-    const csvRows = []
-
-    if (!Array.isArray(jsonData)) {
-        return ""
-    }
-
-    if (jsonData.length === 0) {
-        return ""
-    }
-
-    const keys = Object.keys(jsonData[0])
-
-    // Add headers
-    csvRows.push(keys.join(separator))
-
-    // Convert JSON data to CSV rows
-    jsonData.forEach(obj => {
-        const values = keys.map(key => obj[key])
-        csvRows.push(values.join(separator))
-    })
-
-    return csvRows.join("\n")
-}
-
-const convertJsonToExcelBuffer = (jsonData: unknown[]) => {
-    const worksheet = XLSX.utils.json_to_sheet(jsonData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
-    const excelBuffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" })
-
-    return excelBuffer
-}
-
-const downloadFile = (content: any, filename: string, mimeType: any) => {
-    const blob = new Blob([content], { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = filename
-    link.click()
-
-    // Cleanup
-    URL.revokeObjectURL(url)
-}
-
-const exportFile = () => {
-
-    const jsonData = checkedItems.value.length > 0 ? checkedItems.value : filteredData.value
-
-    const isMac = navigator.userAgent.indexOf("Mac") !== -1
-    const fileExtension = isMac ? "csv" : "xlsx"
-
-    if (fileExtension === "csv") {
-        const csvContent = convertJsonToCsv(jsonData)
-        downloadFile(csvContent, `${tableView.value}.csv`, "text/csv")
-    } else {
-        const excelBuffer = convertJsonToExcelBuffer(jsonData)
-        downloadFile(excelBuffer, `${tableView.value}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    }
-}
 
 const removeItemFromCheckedList = (item: any) => {
     const index = checkedItems.value.indexOf(item)

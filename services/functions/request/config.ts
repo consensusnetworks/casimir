@@ -27,7 +27,7 @@ const requestConfig = {
     // Code language (only JavaScript is currently supported)
     codeLanguage: CodeLanguage.JavaScript,
     // String containing the source code to be executed
-    source: fs.readFileSync(path.join(__dirname, "request/dist/index.js")).toString(),
+    source: fs.readFileSync(path.join(__dirname, "dist/index.js")).toString(),
     // Secrets can be accessed within the source code with `secrets.varName` (ie: secrets.apiKey). The secrets object can only contain string values.
     secrets: {
         ethereumRpcUrl: process.env.ETHEREUM_RPC_URL ?? "",

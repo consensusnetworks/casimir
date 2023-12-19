@@ -54,9 +54,20 @@ async function main() {
             console.error(error.message)
             throw new Error("🚩 Please install node LTS (see https://github.com/consensusnetworks/casimir#prerequisites #4)")
         }
+
+        try {
+            const deno = await run("deno --version") as string
+            if (!deno.includes("1.39")) {
+                throw new Error("🚩 Incompatible deno version")
+            }
+        } catch (error) {
+            console.error(error.message)
+            throw new Error("🚩 Please install deno 1.39.x (see https://github.com/consensusnetworks/casimir#prerequisites #5)")
+        }
     }
 
     await run("npm run build --workspace @casimir/ethereum")
+    await run("npm run build --workspace @casimir/functions")
 }
 
 main().catch(error => {

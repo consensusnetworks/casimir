@@ -3,7 +3,7 @@
     "private": true,
     "main": "src/index.ts",
     "scripts": {
-        "build": "echo '@casimir/functions build not specified. Disregard this warning and any listed errors above if @casimir/functions is not needed for the current project build.' && exit 0",
+        "build": "deno run --allow-read --allow-write --allow-net --allow-env ./request/scripts/build.ts",
         "dev": "npx esno -r dotenv/config scripts/dev.ts",
         "simulate": "npx esno -r dotenv/config scripts/simulate.ts"
     },

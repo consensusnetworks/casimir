@@ -1,19 +1,9 @@
-import os from "os"
 import { ethers } from "ethers"
 import { ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@casimir/env"
 import { run } from "@casimir/shell"
 import { getSecret, loadCredentials } from "@casimir/aws"
 
 async function main() {
-    const deno = await run("which deno") as string
-    if (!deno || deno.includes("not found")) {
-        if (os.platform() === "darwin") {
-            await run("echo y | brew install deno")
-        } else {
-            throw new Error("Please install deno using `curl -fsSL https://deno.land/x/install/install.sh | sh`")
-        }
-    }
-
     if (process.env.USE_SECRETS !== "false") {
         await loadCredentials()
         process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
