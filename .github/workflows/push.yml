@@ -40,7 +40,7 @@ jobs:
           curl -sSf https://atlasgo.sh | sh
           
       - name: Install and build all package dependencies
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk

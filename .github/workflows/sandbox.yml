@@ -43,7 +43,7 @@ jobs:
           curl -sSf https://atlasgo.sh | sh
 
       - name: Install and build all package dependencies
-        run: npm ci
+        run: npm ci --omit=optional
         env:
           PUBLIC_STAGE: ${{ env.STAGE }}
 

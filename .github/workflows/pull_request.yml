@@ -32,7 +32,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install and build all package dependencies
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Test cdk deployment
         run: npm run test:cdk

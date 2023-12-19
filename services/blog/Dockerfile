@@ -10,7 +10,7 @@ RUN apk add --no-cache git
 COPY . .
 
 # Install dependencies
-RUN npm install --ignore-scripts
+RUN npm i --omit=optional --ignore-scripts
 
 # Build the blog service
 RUN npm run build --workspace @casimir/blog
