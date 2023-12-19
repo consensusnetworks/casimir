@@ -31,6 +31,8 @@ import {
     MenuItem,
 } from "@headlessui/vue"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
+import useAuth from "@/composables/services/auth"
+import useUser from "@/composables/services/user"
 
 const { toggleConnectWalletModal } = useConnectWalletModal()
 
@@ -61,8 +63,9 @@ const handleOuterClick = (event) =>{
     }
 }
 
-const user = ref(null)
+const { user } = useUser()
 const userMenu = ref(false)
+const { logout } = useAuth()
 
 const showCopyForPrimary = ref(false)
 const showCopyForSecondary = ref(-1)
@@ -288,6 +291,7 @@ const showCopyForSecondary = ref(-1)
                    text-red dark:text-red hover:bg-light  
                    hover:bg-gray_4/60 dark:hover:bg-gray_5/60  border-t 
                   border-t-lightBorder dark:border-t-lightBorder/60"
+                    @click="logout"
                   >
                     <ArrowRightOnRectangleIcon class="w-[20px] h-[20px]" />
                     <small>Disconnect Account</small>

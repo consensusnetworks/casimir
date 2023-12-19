@@ -91,10 +91,7 @@ export default function useWalletConnectV2() {
     }
 
     async function disconnectWalletConnect() {
-        if (!ethereumProvider.value) {
-            throw new Error("ethereumProvider is not initialized")
-        }
-        await ethereumProvider.value.disconnect()
+        if (ethereumProvider.value) await ethereumProvider.value.disconnect()
         _resetApp()
     }
 

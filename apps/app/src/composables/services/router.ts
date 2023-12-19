@@ -113,37 +113,9 @@ router.beforeEach(async (to, from, next) => {
     }
 })
 
-// router.beforeEach(async (to, from, next) => {
-//     // APP checks if it just got loaded (first time in browser)
-//     // if first time in this session then it goes to '/onboarding/loading-app'
-//     //      if user does exist and does not have a checkbox marked (skip welcome page) they go to '/onboarding/welcome-back'
-//     //      if user exists and has the checkbox marked they go to overview to '/'
-//     //      if user does not exist they goes to '/onboarding/welcome'
-//     // else it takes them to which ever route they wanted
-
-//     // const skipWelcomePage = skipWelcomePageStorage.value
-//     // const newlyLoadedApp = newlyLoadedAppStorage.value
-
-//     // if (newlyLoadedApp) {
-//     //     // newlyLoadedAppStorage.value = false
-//     //     next("/onboarding/loading-app")
-//     //     const userExists = await checkUserSession()
-//     //     if (userExists && !skipWelcomePage) {
-//     //         next("/onboarding/welcome-back")
-//     //     } else if (userExists && skipWelcomePage) {
-//     //         next("/")
-//     //     } else {
-//     //         next("/onbaording/welcome")
-//     //     }
-//     //     newlyLoadedAppStorage.value = false
-//     // }
-//     next()
-// })
-
-
 async function checkUserSession(): Promise<boolean> {
     try {
-        const { error, message, user } = await (await fetch(`${usersUrl}/user`)).json()
+        const { error, message } = await (await fetch(`${usersUrl}/user`)).json()
         if (message.includes("unauthorised")) {
             console.log("no session!")
             return false

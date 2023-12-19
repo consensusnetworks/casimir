@@ -13,14 +13,18 @@ import Failure from "@/components/elements/Failure.vue"
 import useAuth from "@/composables/services/auth"
 import useEthers from "@/composables/services/ethers"
 import useEnvironment from "@/composables/services/environment"
+import useFormat from "@/composables/services/format"
+import useUser from "@/composables/services/user"
 import useWallets from "@/composables/services/wallets"
 import useWalletConnectV2 from "@/composables/services/walletConnectV2"
-import { CryptoAddress, ProviderString } from "@casimir/types"
+import { CryptoAddress, LoginCredentials, ProviderString } from "@casimir/types"
 
 const { login } = useAuth()
+const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
 const { getEthersAddressesWithBalances, browserProvidersList } = useEthers()
 const { requiredNetwork } = useEnvironment()
-const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
+const { convertString, formatEthersCasimir, trimAndLowercaseAddress } = useFormat()
+const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnectV2()
 
@@ -33,16 +37,17 @@ const { connectWalletConnectV2 } = useWalletConnectV2()
 //   | "confirm_signage_with_existing_secondary" 
 //   | "connection_failed"
 
-
+// eslint-disable-next-line no-undef
 const flowState = ref("select_provider")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
 const selectProviderLoading = ref(false)
+const selectedAddress = ref(null as string | null)
 const selectedProvider = ref<ProviderString>("")
 const walletProviderAddresses = ref([] as CryptoAddress[])
 
-const supportedWalletProviders = [
+const supportedWalletProviders: Array<ProviderString> = [
     "MetaMask",
     "CoinbaseWallet",
     "WalletConnect",
@@ -51,6 +56,47 @@ const supportedWalletProviders = [
     "TrustWallet",
     // 'IoPay',
 ]
+
+function checkIfAddressIsUsed(account: CryptoAddress): boolean {
+    const { address } = account
+    if (user.value?.accounts) {
+        const accountAddresses = user.value.accounts.map((account: any) => account.address)
+        if (accountAddresses.includes(address)) return true
+    }
+    return false
+}
+
+async function selectAddress(address: string, pathIndex?: number): Promise<void> {
+    selectedAddress.value = address
+    flowState.value = "loading"
+    const loginCredentials: LoginCredentials = 
+      pathIndex !== undefined ? 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex } : 
+          { provider: selectedProvider.value as ProviderString, address, currency: "ETH" }
+    console.log("loginCredentials :>> ", loginCredentials)
+    const response = await login(loginCredentials)
+    if (response === "Successfully logged in" || response === "Successfully added account to user") {
+        flowState.value = "success"
+    } else if (response === "Address already exists on this account") {
+        flowState.value = "select_address"
+        errorMessage.value = true
+        errorMessageText.value = "Address selected is already connected to your account."
+    } else if (
+        response === "Address already exists as a primary address on another account" ||
+        response === "Address already exists as a secondary address on another account"
+    ) {
+        flowState.value = "confirm_signage_with_existing_secondary"
+    } else if (response === "Selected address is not active address in wallet") {
+        flowState.value = "select_address"
+        errorMessage.value = true
+        errorMessageText.value = "Address selected is not active."
+    } else if (response === "Error in userAuthState") {
+        flowState.value = "connection_failed"
+    } else {
+        errorMessage.value = true
+        errorMessageText.value = "Something went wrong, please try again later."
+    }
+}
 
 async function selectProvider(provider: ProviderString): Promise<void> {
     console.clear()
@@ -73,6 +119,7 @@ async function selectProvider(provider: ProviderString): Promise<void> {
             walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
+            console.log("walletProviderAddresses.value :>> ", walletProviderAddresses.value)
         } else if (provider === "Ledger") {
             // walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
         } else if (provider === "Trezor") {
@@ -117,7 +164,7 @@ function closeModal() {
     toggleConnectWalletModal(false)
 }
 
-function handleOuterClick(event) {
+function handleOuterClick(event: any) {
     const modal_container = document.getElementById("connect_wallet_modal")
     if (
         modal_container && 
@@ -194,6 +241,7 @@ function handleOuterClick(event) {
                         rounded-[6px] bg-lightBg dark:bg-darkBg border-lightBorder dark:border-lightBorder/40
                         hover:bg-hover_white dark:hover:bg-hover_black"
                       :disabled="selectProviderLoading"
+                      @click="selectProvider(walletProvider)"
                     >
                       <!-- TODO: Add this loading shine back once we enable it -->
                       <!-- <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" /> -->
@@ -258,7 +306,7 @@ function handleOuterClick(event) {
   
                 <div class="mt-15 h-[240px] overflow-y-auto overflow-x-hidden">
                   <!-- TODO: Add back once available -->
-                  <!-- <div
+                  <div
                     v-if="walletProviderAddresses.length === 0"
                     class="text-[16px] font-[500]"
                   >
@@ -273,7 +321,7 @@ function handleOuterClick(event) {
                       Back to provider selection
                     </button>
                     We do not see any available addresses, please connect or create a wallet to your {{ selectedProvider }}
-                  </div> -->
+                  </div>
   
                   <!-- <button
                     v-else
@@ -287,7 +335,7 @@ function handleOuterClick(event) {
                     back
                   </button> -->
   
-                  <!-- <div
+                  <div
                     v-for="(act, pathIndex) in walletProviderAddresses"
                     :key="pathIndex"
                     class="flex items-center gap-5"
@@ -320,7 +368,7 @@ function handleOuterClick(event) {
                         {{ formatEthersCasimir(parseFloat(act.balance)) }} ETH
                       </div>
                     </button>
-                  </div> -->
+                  </div>
                 </div>
   
                 <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">

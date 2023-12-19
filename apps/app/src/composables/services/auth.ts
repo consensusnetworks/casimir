@@ -4,6 +4,7 @@ import useEnvironment from "@/composables/services/environment"
 import useEthers from "@/composables/services/ethers"
 // import useLedger from "@/composables/services/ledger"
 // import useTrezor from "@/composables/services/trezor"
+import router from "@/composables/services/router"
 import useUser from "@/composables/services/user"
 import useWalletConnect from "@/composables/services/walletConnectV2"
 import useWallets from "@/composables/services/wallets"
@@ -21,18 +22,64 @@ const { browserProvidersList, loginWithEthers } = useEthers()
 // const { loginWithLedger } = useLedger()
 // const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnectV2 } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
 const loadingSessionLogin = ref(false)
 const loadingSessionLoginError = ref(false)
-const loadingSessionLogout = ref(false)
-const loadingSessionLogoutError = ref(false)
 
 const initializeComposable = ref(false)
 
-export default function useToasts() {
+export default function useAuth() {
+    async function addAccountToUser({
+        provider,
+        address,
+        currency,
+        pathIndex
+    }: {
+    provider: string;
+    address: string;
+    currency: string;
+    pathIndex?: number;
+  }) {
+        const userAccountExists = user.value?.accounts?.some((account: Account | any) =>
+            account?.address === address &&
+            account?.walletProvider === provider &&
+            account?.currency === currency
+        )
+        if (userAccountExists) return "Account already exists for this user"
+        const account = {
+            userId: user?.value?.id,
+            address: address.toLowerCase() as string,
+            currency: currency || "ETH",
+            ownerAddress: user?.value?.address.toLowerCase() as string,
+            walletProvider: provider,
+            pathIndex
+        }
+
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ account, id: user?.value?.id }),
+        }
+
+        try {
+            const response = await fetch(
+                `${usersUrl}/user/add-sub-account`,
+                requestOptions
+            )
+            const { error, message, data: updatedUser } = await response.json()
+            if (error)
+                throw new Error(message || "There was an error adding the account")
+            setUser(updatedUser)
+            return { error, message, data: updatedUser }
+        } catch (error: any) {
+            throw new Error(error.message || "Error adding account")
+        }
+    }
 
     async function checkIfPrimaryUserExists(
         provider: ProviderString,
@@ -79,6 +126,23 @@ export default function useToasts() {
         }
     }
 
+    async function getUser() {
+        try {
+            const requestOptions = {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+            const response = await fetch(`${usersUrl}/user`, requestOptions)
+            const { user: retrievedUser, error } = await response.json()
+            if (error) throw new Error(error)
+            setUser(retrievedUser)
+        } catch (error: any) {
+            throw new Error("Error getting user from API route")
+        }
+    }
+
     async function login(
         loginCredentials: LoginCredentials
     ): Promise<UserAuthState> {
@@ -118,6 +182,7 @@ export default function useToasts() {
                 const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
                 if (sameAddress) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
+                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
                     return "Successfully logged in"
                 }
 
@@ -136,10 +201,12 @@ export default function useToasts() {
                 if (provider === "WalletConnect") {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
+                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
                     return "Successfully logged in"
                 } else if (hardwareWallet) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
+                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
                     return "Successfully logged in"
                 } else if (browserWallet) {
                     const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
@@ -149,6 +216,7 @@ export default function useToasts() {
                             address,
                             currency: "ETH",
                         })
+                        if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
                         return "Successfully logged in"
                     } else {
                         return "Selected address is not active address in wallet"
@@ -163,6 +231,47 @@ export default function useToasts() {
         }
     }
 
+    /**
+     * Uses appropriate provider composable to login or sign up
+     * @param provider
+     * @param address
+     * @param currency
+     * @returns
+   */
+    async function loginWithProvider(loginCredentials: LoginCredentials) {
+        const { provider } = loginCredentials
+        try {
+            if (browserProvidersList.includes(provider)) {
+                await loginWithEthers(loginCredentials)
+            } else if (provider === "Ledger") {
+                // await loginWithLedger(loginCredentials)
+            } else if (provider === "Trezor") {
+                // await loginWithTrezor(loginCredentials)
+            } else if (provider === "WalletConnect") {
+                await loginWithWalletConnectV2(loginCredentials)
+            } else {
+                console.log("Sign up not yet supported for this wallet provider")
+            }
+            await getUser()
+        } catch (error: any) {
+            throw new Error(error.message || "There was an error logging in")
+        }
+    }
+
+    async function logout() {
+        try {
+            const promises = [disconnectWalletConnect(), Session.signOut()]
+            await Promise.all(promises)
+            setUser(undefined)
+            router.push("/onboarding/welcome")
+        } catch (error) {
+            console.log("Error logging out user :>> ", error)
+        }
+        // TODO: Fix bug that doesn't allow you to log in without refreshing page after a user logs out
+        // window.location.reload()
+    }
+
+
     async function performLoginChecklist() {
         // perform checklist of items for the user
         // Methods will be imported from the proper composables
@@ -171,9 +280,13 @@ export default function useToasts() {
     }
 
     // -----------------------------------------
-    onMounted(() => {
+    onMounted(async () => {
         if (!initializeComposable.value) {
             initializeComposable.value = true 
+            const { user } = await (await fetch(`${usersUrl}/user`)).json()
+            if (user) {
+                setUser(user)
+            }
         }
     })
 
@@ -182,6 +295,7 @@ export default function useToasts() {
     })
 
     return {
-        login
+        login,
+        logout,
     }
 }
