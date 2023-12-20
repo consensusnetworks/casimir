@@ -5,7 +5,7 @@ import useEthers from "@/composables/ethers"
 import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
-import useWalletConnect from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 import useWallets from "@/composables/wallets"
 import {
     Account,
@@ -20,7 +20,7 @@ const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect, uninitializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnect, initializeWalletConnect } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
@@ -132,9 +132,8 @@ export default function useAuth() {
                 if (addressExistsOnUser) return "Address already exists on this account"
 
                 // Check if it exists as a primary address of a different user
-                const {
-                    data: { sameAddress, walletProvider },
-                } = await checkIfPrimaryUserExists(provider as ProviderString, address)
+                const { data: { sameAddress } } = 
+                    await checkIfPrimaryUserExists(provider as ProviderString, address)
                 // If yes, ask user if they want to add it as a secondary to this account or if they want to log in with that account
                 if (sameAddress) {
                     return "Address already exists as a primary address on another account"
@@ -174,6 +173,7 @@ export default function useAuth() {
                 const browserWallet = browserProvidersList.includes(provider as ProviderString)
 
                 if (provider === "WalletConnect") {
+                    console.log("got to wallet connect login")
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
                     return "Successfully logged in"
@@ -265,7 +265,7 @@ export default function useAuth() {
             } else if (provider === "Trezor") {
                 await loginWithTrezor(loginCredentials)
             } else if (provider === "WalletConnect") {
-                await loginWithWalletConnectV2(loginCredentials)
+                await loginWithWalletConnect(loginCredentials)
             } else {
                 console.log("Sign up not yet supported for this wallet provider")
             }
@@ -308,12 +308,7 @@ export default function useAuth() {
             }
         }
     })
-
-    onUnmounted(() => {
-        initializedAuthComposable.value = false
-        uninitializeWalletConnect()
-    })
-
+    
     // TODO: Re-enable once we have a way to remove accounts in UI
     // async function removeConnectedAccount() {
     //     if (!user?.value?.address) {

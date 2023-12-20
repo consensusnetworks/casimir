@@ -18,7 +18,7 @@ let cleanupFunctions: Array<any> = [] // TODO: Potentially fix type here.
 const accounts = ref<Array<string>>([])
 const ethereumProvider = ref()
 const pairings = ref([])
-const session = ref()
+const session = ref<SessionTypes.Struct>()
 const web3Modal = ref()
 const web3Provider = shallowRef()
 
@@ -28,8 +28,10 @@ const subscribedToProviderEvents = ref(false)
 const componentIsMounted = ref(false)
 const isInitializing = ref(false)
 
-export default function useWalletConnectV2() {
-    async function connectWalletConnectV2(chainId: "1" | "5" | "1337", pairing?: PairingTypes.Struct): Promise<CryptoAddress[]> {
+const walletConnectSelectedAccount = ref([] as Array<CryptoAddress>)
+
+export default function useWalletConnect() {
+    async function connectWalletConnect(chainId: "1" | "5" | "1337", pairing?: PairingTypes.Struct): Promise<CryptoAddress[]> {
         try {
             if (!ethereumProvider.value) throw new ReferenceError("WalletConnect Client is not initialized.")
         
@@ -40,13 +42,19 @@ export default function useWalletConnectV2() {
             }
             const rpcUrl = customRpcs[chainId]
             if (!rpcUrl) throw new Error(`RPC URL not found for chainId: ${chainId}`)
-
+            if (ethereumProvider.value.accounts.length > 0) throw new Error("Prompt user to simply change accounts to add it to their account")
             await ethereumProvider.value.connect()
             createEthersProvider()
-            const _accounts = await ethereumProvider.value.enable()
+            // const _accounts = await ethereumProvider.value.enable()
+            const _accounts = ethereumProvider.value.accounts
             accounts.value = _accounts
-            session.value = session
+            session.value = ethereumProvider.value.session
             web3Modal.value?.closeModal()
+            walletConnectSelectedAccount.value = [{
+                address: accounts.value[0],
+                balance: (await getEthersBalance(accounts.value[0])).toString()
+            }]
+            
             const connectedAddress = _accounts[0].toLowerCase().trim() as string
             const connectedAddressBalance = (await getEthersBalance(connectedAddress)).toString()
             return [{ address: connectedAddress as string, balance: connectedAddressBalance }]
@@ -98,10 +106,8 @@ export default function useWalletConnectV2() {
         _resetApp()
     }
 
-    function getWalletConnectSignerV2() {
-        if (!web3Provider.value) {
-            throw new Error("Web3Provider is not initialized")
-        }
+    function getWalletConnectSigner() {
+        if (!web3Provider.value) throw new Error("Web3Provider is not initialized")
         return web3Provider.value.getSigner()
     }
 
@@ -109,83 +115,56 @@ export default function useWalletConnectV2() {
         if (componentIsMounted.value) return
         if (import.meta.env.MODE === "development") console.log("initializing wallet connect")
         componentIsMounted.value = true
-
-        // Check for persisted sessions & Subscribe to provider events
-        if (ethereumProvider.value && user.value) {
-            _subscribeToProviderEvents()
-            subscribedToProviderEvents.value = true
-            await _checkForPersistedSession()
-            checkedForPersistedSession.value = true
-        } else {
-            await createClient()
-        }
+        await createClient()
     }
 
-    async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
+    async function loginWithWalletConnect(loginCredentials: LoginCredentials) {
         const { provider, address, currency } = loginCredentials
-        try {
-            const message = await createSiweMessage(address, "Sign in with Ethereum to the Casimir.")
-            const signedMessage = await signWalletConnectMessage(message)
-            await signInWithEthereum({
-                address,
-                currency: currency || "ETH",
-                provider,
-                message,
-                signedMessage
-            })
-        } catch (err) {
-            console.log("error in loginWithWalletConnect :>> ", err)
-        }
+        const message = await createSiweMessage(address, "Sign in with Ethereum to the Casimir.")
+        const signedMessage = await signWalletConnectMessage(message)
+        await signInWithEthereum({
+            address,
+            currency: currency || "ETH",
+            provider,
+            message,
+            signedMessage
+        })
     }
   
     async function signWalletConnectMessage(message: string) : Promise<string> {
-        try {
-            const signer = await web3Provider.value?.getSigner()
-            return await signer?.signMessage(message) as string
-        } catch (err) {
-            console.error("error in signWalletConnectMessage :>> ", err)
-            throw err
-            return ""
-        }
-    }
-
-    function uninitializeWalletConnect() {
-        cleanupFunctions.forEach((cleanup) => cleanup())
-        cleanupFunctions = [] // Reset the array
-        componentIsMounted.value = false
+        const signer = await web3Provider.value?.getSigner()
+        return await signer?.signMessage(message) as string
     }
 
     async function _checkForPersistedSession() {
         if (ethereumProvider.value?.session) {
-            const _session = ethereumProvider.value?.session
-            console.log("RESTORED SESSION:", _session)
+            session.value = ethereumProvider.value?.session
+            console.log("RESTORED SESSION:", session.value)
             if (!user.value) {
                 await disconnectWalletConnect()
-                return
+            } else {
+                if (!ethereumProvider.value) {
+                    throw new ReferenceError("EthereumProvider is not initialized.")
+                }
+                walletConnectSelectedAccount.value = [{
+                    address: ethereumProvider.value.accounts[0],
+                    balance: (await getEthersBalance(ethereumProvider.value.accounts[0])).toString()
+                }]
+                createEthersProvider()
             }
-            await _onSessionConnected(_session)
-            return _session
         }
-    }
-
-    async function _onSessionConnected(_session: SessionTypes.Struct) {
-        if (!ethereumProvider.value) {
-            throw new ReferenceError("EthereumProvider is not initialized.")
-        }
-        const allNamespaceAccounts = Object.values(_session.namespaces).map(namespace => namespace.accounts).flat()
-        const allNamespaceChains = Object.keys(_session.namespaces)
-
-        session.value = _session
-        accounts.value = allNamespaceAccounts.map(account => account.split(":")[2])
-        console.log("RESTORED", allNamespaceChains, allNamespaceAccounts)
-        createEthersProvider()
     }
 
     function _resetApp() {
-        console.log("resetting app")
+        cleanupFunctions.forEach((cleanup) => cleanup())
+        cleanupFunctions = [] // Reset the array
         pairings.value = []
         session.value = undefined
         accounts.value = []
+        web3Provider.value = undefined
+        walletConnectSelectedAccount.value = []
+        checkedForPersistedSession.value = false
+        subscribedToProviderEvents.value = false
     }
 
     function _subscribeToProviderEvents() {
@@ -195,8 +174,35 @@ export default function useWalletConnectV2() {
 
         // Event handler for display_uri
         const handleDisplayUri = (uri: string) => {
-            console.log("DISPLAY URI EVENT", "QR Code Modal open")
+            console.log("QR Code Modal open")
             web3Modal.value?.openModal({ uri })
+        }
+
+        // Event handler for accountsChanged
+        const handleAccountsChanged = async (walletConnectAccounts: Array<string>) => {
+            console.log("ACCOUNTS CHANGED EVENT", walletConnectAccounts)
+            if (!user.value && accounts.value.length > 0) return window.location.reload()
+            
+            // Check which accounts are new
+            const userAccounts = user.value?.accounts.map((account) => account.address.toLowerCase().trim())
+            const newAccounts = walletConnectAccounts.filter((account) => !userAccounts?.includes(account.toLowerCase().trim()))
+            
+            // Add new accounts to user
+            if (newAccounts.length > 0) {
+                // await addAccountToUser(newAccounts) // TODO: Enable this (review with @DemogorGod)
+                const newAccountsWithBalances = await Promise.all(newAccounts.map(async (account) => {
+                    return {
+                        address: account,
+                        balance: (await getEthersBalance(account)).toString()
+                    }
+                }))
+                walletConnectSelectedAccount.value = [...walletConnectSelectedAccount.value, ...newAccountsWithBalances]
+            }
+        }
+
+        // Event handler for chainChanged
+        const handleChainChanged = (chainId: number) => {
+            // console.log("CHAIN CHANGED EVENT", chainId)
         }
 
         // Event handler for session_ping
@@ -207,8 +213,7 @@ export default function useWalletConnectV2() {
 
         // Event handler for session_event
         const handleSessionEvent = ({ event, chainId }: { event: any; chainId: string }) => {
-            console.log("SESSION EVENT", "session_event")
-            console.log(event, chainId)
+            console.log("SESSION EVENT", event)
         }
 
         // Event handler for session_update
@@ -219,13 +224,14 @@ export default function useWalletConnectV2() {
 
         // Event handler for session_delete
         const handleSessionDelete = ({ id, topic }: { id: number; topic: string }) => {
-            console.log("DELETE SESSION EVENT", "session_deleted")
-            console.log(id, topic)
+            console.log("DELETE SESSION EVENT", "session_deleted", id, topic)
             _resetApp()
         }
 
         // Attaching the event listeners
         ethereumProvider.value.on("display_uri", handleDisplayUri)
+        ethereumProvider.value.on("accountsChanged", handleAccountsChanged)
+        ethereumProvider.value.on("chainChanged", handleChainChanged)
         ethereumProvider.value.on("session_ping", handleSessionPing)
         ethereumProvider.value.on("session_event", handleSessionEvent)
         ethereumProvider.value.on("session_update", handleSessionUpdate)
@@ -233,6 +239,8 @@ export default function useWalletConnectV2() {
 
         // Storing cleanup functions
         cleanupFunctions.push(() => ethereumProvider.value.off("display_uri", handleDisplayUri))
+        cleanupFunctions.push(() => ethereumProvider.value.off("accountsChanged", handleAccountsChanged))
+        cleanupFunctions.push(() => ethereumProvider.value.off("chainChanged", handleChainChanged))
         cleanupFunctions.push(() => ethereumProvider.value.off("session_ping", handleSessionPing))
         cleanupFunctions.push(() => ethereumProvider.value.off("session_event", handleSessionEvent))
         cleanupFunctions.push(() => ethereumProvider.value.off("session_update", handleSessionUpdate))
@@ -240,12 +248,12 @@ export default function useWalletConnectV2() {
     }
 
     return {
+        walletConnectSelectedAccount,
         web3Provider,
-        connectWalletConnectV2,
+        connectWalletConnect,
         disconnectWalletConnect,
-        getWalletConnectSignerV2,
+        getWalletConnectSigner,
         initializeWalletConnect,
-        loginWithWalletConnectV2,
-        uninitializeWalletConnect
+        loginWithWalletConnect,
     }
 }

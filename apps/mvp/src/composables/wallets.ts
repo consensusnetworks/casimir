@@ -1,11 +1,11 @@
 import { ref, readonly } from "vue"
 import { ProviderString } from "@casimir/types"
 import useEthers from "@/composables/ethers"
-import useWalletConnectV2 from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 
 const installedWallets = ref([] as ProviderString[])
 const { browserProvidersList, detectActiveEthersWalletAddress, getBrowserProvider } = useEthers()
-const { web3Provider } = useWalletConnectV2()
+const { connectWalletConnect, web3Provider } = useWalletConnect()
 
 export default function useWallets() {
     async function detectActiveNetwork(providerString: ProviderString): Promise<number> {
@@ -15,6 +15,9 @@ export default function useWallets() {
                 const chainId = parseInt(await provider.request({ method: "eth_chainId" }), 16)
                 return chainId
             } else if (providerString === "WalletConnect") {
+                if (!web3Provider.value) {
+                    await connectWalletConnect("5")
+                }
                 return web3Provider.value.provider.chainId
             } else if (providerString === "Ledger") {
                 // TODO: Determine if there is a way to implement with Ledger or if have to rely on selected network on device

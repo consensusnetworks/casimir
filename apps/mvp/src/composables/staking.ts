@@ -7,7 +7,7 @@ import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
 import useWallets from "@/composables/wallets"
-import useWalletConnectV2 from "./walletConnectV2"
+import useWalletConnect from "./walletConnect"
 import { CasimirManager } from "@casimir/ethereum/build/@types"
 import { StakeDetails } from "@casimir/types"
 
@@ -17,7 +17,7 @@ const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
-const { getWalletConnectSignerV2 } = useWalletConnectV2()
+const { getWalletConnectSigner } = useWalletConnect()
 
 const stakingComposableInitialized = ref(false)
 const awaitingStakeOrWithdrawConfirmation = ref(false)
@@ -50,7 +50,9 @@ export default function useStaking() {
     async function deposit({ amount, walletProvider, type, pathIndex }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen", pathIndex: number | undefined}) {
         stakeWithdrawError.value = ""
         try {
+            // This is currently handling the connectWalletConnect if no current session
             const activeNetwork = await detectActiveNetwork(walletProvider)
+            console.log("activeNetwork :>> ", activeNetwork)
             if (activeNetwork !== 5) {
                 await switchEthersNetwork(walletProvider, "0x5")
                 return window.location.reload()
@@ -60,7 +62,7 @@ export default function useStaking() {
             if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === "WalletConnect") {
-                signer = await getWalletConnectSignerV2()
+                signer = await getWalletConnectSigner()
             } else if (walletProvider === "Ledger") {
                 signer = getEthersLedgerSigner(pathIndex)
             } else if (walletProvider === "Trezor") {
@@ -166,7 +168,7 @@ export default function useStaking() {
         if (browserProvidersList.includes(walletProvider)) {
             signer = getEthersBrowserSigner(walletProvider)
         } else if (walletProvider === "WalletConnect") {
-            await getWalletConnectSignerV2()
+            await getWalletConnectSigner()
         } else if (walletProvider === "Ledger") {
             getEthersLedgerSigner()
         } else if (walletProvider === "Trezor") {
@@ -184,6 +186,7 @@ export default function useStaking() {
     async function withdraw({ amount, walletProvider, type }: { amount: string, walletProvider: ProviderString, type: "default" | "eigen" }) {
         try {
             stakeWithdrawError.value = ""
+            // This is currently handling the connectWalletConnect if no current session
             const activeNetwork = await detectActiveNetwork(walletProvider)
             if (activeNetwork !== 5) {
                 await switchEthersNetwork(walletProvider, "0x5")
@@ -194,7 +197,7 @@ export default function useStaking() {
             if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === "WalletConnect") {
-                await getWalletConnectSignerV2()
+                await getWalletConnectSigner()
             } else if (walletProvider === "Ledger") {
                 getEthersLedgerSigner()
             } else if (walletProvider === "Trezor") {
