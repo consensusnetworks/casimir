@@ -1,10 +1,10 @@
 export interface ContractEventsByAddress {
-    CompletedExitReportsRequested?: number;
-    PoolActivated?: number;
-    PoolInitiated?: number;
-    InitiationRequested?: number;
+    ValidatorWithdrawalsRequested?: number;
+    ValidatorActivated?: number;
+    ValidatorInititated?: number;
+    ValidatorInitiationRequested?: number;
     ExitCompleted?: number;
-    ExitRequested?: number;
+    ValidatorExitRequested?: number;
     ForcedExitReportsRequested?: number;
     OwnershipTransferred?: number;
     ReshareCompleted?: number;

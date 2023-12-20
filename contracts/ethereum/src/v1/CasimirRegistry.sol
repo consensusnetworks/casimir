@@ -123,7 +123,7 @@ contract CasimirRegistry is
             emit DeactivationCompleted(operatorId);
         } else {
             operator.resharing = true;
-            emit DeactivationRequested(operatorId);
+            emit OperatorDeactivationRequested(operatorId);
         }
     }
 

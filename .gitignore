@@ -15,3 +15,5 @@ cdk-outputs.json
 services/crawler/.env
 
 .out
+dist
+build

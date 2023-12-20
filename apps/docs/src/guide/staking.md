@@ -17,20 +17,15 @@ Let:
 - $F_t$ be the total fee percentage, which is a sum of the required ETH, LINK, and SSV fees.
 - $D$ be the amount of ETH deposited by the user.
 - $E$ be the amount of ETH to be allocated for the contract's operations.
-- $F_a$ be the ETH amount to be swapped for LINK and SSV to facilitate the contract's functions.
 
 Given the 5% fee, the ETH to be allocated for the contract's operations is calculated as:
 $E = D \times \frac{100}{100 + F_t}$
-
-The amount to be converted to LINK and SSV is:
-$F_a = D - E$
 
 Where:
 
 - $F_t$ typically equals 5%.
 - $D$ is the amount of ETH the user wants to deposit.
 - $E$ represents the actual ETH amount that will be added to the contract after deducting the fee.
-- $F_a$ is the remaining ETH that will be used to acquire LINK and SSV.
 
 ## Stake Balances
 
@@ -58,3 +53,25 @@ Where:
 ## Stake Withdrawals
 
 You can request a withdrawal of any amount of your stake at any time. If the requested amount is available in the manager's withdrawable balance (prepooled balance plus withdrawn balance), the withdrawal is fulfilled immediately. Otherwise, the withdrawal is added to the pending withdrawals queue and fulfilled when the requested amount is available (usually within 1-4 days, depending on the amount).
+
+## Stake Events
+
+When your stake balance changes, the manager contract emits:
+
+- A [stake deposited](#stake-deposited) event when you deposit ETH to the manager contract.
+- A [stake rebalanced](#stake-rebalanced) event when your stake balance is updated due to a change in the total reward-to-stake ratio sum after a new report.
+- A [withdrawal requested](#withdrawal-requested) event when you request a withdrawal of your stake.
+
+### Stake Deposited
+
+The `StakeDeposited` event is emitted when you deposit ETH to the manager contract.
+
+```solidity
+event StakeDeposited(address sender, uint256 amount)
+```
+
+The event's parameters are:
+
+- `sender`: Address of the staker who deposited ETH.
+- `amount`: Amount of ETH deposited after fees.
+

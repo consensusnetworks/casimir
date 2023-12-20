@@ -6,8 +6,8 @@ import { Reshare, SSVOperator, Validator } from "@casimir/types"
 import { DkgOptions } from "../interfaces/DkgOptions"
 
 export class Dkg {
-    cliPath: string
-    configPath: string
+    public readonly cliPath: string
+    public readonly configPath: string
 
     constructor(options: DkgOptions) {
         this.cliPath = options.cliPath

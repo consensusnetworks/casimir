@@ -7,7 +7,7 @@ export const SuperTokensWebJSConfig = {
     appInfo: {
         apiDomain: usersUrl,
         appName: "Casimir",
-    // apiBasePath: '/',
+        // apiBasePath: '/',
     },
     recipeList: [Session.init()],
 }

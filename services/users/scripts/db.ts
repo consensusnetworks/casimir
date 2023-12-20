@@ -42,7 +42,7 @@ void async function () {
 
     let sqlSchema = ""
     for (const table of Object.keys(tableSchemas)) {
-        const tableSchema = tableSchemas[table] as JsonSchema
+        const tableSchema = tableSchemas[table as keyof typeof tableSchemas] as JsonSchema
         const schema = new Schema(tableSchema)
         const postgresTable = schema.getPostgresTable()
         console.log(`${schema.getTitle()} JSON schema parsed to SQL`)

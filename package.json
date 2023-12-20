@@ -19,7 +19,7 @@
     "docgen": "npm run docgen --workspace @casimir/ethereum",
     "lint": "eslint --ext .vue,.ts ./ --fix",
     "migrations:users": "npx esno -r dotenv/config scripts/migrations/users.ts",
-    "postinstall": "npx esno scripts/root/check.ts && npm run build --workspace @casimir/ethereum",
+    "postinstall": "npx esno scripts/root/postinstall.ts",
     "preinstall": "git submodule sync && git submodule update --init --recursive",
     "prepare": "husky install",
     "release": "release-it",
@@ -58,9 +58,7 @@
     "http-proxy-middleware": "^2.0.6",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.0",
-    "release-it": "^15.6.0",
-    "vite-plugin-md": "^0.22.5",
-    "vite-plugin-vue-markdown": "^0.23.8",
+    "release-it": "^17.0.1",
     "zx": "^7.1.1"
   },
   "lint-staged": {
@@ -82,6 +80,5 @@
     "hooks": {
       "after:bump": "npx auto-changelog -p"
     }
-  },
-  "dependencies": {}
+  }
 }

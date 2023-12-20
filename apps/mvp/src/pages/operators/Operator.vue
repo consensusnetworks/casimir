@@ -70,10 +70,10 @@ const selectedHeader = ref("walletProvider")
 const selectedOrientation = ref("ascending")
 const operatorTableHeaders = ref(
     [
-    // {
-    //   title: '',
-    //   value: 'blank_column'
-    // },
+        // {
+        //   title: '',
+        //   value: 'blank_column'
+        // },
         {
             title: "Operator ID",
             value: "id"
@@ -94,14 +94,14 @@ const operatorTableHeaders = ref(
             title: "Node URL",
             value: "nodeURL"
         },
-    // {
-    //   title: '',
-    //   value: 'deactivate'
-    // },
-    // {
-    //   title: '',
-    //   value: 'withdraw_collateral'
-    // },
+        // {
+        //   title: '',
+        //   value: 'deactivate'
+        // },
+        // {
+        //   title: '',
+        //   value: 'withdraw_collateral'
+        // },
     ]
 )
 

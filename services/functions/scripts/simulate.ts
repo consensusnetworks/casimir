@@ -2,9 +2,8 @@ import { ethers } from "ethers"
 import { ETHEREUM_NETWORK_NAME, ETHEREUM_RPC_URL } from "@casimir/env"
 import { run } from "@casimir/shell"
 import { getSecret, loadCredentials } from "@casimir/aws"
-import { waitForNetwork } from "@casimir/ethereum/helpers/network"
 
-async function simulate() {
+async function main() {
     if (process.env.USE_SECRETS !== "false") {
         await loadCredentials()
         process.env.BIP39_SEED = process.env.BIP39_SEED || await getSecret("consensus-networks-bip39-seed") as string
@@ -21,17 +20,15 @@ async function simulate() {
     process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await forkProvider.getBlockNumber() - 10}`
     console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
 
-    process.env.TUNNEL = process.env.TUNNEL || "false"
     process.env.MINING_INTERVAL = "12"
-    process.env.SIMULATE_UPGRADES = "true"
-    process.env.SIMULATE_UPKEEP = "true"
+    process.env.SIMULATE_REPORTING = "true"
+    process.env.UPGRADE_CONTRACTS = "true"
 
     run("npm run dev --workspace @casimir/ethereum -- --network localhost")
-    run("npm run report --workspace @casimir/ethereum -- --network localhost")    
     run("npm run dev --workspace @casimir/functions")
 }
 
-simulate().catch(error => {
+main().catch(error => {
     console.error(error)
     process.exit(1)
 })

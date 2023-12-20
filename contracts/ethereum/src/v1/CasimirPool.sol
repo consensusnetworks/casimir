@@ -6,6 +6,8 @@ import "./interfaces/ICasimirPool.sol";
 import "./interfaces/ICasimirManager.sol";
 import "./interfaces/ICasimirRegistry.sol";
 import "./vendor/interfaces/IDepositContract.sol";
+import "./vendor/interfaces/IEigenPod.sol";
+import "./vendor/interfaces/IEigenPodManager.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -24,6 +26,11 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
      * @custom:oz-upgrades-unsafe-allow state-variable-immutable
      */
     IDepositContract private immutable depositContract;
+    /**
+     * @dev Eigen pod manager contract
+     * @custom:oz-upgrades-unsafe-allow state-variable-immutable
+     */
+    IEigenPodManager private immutable eigenPodManager;
     /// @dev Pool deposit capacity
     uint256 private constant POOL_CAPACITY = 32 ether;
     /// @dev Operator IDs
@@ -36,18 +43,25 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
     ICasimirManager private manager;
     /// @dev Registry contract
     ICasimirRegistry private registry;
-
+    /// @dev Eigen pod contract
+    IEigenPod private eigenPod;
     /// @dev Storage gap
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /**
      * @dev Constructor
      * @param depositContract_ Beacon deposit contract
+     * @param eigenPodManager_ Eigen pod manager
      * @custom:oz-upgrades-unsafe-allow constructor
      */
-    constructor(IDepositContract depositContract_) {
+    constructor(
+        IDepositContract depositContract_,
+        IEigenPodManager eigenPodManager_
+    ) {
         onlyAddress(address(depositContract_));
+        onlyAddress(address(eigenPodManager_));
         depositContract = depositContract_;
+        eigenPodManager = eigenPodManager_;
         _disableInitializers();
     }
 
@@ -87,12 +101,15 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
         if (msg.value != POOL_CAPACITY) {
             revert InvalidDepositAmount();
         }
-        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), address(this));
-        if (keccak256(computedWithdrawalCredentials) != keccak256(withdrawalCredentials)) {
-            revert InvalidWithdrawalCredentials();
-        }
         status = PoolStatus.PENDING;
-        depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
+        if (manager.eigenStake()) {
+            eigenPod = eigenPodManager.getPod(address(this));
+            validateWithdrawalCredentials(address(eigenPod), withdrawalCredentials);
+            eigenPodManager.stake{value: msg.value}(publicKey, signature, depositDataRoot);
+        } else {
+            validateWithdrawalCredentials(address(this), withdrawalCredentials);
+            depositContract.deposit{value: msg.value}(publicKey, withdrawalCredentials, signature, depositDataRoot);
+        }
     }
 
     /// @inheritdoc ICasimirPool
@@ -125,7 +142,7 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
     /// @inheritdoc ICasimirPool
     function withdrawBalance(uint32[] memory blamePercents) external onlyOwner {
         if (status != PoolStatus.EXITING_FORCED && status != PoolStatus.EXITING_REQUESTED) {
-            revert PoolNotExiting();
+            revert NotExiting();
         }
         if (status == PoolStatus.WITHDRAWN) {
             revert PoolAlreadyWithdrawn();
@@ -144,7 +161,7 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
             }
             registry.removeOperatorPool(operatorIds[i], poolId, blameAmount);
         }
-        manager.depositExitedBalance{value: balance}(poolId);
+        manager.depositWithdrawnBalance{value: balance}(poolId);
     }
 
     /// @inheritdoc ICasimirPool
@@ -155,5 +172,13 @@ contract CasimirPool is ICasimirPool, CasimirCore, Initializable, OwnableUpgrade
     /// @inheritdoc ICasimirPool
     function getRegistration() external view returns (PoolRegistration memory) {
         return PoolRegistration({operatorIds: operatorIds, publicKey: publicKey, shares: shares, status: status});
+    }
+
+    /// @dev Validate the withdrawal credentials are correct for the withdrawal address
+    function validateWithdrawalCredentials(address withdrawalAddress, bytes memory withdrawalCredentials) internal pure {
+        bytes memory computedWithdrawalCredentials = abi.encodePacked(bytes1(uint8(1)), bytes11(0), withdrawalAddress);
+        if (keccak256(computedWithdrawalCredentials) != keccak256(withdrawalCredentials)) {
+            revert InvalidWithdrawalCredentials();
+        }
     }
 }

@@ -22,7 +22,7 @@ import { run, runSync } from "@casimir/shell"
  * - ETHEREUM_FORK_RPC_URL: string
  * - ETHEREUM_FORK_BLOCK: string
  */
-async function root() {
+async function main() {
     const apps = {
         www: {
             contracts: false,
@@ -66,8 +66,6 @@ async function root() {
         process.env.HACKMD_TOKEN = process.env.HACKMD_TOKEN || ""
         process.env.WALLET_CONNECT_PROJECT_ID = process.env.WALLET_CONNECT_PROJECT_ID || "8e6877b49198d7a9f9561b8712805726"
     }
-
-    console.log(process.env.BIP39_SEED)
 
     process.env.PROJECT = process.env.PROJECT || "casimir"
     process.env.STAGE = process.env.STAGE || "local"
@@ -113,11 +111,9 @@ async function root() {
             process.env.ETHEREUM_FORK_BLOCK = process.env.ETHEREUM_FORK_BLOCK || `${await forkProvider.getBlockNumber() - 10}`
             console.log(`📍 Forking started at ${process.env.ETHEREUM_FORK_BLOCK}`)
         
-            process.env.TUNNEL = process.env.TUNNEL || "false"
-            process.env.MINING_INTERVAL = "12"
-            process.env.SIMULATE_EIGEN = "true"
-            process.env.SIMULATE_REWARDS = "true"
-
+            process.env.MINING_INTERVAL = process.env.MINING_INTERVAL || "12"
+            process.env.SIMULATE_REPORTING = "true"
+            process.env.UPGRADE_CONTRACTS = "true"
             run("npm run dev --workspace @casimir/ethereum -- --network localhost")
         }
     }
@@ -154,7 +150,7 @@ async function root() {
     }
 }
 
-root().catch(error => {
+main().catch(error => {
     console.error(error)
     process.exit(1)
 })

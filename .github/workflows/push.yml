@@ -15,7 +15,7 @@ jobs:
 
     # Skip any pushes with commit flag "(skip deploy)"
     # Comment out for testing
-    if: ${{ !contains(github.event.head_commit.message, "(skip deploy)") }}
+    if: ${{ !contains(github.event.head_commit.message, '(skip deploy)') }}
 
     steps:
       - name: Checkout the repo with submodules
@@ -40,7 +40,7 @@ jobs:
           curl -sSf https://atlasgo.sh | sh
           
       - name: Install and build all package dependencies
-        run: npm ci
+        run: npm ci --omit=optional
 
       - name: Deploy cdk infrastructure
         run: npm run deploy:cdk

@@ -4,7 +4,7 @@ import { TypeInput } from "supertokens-node/types"
 export const SuperTokensBackendConfig: TypeInput = {
     framework: "express",
     supertokens: {
-    // SuperTokens core (temporary) host
+        // SuperTokens core (temporary) host
         connectionURI: process.env.SESSIONS_HOST || "https://try.supertokens.com",
         apiKey: process.env.SESSIONS_KEY || ""
     },

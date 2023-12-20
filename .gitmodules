@@ -6,3 +6,6 @@
 	path = services/oracle/lib/dkg
 	url = https://github.com/consensusnetworks/ssv-dkg.git
 	branch = update/makefile
+[submodule "contracts/ethereum/lib/eigenlayer-contracts"]
+	path = contracts/ethereum/lib/eigenlayer-contracts
+	url = https://github.com/Layr-Labs/eigenlayer-contracts.git

@@ -61,23 +61,17 @@ contract CasimirViews is ICasimirViews, Initializable {
     }
 
     /// @inheritdoc ICasimirViews
-    function getDepositedPoolCount() external view returns (uint256 depositedPoolCount) {
-        depositedPoolCount = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length;
+    function getPendingPoolCount() external view returns (uint256 pendingPoolCount) {
+        pendingPoolCount = manager.getPendingPoolIds().length;
     }
 
     /// @inheritdoc ICasimirViews
-    function getDepositedPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory) {
+    function getPendingPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory) {
         bytes[] memory publicKeys = new bytes[](endIndex - startIndex);
         uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
-        uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
         uint256 count = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId;
-            if (i < pendingPoolIds.length) {
-                poolId = pendingPoolIds[i];
-            } else {
-                poolId = stakedPoolIds[i - pendingPoolIds.length];
-            }
+            uint32 poolId = pendingPoolIds[i];
             publicKeys[count] = ICasimirPool(manager.getPoolAddress(poolId)).publicKey();
             count++;
         }
@@ -85,21 +79,33 @@ contract CasimirViews is ICasimirViews, Initializable {
     }
 
     /// @inheritdoc ICasimirViews
-    function getDepositedPoolStatuses(
+    function getStakedPoolCount() external view returns (uint256 stakedPoolCount) {
+        stakedPoolCount = manager.getStakedPoolIds().length;
+    }
+
+    /// @inheritdoc ICasimirViews
+    function getStakedPoolPublicKeys(uint256 startIndex, uint256 endIndex) external view returns (bytes[] memory) {
+        bytes[] memory publicKeys = new bytes[](endIndex - startIndex);
+        uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
+        uint256 count = 0;
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            uint32 poolId = stakedPoolIds[i];
+            publicKeys[count] = ICasimirPool(manager.getPoolAddress(poolId)).publicKey();
+            count++;
+        }
+        return publicKeys;
+    }
+
+    /// @inheritdoc ICasimirViews
+    function getStakedPoolStatuses(
         uint256 startIndex,
         uint256 endIndex
     ) external view returns (ICasimirPool.PoolStatus[] memory) {
         ICasimirPool.PoolStatus[] memory statuses = new ICasimirPool.PoolStatus[](endIndex - startIndex);
-        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
         uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
         uint256 count = 0;
         for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId;
-            if (i < pendingPoolIds.length) {
-                poolId = pendingPoolIds[i];
-            } else {
-                poolId = stakedPoolIds[i - pendingPoolIds.length];
-            }
+            uint32 poolId = stakedPoolIds[i];
             statuses[count] = ICasimirPool(manager.getPoolAddress(poolId)).status();
             count++;
         }
@@ -139,15 +145,9 @@ contract CasimirViews is ICasimirViews, Initializable {
 
     /// @inheritdoc ICasimirViews
     function getSweptBalance(uint256 startIndex, uint256 endIndex) external view returns (uint128 sweptBalance) {
-        uint32[] memory pendingPoolIds = manager.getPendingPoolIds();
         uint32[] memory stakedPoolIds = manager.getStakedPoolIds();
         for (uint256 i = startIndex; i < endIndex; i++) {
-            uint32 poolId;
-            if (i < pendingPoolIds.length) {
-                poolId = pendingPoolIds[i];
-            } else {
-                poolId = stakedPoolIds[i - pendingPoolIds.length];
-            }
+            uint32 poolId = stakedPoolIds[i];
             sweptBalance += uint128(manager.getPoolAddress(poolId).balance / 1 gwei);
         }
     }

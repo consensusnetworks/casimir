@@ -6,7 +6,7 @@ import "./ICasimirCore.sol";
 interface ICasimirRegistry is ICasimirCore {
     event CollateralDeposited(uint64 indexed operatorId, uint256 amount);
     event DeactivationCompleted(uint64 indexed operatorId);
-    event DeactivationRequested(uint64 indexed operatorId);
+    event OperatorDeactivationRequested(uint64 indexed operatorId);
     event DeregistrationCompleted(uint64 indexed operatorId);
     event OperatorPoolAdded(uint64 indexed operatorId, uint32 poolId);
     event OperatorPoolRemoved(uint64 operatorId, uint32 poolId, uint256 blameAmount);

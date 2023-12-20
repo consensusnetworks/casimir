@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
+/// @title Interface for Chainlink keeper registry
 interface IKeeperRegistrar {
     struct RegistrationParams {
         string name;

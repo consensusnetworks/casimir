@@ -7,7 +7,7 @@ import { Validator/*, Reshare*/ } from "@casimir/types"
 /**
  * Generate validator keys for ethereum testing
  */
-void async function () {
+async function main() {
     process.env.CLI_PATH = process.env.CLI_PATH || "./lib/dkg/bin/ssv-dkg"
     process.env.CONFIG_PATH = process.env.CONFIG_PATH || "./config/example.dkg.initiator.yaml"
 
@@ -15,10 +15,7 @@ void async function () {
     
     if (!process.env.FACTORY_ADDRESS) throw new Error("No factory address provided")
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [208,
-        209,
-        210,
-        211/*, 212, 213, 214, 215*/]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
     if (preregisteredOperatorIds.length < 4) throw new Error("Not enough operator ids provided")
 
     const accountPath = "m/44'/60'/0'/0/1"
@@ -29,7 +26,7 @@ void async function () {
     if (!fs.existsSync(keysDir)) fs.mkdirSync(keysDir, { recursive: true })
     let mockValidators: Record<string, Validator[]> = {}
     try {
-        mockValidators = JSON.parse(fs.readFileSync(`${keysDir}/example.validators.json`).toString())
+        mockValidators = JSON.parse(fs.readFileSync(`${keysDir}/mock.validators.json`).toString())
     } catch (error) {
         mockValidators = {}
     }
@@ -95,7 +92,12 @@ void async function () {
 
         mockValidators[wallet.address] = newValidators
 
-        fs.writeFileSync(`${keysDir}/example.validators.json`, JSON.stringify(mockValidators))
-    // fs.writeFileSync(`${keysDir}/example.reshares.json`, JSON.stringify(MOCK_RESHARES))
+        fs.writeFileSync(`${keysDir}/mock.validators.json`, JSON.stringify(mockValidators))
+        // fs.writeFileSync(`${keysDir}/mock.reshares.json`, JSON.stringify(MOCK_RESHARES))
     }
-}()
+}
+
+main().catch(error => {
+    console.error(error)
+    process.exit(1)
+})

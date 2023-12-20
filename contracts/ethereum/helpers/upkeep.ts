@@ -1,9 +1,10 @@
-import { ethers } from "hardhat"
+import { ethers } from "ethers"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { CasimirUpkeep, FunctionsBillingRegistry } from "../build/@types"
 
 export async function runUpkeep({
-    donTransmitter, upkeep,
+    donTransmitter, 
+    upkeep,
 }: {
     donTransmitter: SignerWithAddress,
     upkeep: CasimirUpkeep,
@@ -24,10 +25,8 @@ export async function runUpkeep({
 export interface ReportValues {
     beaconBalance: number
     sweptBalance: number
-    activatedDeposits: number
-    forcedExits: number
-    completedExits: number
     compoundablePoolIds: number[]
+    withdrawnValidators: number
 }
 
 export async function fulfillReport({
@@ -41,7 +40,7 @@ export async function fulfillReport({
     functionsBillingRegistry: FunctionsBillingRegistry,
     values: ReportValues
 }) {
-    const { beaconBalance, sweptBalance, activatedDeposits, forcedExits, completedExits, compoundablePoolIds } = values
+    const { beaconBalance, sweptBalance, compoundablePoolIds, withdrawnValidators } = values
 
     const reportRequests = (await upkeep.queryFilter(upkeep.filters.ReportRequestSent())).slice(-2)
     const requestIds = reportRequests.map((event) => event.args.requestId)
@@ -68,16 +67,12 @@ export async function fulfillReport({
     const detailsRequestId = requestIds[1]
     const detailsResponse = ethers.utils.defaultAbiCoder.encode(
         [
-            "uint32",
-            "uint32",
-            "uint32",
-            "uint32[5]"
+            "uint32[5]",
+            "uint32"
         ],
         [
-            activatedDeposits,
-            forcedExits,
-            completedExits,
-            compoundablePoolIds
+            compoundablePoolIds,
+            withdrawnValidators
         ]
     )
 

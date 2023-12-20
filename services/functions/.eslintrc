@@ -1,5 +1,5 @@
 {
     "ignorePatterns": [
-        "Functions-request-config.js"
+        "config.js"
     ]
 }

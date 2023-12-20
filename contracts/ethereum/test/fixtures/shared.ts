@@ -2,25 +2,17 @@ import { ethers, network, upgrades } from "hardhat"
 import { loadFixture, time, setBalance } from "@nomicfoundation/hardhat-network-helpers"
 import { AuthorizedReceiver, CasimirFactory, CasimirManager, CasimirRegistry, CasimirUpkeep, CasimirViews, FunctionsBillingRegistry, FunctionsOracle, FunctionsOracleFactory, ISSVViews } from "../../build/@types"
 import { fulfillReport, runUpkeep } from "../../helpers/upkeep"
-import { activatePoolsHandler, depositFunctionsBalanceHandler, depositUpkeepBalanceHandler, initiatePoolHandler, reportCompletedExitsHandler } from "../../helpers/oracle"
+import { updateValidatorsHandler, fundAccountsHandler, initiateValidatorHandler, withdrawValidatorsHandler } from "../../helpers/oracle"
 import { round } from "../../helpers/math"
 import ISSVViewsAbi from "../../build/abi/ISSVViews.json"
-import requestConfig from "@casimir/functions/Functions-request-config"
+import requestConfig from "@casimir/functions/request/config"
+import { Config } from "../../helpers/config"
 
 upgrades.silenceWarnings()
 
 /** Fixture to deploy SSV manager contract */
 export async function deploymentFixture() {
-    if (!process.env.DEPOSIT_CONTRACT_ADDRESS) throw new Error("No deposit contract address provided")
-    if (!process.env.KEEPER_REGISTRAR_ADDRESS) throw new Error("No keeper registrar address provided")
-    if (!process.env.KEEPER_REGISTRY_ADDRESS) throw new Error("No keeper registry address provided")
-    if (!process.env.LINK_TOKEN_ADDRESS) throw new Error("No link token address provided")
-    if (!process.env.LINK_ETH_FEED_ADDRESS) throw new Error("No link eth feed address provided")
-    if (!process.env.SSV_NETWORK_ADDRESS) throw new Error("No ssv network address provided")
-    if (!process.env.SSV_TOKEN_ADDRESS) throw new Error("No ssv token address provided")
-    if (!process.env.SWAP_FACTORY_ADDRESS) throw new Error("No swap factory address provided")
-    if (!process.env.SWAP_ROUTER_ADDRESS) throw new Error("No swap router address provided")
-    if (!process.env.WETH_TOKEN_ADDRESS) throw new Error("No weth token address provided")
+    const config = new Config()
 
     const [
         owner,
@@ -43,8 +35,8 @@ export async function deploymentFixture() {
     await acceptOwnership.wait()
 
     const functionsBillingRegistryArgs = {
-        linkTokenAddress: process.env.LINK_TOKEN_ADDRESS,
-        linkEthFeedAddress: process.env.LINK_ETH_FEED_ADDRESS,
+        linkTokenAddress: config.linkTokenAddress,
+        linkEthFeedAddress: config.linkEthFeedAddress,
         functionsOracleAddress: functionsOracle.address
     }
     const functionsBillingRegistryFactory = await ethers.getContractFactory("FunctionsBillingRegistry")
@@ -80,34 +72,35 @@ export async function deploymentFixture() {
             CasimirBeacon: beaconLibrary.address
         }
     })
-    const managerBeacon = await upgrades.deployBeacon(managerBeaconFactory, { 
+    const managerBeacon = await upgrades.deployBeacon(managerBeaconFactory, {
         constructorArgs: [
             functionsBillingRegistry.address,
-            process.env.KEEPER_REGISTRAR_ADDRESS as string,
-            process.env.KEEPER_REGISTRY_ADDRESS as string,
-            process.env.LINK_TOKEN_ADDRESS as string,
-            process.env.SSV_NETWORK_ADDRESS as string,
-            process.env.SSV_TOKEN_ADDRESS as string,
-            process.env.SWAP_FACTORY_ADDRESS as string,
-            process.env.SWAP_ROUTER_ADDRESS as string,
-            process.env.WETH_TOKEN_ADDRESS as string
+            config.keeperRegistrarAddress,
+            config.keeperRegistryAddress,
+            config.linkTokenAddress,
+            config.ssvNetworkAddress,
+            config.ssvTokenAddress,
+            config.swapFactoryAddress,
+            config.swapRouterAddress,
+            config.wethTokenAddress
         ],
-        unsafeAllow: ["external-library-linking"] 
+        unsafeAllow: ["external-library-linking"]
     })
     await managerBeacon.deployed()
 
     const poolBeaconFactory = await ethers.getContractFactory("CasimirPool")
-    const poolBeacon = await upgrades.deployBeacon(poolBeaconFactory, { 
+    const poolBeacon = await upgrades.deployBeacon(poolBeaconFactory, {
         constructorArgs: [
-            process.env.DEPOSIT_CONTRACT_ADDRESS as string
+            config.depositContractAddress,
+            config.eigenpodManagerAddress
         ]
     })
     await poolBeacon.deployed()
 
     const registryBeaconFactory = await ethers.getContractFactory("CasimirRegistry")
-    const registryBeacon = await upgrades.deployBeacon(registryBeaconFactory, { 
+    const registryBeacon = await upgrades.deployBeacon(registryBeaconFactory, {
         constructorArgs: [
-            process.env.SSV_VIEWS_ADDRESS as string
+            config.ssvViewsAddress
         ]
     })
     await registryBeacon.deployed()
@@ -133,7 +126,7 @@ export async function deploymentFixture() {
             upkeepBeacon.address,
             viewsBeacon.address
         ],
-        unsafeAllow: ["external-library-linking"] 
+        unsafeAllow: ["external-library-linking"]
     }) as CasimirFactory
     await factory.deployed()
 
@@ -175,11 +168,9 @@ export async function deploymentFixture() {
 
     await functionsBillingRegistry.setAuthorizedSenders([donTransmitter.address, functionsOracle.address])
     await functionsOracle.setRegistry(functionsBillingRegistry.address)
-    await functionsOracle.setAuthorizedSenders([donTransmitter.address,
-        manager.address,
-        upkeep.address])
+    await functionsOracle.setAuthorizedSenders([donTransmitter.address, manager.address, upkeep.address])
 
-    const ssvViews = await ethers.getContractAt(ISSVViewsAbi, process.env.SSV_VIEWS_ADDRESS as string) as ISSVViews
+    const ssvViews = await ethers.getContractAt(ISSVViewsAbi, config.ssvViewsAddress) as ISSVViews
 
     return {
         managerBeacon,
@@ -202,7 +193,7 @@ export async function deploymentFixture() {
 
 /** Fixture to preregister operators */
 export async function preregistrationFixture() {
-    const {      
+    const {
         managerBeacon,
         poolBeacon,
         registryBeacon,
@@ -217,13 +208,10 @@ export async function preregistrationFixture() {
         functionsOracle,
         ssvViews,
         daoOracle,
-        donTransmitter 
+        donTransmitter
     } = await loadFixture(deploymentFixture)
 
-    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [208,
-        209,
-        210,
-        211/*, 212, 213, 214, 215*/]
+    const preregisteredOperatorIds = process.env.PREREGISTERED_OPERATOR_IDS?.split(",").map(id => parseInt(id)) || [208, 209, 210, 211/*, 212, 213, 214, 215*/]
     if (preregisteredOperatorIds.length < 4) throw new Error("Not enough operator ids provided")
     const preregisteredBalance = ethers.utils.parseEther("10")
     for (const operatorId of preregisteredOperatorIds) {
@@ -236,7 +224,7 @@ export async function preregistrationFixture() {
             method: "hardhat_impersonateAccount",
             params: [operatorOwnerAddress]
         })
-        const result = 
+        const result =
             await registry.connect(operatorOwnerSigner).registerOperator(operatorId, { value: preregisteredBalance })
         await result.wait()
     }
@@ -269,31 +257,33 @@ export async function firstUserDepositFixture() {
         functionsBillingRegistry,
         ssvViews,
         daoOracle,
-        donTransmitter 
+        donTransmitter
     } = await loadFixture(preregistrationFixture)
     const [, , , firstUser] = await ethers.getSigners()
 
     const depositAmount = round(16 * ((100 + await manager.userFee()) / 100), 10)
-    const deposit = 
-        await manager.connect(firstUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+    const deposit = await manager.connect(firstUser).depositStake({ 
+        value: ethers.utils.parseEther(depositAmount.toString()) 
+    })
     await deposit.wait()
 
-    return { 
-        manager, 
-        registry, 
-        upkeep, 
-        views, 
-        functionsBillingRegistry, 
-        ssvViews, 
-        daoOracle, 
-        donTransmitter, 
-        firstUser 
+    return {
+        manager,
+        registry,
+        upkeep,
+        views,
+        functionsBillingRegistry,
+        ssvViews,
+        daoOracle,
+        donTransmitter,
+        firstUser
     }
 }
 
 /** Fixture to stake 24 for the second user */
 export async function secondUserDepositFixture() {
-    const { manager,
+    const {
+        manager,
         registry,
         upkeep,
         views,
@@ -306,29 +296,44 @@ export async function secondUserDepositFixture() {
     const [, , , , secondUser] = await ethers.getSigners()
 
     const depositAmount = round(24 * ((100 + await manager.userFee()) / 100), 10)
-    const deposit = 
-        await manager.connect(secondUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
+    const deposit = await manager.connect(secondUser).depositStake({ 
+        value: ethers.utils.parseEther(depositAmount.toString()) 
+    })
     await deposit.wait()
 
-    await depositFunctionsBalanceHandler({ manager, signer: daoOracle })
-    await depositUpkeepBalanceHandler({ manager, signer: daoOracle })
+    await fundAccountsHandler({
+        manager,
+        functionsBillingRegistry,
+        provider: ethers.provider,
+        signer: daoOracle
+    })
 
-    await initiatePoolHandler({ manager, signer: daoOracle })
-
+    await initiateValidatorHandler({
+        manager,
+        provider: ethers.provider,
+        signer: daoOracle
+    })
+    
     await time.increase(time.duration.days(1))
+
+    const pendingPoolIds = await manager.getPendingPoolIds()
+    const activatableValidators = pendingPoolIds.length
+    if (activatableValidators) {
+        await updateValidatorsHandler({
+            manager,
+            provider: ethers.provider,
+            signer: daoOracle,
+            activatableValidators
+        })
+    }
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 32,
         sweptBalance: 0,
-        activatedDeposits: 1,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -338,11 +343,9 @@ export async function secondUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
-
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -352,13 +355,14 @@ export async function secondUserDepositFixture() {
         daoOracle,
         donTransmitter,
         firstUser,
-        secondUser 
+        secondUser
     }
 }
 
 /** Fixture to report increase of 0.105 in total rewards before fees */
 export async function rewardsPostSecondUserDepositFixture() {
-    const { manager,
+    const { 
+        manager,
         registry,
         upkeep,
         views,
@@ -371,19 +375,15 @@ export async function rewardsPostSecondUserDepositFixture() {
     } = await loadFixture(secondUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 32.105,
         sweptBalance: 0,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
+
     }
 
     await fulfillReport({
@@ -395,7 +395,7 @@ export async function rewardsPostSecondUserDepositFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -411,7 +411,7 @@ export async function rewardsPostSecondUserDepositFixture() {
 
 /** Fixture to sweep 0.105 to the manager */
 export async function sweepPostSecondUserDepositFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -421,10 +421,11 @@ export async function sweepPostSecondUserDepositFixture() {
         daoOracle,
         donTransmitter,
         firstUser,
-        secondUser 
+        secondUser
     } = await loadFixture(secondUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const sweptRewards = 0.105
@@ -436,18 +437,12 @@ export async function sweepPostSecondUserDepositFixture() {
         const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
         await setBalance(poolAddress, nextBalance)
     }
-    const compoundablePoolIds = [1,
-        0,
-        0,
-        0,
-        0]
+    const compoundablePoolIds = [1, 0, 0, 0, 0]
     const reportValues = {
         beaconBalance: 32,
         sweptBalance: sweptRewards,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds
+        compoundablePoolIds,
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -459,7 +454,7 @@ export async function sweepPostSecondUserDepositFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -475,7 +470,7 @@ export async function sweepPostSecondUserDepositFixture() {
 
 /** Fixture to stake 24 for the third user */
 export async function thirdUserDepositFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -490,26 +485,36 @@ export async function thirdUserDepositFixture() {
     const [, , , , , thirdUser] = await ethers.getSigners()
 
     const depositAmount = round(24 * ((100 + await manager.userFee()) / 100), 10)
-    const deposit = 
+    const deposit =
         await manager.connect(thirdUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
-    await initiatePoolHandler({ manager, signer: daoOracle })
-
+    await initiateValidatorHandler({
+        manager,
+        provider: ethers.provider,
+        signer: daoOracle
+    })
+    
     await time.increase(time.duration.days(1))
+
+    const pendingPoolIds = await manager.getPendingPoolIds()
+    const activatableValidators = pendingPoolIds.length
+    if (activatableValidators) {
+        await updateValidatorsHandler({
+            manager,
+            provider: ethers.provider,
+            signer: daoOracle,
+            activatableValidators
+        })
+    }
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 64,
         sweptBalance: 0,
-        activatedDeposits: 1,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -519,11 +524,9 @@ export async function thirdUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
-
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -550,23 +553,18 @@ export async function rewardsPostThirdUserDepositFixture() {
         donTransmitter,
         firstUser,
         secondUser,
-        thirdUser 
+        thirdUser
     } = await loadFixture(thirdUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 64.21,
         sweptBalance: 0,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -578,7 +576,7 @@ export async function rewardsPostThirdUserDepositFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -595,7 +593,7 @@ export async function rewardsPostThirdUserDepositFixture() {
 
 /** Fixture to sweep 0.21 to the manager */
 export async function sweepPostThirdUserDepositFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -606,10 +604,11 @@ export async function sweepPostThirdUserDepositFixture() {
         donTransmitter,
         firstUser,
         secondUser,
-        thirdUser 
+        thirdUser
     } = await loadFixture(rewardsPostThirdUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const sweptRewards = 0.21
@@ -621,18 +620,12 @@ export async function sweepPostThirdUserDepositFixture() {
         const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
         await setBalance(poolAddress, nextBalance)
     }
-    const compoundablePoolIds = [1,
-        2,
-        0,
-        0,
-        0]
+    const compoundablePoolIds = [1, 2, 0, 0, 0]
     const reportValues = {
         beaconBalance: 64,
         sweptBalance: sweptRewards,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds
+        compoundablePoolIds,
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -644,7 +637,7 @@ export async function sweepPostThirdUserDepositFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -661,7 +654,7 @@ export async function sweepPostThirdUserDepositFixture() {
 
 /** Fixture to partial withdraw 0.3 to the first user */
 export async function firstUserPartialWithdrawalFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -679,19 +672,14 @@ export async function firstUserPartialWithdrawalFixture() {
     await withdraw.wait()
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 64,
         sweptBalance: 0,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -703,7 +691,7 @@ export async function firstUserPartialWithdrawalFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -730,33 +718,43 @@ export async function fourthUserDepositFixture() {
         donTransmitter,
         firstUser,
         secondUser,
-        thirdUser 
+        thirdUser
     } = await loadFixture(firstUserPartialWithdrawalFixture)
     const [, , , , , , fourthUser] = await ethers.getSigners()
 
     const depositAmount = round(72 * ((100 + await manager.userFee()) / 100), 10)
-    const deposit = 
+    const deposit =
         await manager.connect(fourthUser).depositStake({ value: ethers.utils.parseEther(depositAmount.toString()) })
     await deposit.wait()
 
     for (let i = 0; i < 2; i++) {
-        await initiatePoolHandler({ manager, signer: daoOracle })
+        await initiateValidatorHandler({ 
+            manager, 
+            provider: ethers.provider,
+            signer: daoOracle 
+        })
     }
 
     await time.increase(time.duration.days(1))
+
+    const pendingPoolIds = await manager.getPendingPoolIds()
+    const activatableValidators = pendingPoolIds.length
+    if (activatableValidators) {
+        await updateValidatorsHandler({
+            manager,
+            provider: ethers.provider,
+            signer: daoOracle,
+            activatableValidators
+        })
+    }
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 128,
         sweptBalance: 0,
-        activatedDeposits: 2,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -766,11 +764,9 @@ export async function fourthUserDepositFixture() {
         values: reportValues
     })
 
-    await activatePoolsHandler({ manager, views, signer: daoOracle, args: { count: 2 } })
-
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -782,13 +778,13 @@ export async function fourthUserDepositFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     }
 }
 
 /** Fixture to simulate a validator stake penalty that decreases the beacon chain balance */
 export async function beaconBalanceLossFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -800,23 +796,18 @@ export async function beaconBalanceLossFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     } = await loadFixture(fourthUserDepositFixture)
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const reportValues = {
         beaconBalance: 126,
         sweptBalance: 0,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -828,7 +819,7 @@ export async function beaconBalanceLossFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -840,13 +831,13 @@ export async function beaconBalanceLossFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     }
 }
 
 /** Fixture to simulate a validator reward that brings the beacon chain balance back to expected */
 export async function beaconBalanceRecoveryFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -864,19 +855,14 @@ export async function beaconBalanceRecoveryFixture() {
     let nextBeaconBalance = 127
     for (let i = 0; i < 2; i++) {
         await time.increase(time.duration.days(1))
+
         await runUpkeep({ donTransmitter, upkeep })
 
         const reportValues = {
             beaconBalance: nextBeaconBalance,
             sweptBalance: 0,
-            activatedDeposits: 0,
-            forcedExits: 0,
-            completedExits: 0,
-            compoundablePoolIds: [0,
-                0,
-                0,
-                0,
-                0]
+            compoundablePoolIds: [0, 0, 0, 0, 0],
+            withdrawnValidators: 0
         }
 
         await fulfillReport({
@@ -890,7 +876,7 @@ export async function beaconBalanceRecoveryFixture() {
         nextBeaconBalance += 1
     }
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -902,25 +888,25 @@ export async function beaconBalanceRecoveryFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     }
 }
 
 /** Fixture to full withdraw ~24.07 */
 export async function thirdUserFullWithdrawalFixture() {
-    const { 
-        manager, 
-        registry, 
-        upkeep, 
-        views, 
-        functionsBillingRegistry, 
-        ssvViews, 
-        daoOracle, 
-        donTransmitter, 
-        firstUser, 
-        secondUser, 
-        thirdUser, 
-        fourthUser 
+    const {
+        manager,
+        registry,
+        upkeep,
+        views,
+        functionsBillingRegistry,
+        ssvViews,
+        daoOracle,
+        donTransmitter,
+        firstUser,
+        secondUser,
+        thirdUser,
+        fourthUser
     } = await loadFixture(beaconBalanceRecoveryFixture)
 
     const thirdStake = await manager.getUserStake(thirdUser.address)
@@ -928,20 +914,15 @@ export async function thirdUserFullWithdrawalFixture() {
     await withdraw.wait()
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     const sweptExitedBalance = 32
     const reportValues = {
         beaconBalance: 96,
         sweptBalance: sweptExitedBalance,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 1,
-        compoundablePoolIds: [0,
-            0,
-            0,
-            0,
-            0]
+        compoundablePoolIds: [0, 0, 0, 0, 0],
+        withdrawnValidators: 1
     }
 
     await fulfillReport({
@@ -957,11 +938,17 @@ export async function thirdUserFullWithdrawalFixture() {
     const nextBalance = currentBalance.add(ethers.utils.parseEther(sweptExitedBalance.toString()))
     await setBalance(exitedPoolAddress, nextBalance)
 
-    await reportCompletedExitsHandler({ manager, views, signer: daoOracle, args: { count: 1 } })
+    await withdrawValidatorsHandler({ 
+        manager, 
+        provider: ethers.provider,
+        views, 
+        signer: daoOracle, 
+        args: { count: 1 } 
+    })
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -973,13 +960,13 @@ export async function thirdUserFullWithdrawalFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     }
 }
 
 /** Fixture to simulate rewards */
 export async function simulationFixture() {
-    const { 
+    const {
         manager,
         registry,
         upkeep,
@@ -991,7 +978,7 @@ export async function simulationFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     } = await loadFixture(thirdUserFullWithdrawalFixture)
 
     const rewardsPerValidator = 0.105
@@ -999,6 +986,7 @@ export async function simulationFixture() {
     let totalRewards = 0
     for (let i = 0; i < 5; i++) {
         await time.increase(time.duration.days(1))
+
         await runUpkeep({ donTransmitter, upkeep })
 
         const stakedPoolIds = await manager.getStakedPoolIds()
@@ -1008,14 +996,8 @@ export async function simulationFixture() {
         const reportValues = {
             beaconBalance: nextBeaconBalance,
             sweptBalance: 0,
-            activatedDeposits: 0,
-            forcedExits: 0,
-            completedExits: 0,
-            compoundablePoolIds: [0,
-                0,
-                0,
-                0,
-                0]
+            compoundablePoolIds: [0, 0, 0, 0, 0],
+            withdrawnValidators: 0
         }
 
         await fulfillReport({
@@ -1032,6 +1014,7 @@ export async function simulationFixture() {
     const stakedPoolIds = await manager.getStakedPoolIds()
 
     await time.increase(time.duration.days(1))
+
     await runUpkeep({ donTransmitter, upkeep })
 
     for (const poolId of stakedPoolIds) {
@@ -1041,18 +1024,12 @@ export async function simulationFixture() {
         const nextBalance = currentBalance.add(ethers.utils.parseEther(poolSweptRewards.toString()))
         await setBalance(poolAddress, nextBalance)
     }
-    const compoundablePoolIds = [2,
-        3,
-        4,
-        0,
-        0]
+    const compoundablePoolIds = [2, 3, 4, 0, 0]
     const reportValues = {
         beaconBalance: 96,
         sweptBalance: sweptRewards,
-        activatedDeposits: 0,
-        forcedExits: 0,
-        completedExits: 0,
-        compoundablePoolIds
+        compoundablePoolIds,
+        withdrawnValidators: 0
     }
 
     await fulfillReport({
@@ -1064,7 +1041,7 @@ export async function simulationFixture() {
 
     await runUpkeep({ donTransmitter, upkeep })
 
-    return { 
+    return {
         manager,
         registry,
         upkeep,
@@ -1076,6 +1053,6 @@ export async function simulationFixture() {
         firstUser,
         secondUser,
         thirdUser,
-        fourthUser 
+        fourthUser
     }
 }

@@ -124,7 +124,7 @@ export class Scanner {
      * @param {number[]} operatorIds - Operator IDs
      * @returns {Promise<ethers.BigNumber>} Validator fee
      */
-    async getRequiredFee(operatorIds: number[]): Promise<ethers.BigNumber> {
+    async getRequiredBalance(operatorIds: number[]): Promise<ethers.BigNumber> {
         let feeSum = await this.ssvViews.getNetworkFee()
         for (const operatorId of operatorIds) {
             const operatorFee = await this.ssvViews.getOperatorFee(operatorId)

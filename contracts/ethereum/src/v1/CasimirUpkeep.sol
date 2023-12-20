@@ -28,31 +28,40 @@ contract CasimirUpkeep is
     ICasimirFactory private factory;
     /// @dev Manager contract
     ICasimirManager private manager;
-    /// @dev Previous report timestamp
+    /// @dev Previous report timestamp (remove in the next deployment)
     uint256 private previousReportTimestamp;
-    /// @dev Current report status
-    ReportStatus private reportStatus;
-    /// @dev Current report period
+    /// @inheritdoc ICasimirUpkeep
+    ReportStatus public reportStatus; // (move up to the public section in the next deployment)
+    /// @dev Period for the current report
     uint32 private reportPeriod;
-    /// @dev Current report remaining request count
+    /// @dev Remaining request count for the current report
     uint256 private reportRemainingRequests;
-    /// @dev Current report block
+    /// @dev Request block for the current report (remove in the next deployment)
     uint256 private reportRequestBlock;
-    /// @dev Current report request timestamp
+    /// @dev Request timestamp for the current report
     uint256 private reportTimestamp;
-    /// @dev Current report swept balance
+    /// @dev Swept balance for the current report (swap order -1 in the next deployment)
     uint256 private reportSweptBalance;
-    /// @dev Current report beacon chain balance
+    /// @dev Beacon chain balance for the current report (swap order +1 in the next deployment)
     uint256 private reportBeaconBalance;
-    /// @dev Current report deposit activations
-    uint256 private reportActivatedDeposits;
-    /// @dev Current report unexpected exits
-    uint256 private reportForcedExits;
-    /// @dev Current report completed exits
-    uint256 private reportCompletedExits;
-    /// @dev Current report compoundable pools
+    /**
+     * @dev Requested validator activations for the current report (remove in the next deployment)
+     * @custom:oz-renamed-from reportActivatedDeposits
+     */
+    uint256 private reportActivatedValidators;
+    /**
+     * @dev Requested validator slashings for the current report (remove in the next deployment)
+     * @custom:oz-renamed-from flagValidators
+     */
+    uint256 private reportSlashedValidators;
+    /**
+     * @dev Requested validator deactivations for the current report
+     * @custom:oz-renamed-from withdrawValidators
+     */
+    uint256 private reportWithdrawnValidators;
+    /// @dev Compoundable pool IDs for the current report
     uint32[5] private reportCompoundablePoolIds;
-    /// @dev Finalizable compoundable pools (will be removed in the next release)
+    /// @dev Finalizable compoundable pools (remove in the next deployment)
     uint32[5] private finalizableCompoundablePoolIds;
     /// @dev Current report request
     mapping(bytes32 => RequestType) private reportRequests;
@@ -64,11 +73,11 @@ contract CasimirUpkeep is
     string[] private defaultRequestArgs;
     /// @dev Fulfillment gas limit
     uint32 private fulfillGasLimit;
-    /// @dev Whether a report has been requested
+    /// @dev Whether a report has been requested (remove in the next deployment)
     bool private reportRequested;
-    /// @dev Previous report block
+    /// @dev Previous report block (remove in the next deployment)
     uint256 private previousReportBlock;
-    /// @dev DON transmitter address (will be removed in the next release)
+    /// @dev DON transmitter address (remove in the next deployment)
     address private transmitterAddress;
     /// @dev Storage gap
     uint256[48] private __gap;
@@ -108,17 +117,11 @@ contract CasimirUpkeep is
         }
         if (reportStatus == ReportStatus.FINALIZED) {
             reportStatus = ReportStatus.REQUESTING;
-            previousReportBlock = reportRequestBlock;
-            previousReportTimestamp = reportTimestamp;
-            reportRequestBlock = block.number;
             reportTimestamp = block.timestamp;
             reportPeriod = manager.reportPeriod();
             Functions.Request memory request;
             request.initializeRequest(Functions.Location.Inline, Functions.CodeLanguage.JavaScript, requestSource);
             string[] memory requestArgs = defaultRequestArgs;
-            requestArgs[7] = StringsUpgradeable.toString(previousReportTimestamp);
-            requestArgs[8] = StringsUpgradeable.toString(reportTimestamp);
-            requestArgs[9] = StringsUpgradeable.toString(reportRequestBlock);
             sendFunctionsRequest(request, requestArgs, RequestType.BALANCES);
             sendFunctionsRequest(request, requestArgs, RequestType.DETAILS);
         } else {
@@ -130,57 +133,20 @@ contract CasimirUpkeep is
                 manager.fulfillWithdrawals(5);
             }
             if (!manager.getPendingWithdrawalEligibility(0, reportPeriod)) {
-                if (reportRequested) {
-                    reportRequested = false;
-                }
                 reportStatus = ReportStatus.FINALIZED;
                 manager.rebalanceStake({
                     beaconBalance: reportBeaconBalance,
                     sweptBalance: reportSweptBalance,
-                    activatedDeposits: reportActivatedDeposits,
-                    completedExits: reportCompletedExits
+                    withdrawnValidators: reportWithdrawnValidators
                 });
                 manager.compoundRewards(reportCompoundablePoolIds);
                 reportBeaconBalance = 0;
-                reportActivatedDeposits = 0;
-                reportForcedExits = 0;
-                reportCompletedExits = 0;
+                reportSweptBalance = 0;
                 reportCompoundablePoolIds = [0, 0, 0, 0, 0];
+                reportWithdrawnValidators = 0;
             }
         }
         emit UpkeepPerformed(reportStatus);
-    }
-
-    /// @inheritdoc ICasimirUpkeep
-    function requestReport() external {
-        onlyFactoryOwner();
-        reportRequested = true;
-        emit NewReportRequested();
-    }
-
-    /// @inheritdoc ICasimirUpkeep
-    function resetReport(
-        uint32 resetReportPeriod,
-        uint256 resetReportBlock,
-        uint256 resetReportTimestamp,
-        uint256 resetPreviousReportBlock,
-        uint256 resetPreviousReportTimestamp
-    ) external {
-        onlyFactoryOwner();
-        reportStatus = ReportStatus.FINALIZED;
-        reportRequested = false;
-        reportPeriod = resetReportPeriod;
-        reportRequestBlock = resetReportBlock;
-        reportTimestamp = resetReportTimestamp;
-        previousReportBlock = resetPreviousReportBlock;
-        previousReportTimestamp = resetPreviousReportTimestamp;
-        reportRemainingRequests = 0;
-        reportBeaconBalance = 0;
-        reportSweptBalance = 0;
-        reportActivatedDeposits = 0;
-        reportForcedExits = 0;
-        reportCompletedExits = 0;
-        reportCompoundablePoolIds = [0, 0, 0, 0, 0];
     }
 
     /// @inheritdoc ICasimirUpkeep
@@ -206,12 +172,11 @@ contract CasimirUpkeep is
     /// @inheritdoc ICasimirUpkeep
     function checkUpkeep(bytes memory) public view override returns (bool upkeepNeeded, bytes memory checkData) {
         if (reportStatus == ReportStatus.FINALIZED) {
-            bool checkActive = manager.getPendingPoolIds().length + manager.getStakedPoolIds().length > 0;
+            bool checkValidators = manager.getStakedPoolIds().length > 0;
             bool heartbeatLapsed = (block.timestamp - reportTimestamp) >= REPORT_HEARTBEAT;
-            upkeepNeeded = (checkActive && heartbeatLapsed) || (checkActive && reportRequested);
+            upkeepNeeded = checkValidators && heartbeatLapsed;
         } else if (reportStatus == ReportStatus.PROCESSING) {
-            bool finalizeReport = reportActivatedDeposits == manager.finalizableActivations() &&
-                reportCompletedExits == manager.finalizableCompletedExits();
+            bool finalizeReport = reportWithdrawnValidators == manager.finalizableWithdrawnValidators();
             upkeepNeeded = finalizeReport;
         }
         return (upkeepNeeded, checkData);
@@ -250,23 +215,13 @@ contract CasimirUpkeep is
             reportSweptBalance = uint256(sweptBalance);
         } else {
             (
-                uint32 activatedDeposits,
-                uint32 forcedExits,
-                uint32 completedExits,
-                uint32[5] memory compoundablePoolIds
-            ) = abi.decode(response, (uint32, uint32, uint32, uint32[5]));
-            reportActivatedDeposits = activatedDeposits;
-            reportForcedExits = forcedExits;
-            reportCompletedExits = completedExits;
+                uint32[5] memory compoundablePoolIds,
+                uint32 withdrawnValidators
+            ) = abi.decode(response, (uint32[5], uint32));
             reportCompoundablePoolIds = compoundablePoolIds;
-            if (reportActivatedDeposits > 0) {
-                emit ActivationsRequested(activatedDeposits);
-            }
-            if (reportForcedExits > 0) {
-                emit ForcedExitReportsRequested(forcedExits);
-            }
-            if (reportCompletedExits > 0) {
-                emit CompletedExitReportsRequested(completedExits);
+            if (withdrawnValidators > 0) {
+                reportWithdrawnValidators = withdrawnValidators;
+                emit ValidatorWithdrawalsRequested(withdrawnValidators);
             }
         }
         if (reportRemainingRequests == 0) {
@@ -285,7 +240,7 @@ contract CasimirUpkeep is
         string[] memory requestArgs,
         RequestType requestType
     ) private {
-        requestArgs[10] = StringsUpgradeable.toString(uint256(requestType));
+        requestArgs[6] = StringsUpgradeable.toString(uint256(requestType));
         request.addArgs(requestArgs);
         bytes32 requestId = sendRequest(request, manager.functionsId(), fulfillGasLimit);
         reportRequests[requestId] = requestType;

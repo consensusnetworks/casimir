@@ -11,7 +11,7 @@ jobs:
 
     # Skip any pushes from the act CLI
     # Comment out for testing
-    if: ${{ github.actor != "nektos/act" }}
+    if: ${{ github.actor != 'nektos/act' }}
 
     steps:
       - uses: actions/checkout@v3

@@ -18,7 +18,7 @@ export default function useTxData () {
     }
   
     function generateRandomDate() {
-    // Generate a random date within the last two years
+        // Generate a random date within the last two years
         const startDate = new Date()
         startDate.setFullYear(startDate.getFullYear() - 2)
         const endDate = new Date()

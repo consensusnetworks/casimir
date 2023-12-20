@@ -25,7 +25,7 @@ export default withMermaid({
                 items: [
                     { text: 'What is Casimir?', link: '/introduction/what-is-casimir' },
                     { text: 'Architecture', link: '/introduction/architecture' },
-                    { text: 'Staking Strategies', link: '/introduction/staking-strategies' },
+                    { text: 'Stake Configs', link: '/introduction/stake-configs' },
                     { text: 'User Accounts', link: '/introduction/user-accounts' }
                 ]
             },

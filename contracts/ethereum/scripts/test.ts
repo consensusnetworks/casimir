@@ -26,7 +26,7 @@ async function test() {
     const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_FORK_RPC_URL)
     const wallet = ethers.Wallet.fromMnemonic(process.env.BIP39_SEED)
 
-    const factoryNonceDiff = 13 // Account for the mock, beacon, and library deployments
+    const factoryNonceDiff = 17 // Account for the mock, beacon, and library deployments
     const walletNonce = await provider.getTransactionCount(wallet.address) + factoryNonceDiff
     process.env.FACTORY_NONCE_DIFF = factoryNonceDiff.toString()
 

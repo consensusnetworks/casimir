@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache
 pragma solidity 0.8.18;
 
+/// @title Interface for Chainlink functions billing registry
 interface IFunctionsBillingRegistry {
     function getSubscription(
         uint64 subscriptionId

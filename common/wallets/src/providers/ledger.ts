@@ -146,8 +146,8 @@ export class EthersLedgerSigner extends ethers.Signer {
     }
 
     retry<T = unknown>(callback: (eth: Eth) => Promise<T>, timeout?: number): Promise<T> {
-    // The async-promise-executor is ok since retry handles necessary errors 
-    // eslint-disable-next-line no-async-promise-executor
+        // The async-promise-executor is ok since retry handles necessary errors 
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const ledgerConnectionError = "Please make sure Ledger is ready and retry"
             if (timeout && timeout > 0) {
