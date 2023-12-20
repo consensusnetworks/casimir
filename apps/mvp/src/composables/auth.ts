@@ -5,7 +5,7 @@ import useEthers from "@/composables/ethers"
 import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
-import useWalletConnect from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 import useWallets from "@/composables/wallets"
 import {
     Account,
@@ -20,7 +20,7 @@ const { browserProvidersList, loginWithEthers } = useEthers()
 const { loginWithLedger } = useLedger()
 const { loginWithTrezor } = useTrezor()
 const { setUser, user } = useUser()
-const { disconnectWalletConnect, loginWithWalletConnectV2, initializeWalletConnect } = useWalletConnect()
+const { disconnectWalletConnect, loginWithWalletConnect, initializeWalletConnect } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
 const initializedAuthComposable = ref(false)
@@ -265,7 +265,7 @@ export default function useAuth() {
             } else if (provider === "Trezor") {
                 await loginWithTrezor(loginCredentials)
             } else if (provider === "WalletConnect") {
-                await loginWithWalletConnectV2(loginCredentials)
+                await loginWithWalletConnect(loginCredentials)
             } else {
                 console.log("Sign up not yet supported for this wallet provider")
             }

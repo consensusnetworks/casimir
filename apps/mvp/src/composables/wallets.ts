@@ -1,11 +1,11 @@
 import { ref, readonly } from "vue"
 import { ProviderString } from "@casimir/types"
 import useEthers from "@/composables/ethers"
-import useWalletConnectV2 from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 
 const installedWallets = ref([] as ProviderString[])
 const { browserProvidersList, detectActiveEthersWalletAddress, getBrowserProvider } = useEthers()
-const { connectWalletConnectV2, web3Provider } = useWalletConnectV2()
+const { connectWalletConnect, web3Provider } = useWalletConnect()
 
 export default function useWallets() {
     async function detectActiveNetwork(providerString: ProviderString): Promise<number> {
@@ -16,7 +16,7 @@ export default function useWallets() {
                 return chainId
             } else if (providerString === "WalletConnect") {
                 if (!web3Provider.value) {
-                    await connectWalletConnectV2("5")
+                    await connectWalletConnect("5")
                 }
                 return web3Provider.value.provider.chainId
             } else if (providerString === "Ledger") {

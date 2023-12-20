@@ -10,7 +10,7 @@ import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
 import useWallets from "@/composables/wallets"
-import useWalletConnect from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 // import useWallets from '@/composables/wallets'
 
 type UserAuthFlowState = 
@@ -40,7 +40,7 @@ const { getEthersLedgerAddresses } = useLedger()
 const { getEthersTrezorAddresses } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
-const { connectWalletConnectV2, walletConnectSelectedAccount } = useWalletConnect()
+const { connectWalletConnect, walletConnectSelectedAccount } = useWalletConnect()
 // const { installedWallets, detectInstalledWalletProviders } = useWallets()
 
 // eslint-disable-next-line no-undef
@@ -164,7 +164,7 @@ async function selectProvider(provider: ProviderString): Promise<void> {
 
         if (provider === "WalletConnect") {
             // TODO: @@cali1 - pass in the network id dynamically
-            walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
+            walletProviderAddresses.value = await connectWalletConnect(requiredNetwork) as CryptoAddress[]
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
         } else if (provider === "Ledger") {
@@ -684,4 +684,4 @@ watch(walletConnectSelectedAccount, () => {
   letter-spacing: -0.01em;
   color: #667085;
 }
-</style>@/composables/eventBus
+</style>@/composables/eventBus@/composables/walletConnect

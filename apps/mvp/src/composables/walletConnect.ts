@@ -30,8 +30,8 @@ const isInitializing = ref(false)
 
 const walletConnectSelectedAccount = ref([] as Array<CryptoAddress>)
 
-export default function useWalletConnectV2() {
-    async function connectWalletConnectV2(chainId: "1" | "5" | "1337", pairing?: PairingTypes.Struct): Promise<CryptoAddress[]> {
+export default function useWalletConnect() {
+    async function connectWalletConnect(chainId: "1" | "5" | "1337", pairing?: PairingTypes.Struct): Promise<CryptoAddress[]> {
         try {
             if (!ethereumProvider.value) throw new ReferenceError("WalletConnect Client is not initialized.")
         
@@ -106,7 +106,7 @@ export default function useWalletConnectV2() {
         _resetApp()
     }
 
-    function getWalletConnectSignerV2() {
+    function getWalletConnectSigner() {
         if (!web3Provider.value) throw new Error("Web3Provider is not initialized")
         return web3Provider.value.getSigner()
     }
@@ -118,7 +118,7 @@ export default function useWalletConnectV2() {
         await createClient()
     }
 
-    async function loginWithWalletConnectV2(loginCredentials: LoginCredentials) {
+    async function loginWithWalletConnect(loginCredentials: LoginCredentials) {
         const { provider, address, currency } = loginCredentials
         const message = await createSiweMessage(address, "Sign in with Ethereum to the Casimir.")
         const signedMessage = await signWalletConnectMessage(message)
@@ -250,10 +250,10 @@ export default function useWalletConnectV2() {
     return {
         walletConnectSelectedAccount,
         web3Provider,
-        connectWalletConnectV2,
+        connectWalletConnect,
         disconnectWalletConnect,
-        getWalletConnectSignerV2,
+        getWalletConnectSigner,
         initializeWalletConnect,
-        loginWithWalletConnectV2,
+        loginWithWalletConnect,
     }
 }

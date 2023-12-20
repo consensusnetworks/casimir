@@ -9,7 +9,7 @@ import useLedger from "@/composables/ledger"
 import useTrezor from "@/composables/trezor"
 import useUser from "@/composables/user"
 import useWallets from "@/composables/wallets"
-import useWalletConnectV2 from "@/composables/walletConnectV2"
+import useWalletConnect from "@/composables/walletConnect"
 import { CasimirManager, CasimirRegistry, CasimirViews } from "@casimir/ethereum/build/@types"
 
 let baseManager: CasimirManager
@@ -35,7 +35,7 @@ const { getEthersLedgerSigner } = useLedger()
 const { getEthersTrezorSigner } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
-const { getWalletConnectSignerV2 } = useWalletConnectV2()
+const { getWalletConnectSigner } = useWalletConnect()
 const loadingInitializeOperators = ref(false)
 const loadingInitializeOperatorsError = ref(false)
 
@@ -210,7 +210,7 @@ export default function useOperators() {
             if (browserProvidersList.includes(walletProvider)) {
                 signer = getEthersBrowserSigner(walletProvider)
             } else if (walletProvider === "WalletConnect") {
-                await getWalletConnectSignerV2()
+                await getWalletConnectSigner()
             } else if (walletProvider === "Ledger") {
                 getEthersLedgerSigner()
             } else if (walletProvider === "Trezor") {
