@@ -6,6 +6,10 @@ import {
     Dialog,
     DialogPanel,
 } from "@headlessui/vue"
+import {
+    ArrowLeftCircleIcon,
+    ExclamationCircleIcon
+} from "@heroicons/vue/24/outline"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import Loading from "@/components/elements/Loading.vue"
 import Success from "@/components/elements/Success.vue"
@@ -19,7 +23,7 @@ import useWallets from "@/composables/services/wallets"
 import useWalletConnectV2 from "@/composables/services/walletConnectV2"
 import { CryptoAddress, LoginCredentials, ProviderString } from "@casimir/types"
 
-const { login } = useAuth()
+const { login, loginWithSecondaryAddress } = useAuth()
 const { openConnectWalletModal, toggleConnectWalletModal } = useConnectWalletModal()
 const { getEthersAddressesWithBalances, browserProvidersList } = useEthers()
 const { requiredNetwork } = useEnvironment()
@@ -171,6 +175,36 @@ async function selectProvider(provider: ProviderString): Promise<void> {
     }
 }
 
+async function handleConfirmCreateAccountWithExistingSecondary() {
+    flowState.value = "loading"
+    const loginCredentials: LoginCredentials = { provider: selectedProvider.value as ProviderString, address: selectedAddress.value as string, currency: "ETH", pathIndex: 0 }
+    const response = await loginWithSecondaryAddress(loginCredentials)
+    if (response === "Successfully created account and logged in") {
+        flowState.value = "success"
+        setTimeout(() => {
+            closeModal()
+            setTimeout(() => {
+                flowState.value = "select_provider"
+            }, 100)
+        }, 1000)
+    } else if (response === "Selected address is not active address in wallet") {
+        flowState.value = "select_address"
+        errorMessage.value = true
+        errorMessageText.value = "Address selected is not active."
+    } else if (response === "Error in userAuthState") {
+        flowState.value = "connection_failed"
+        setTimeout(() => {
+            closeModal()
+            setTimeout(() => {
+                flowState.value = "select_provider"
+            }, 100)
+        }, 1000)
+    } else {
+        errorMessage.value = true
+        errorMessageText.value = "Something went wrong, please try again later."
+    }
+}
+
 function closeModal() {
     toggleConnectWalletModal(false)
 }
@@ -182,8 +216,31 @@ function handleOuterClick(event: any) {
         !modal_container.contains(event.target)
     ) {
         closeModal()
+        setTimeout(() => {
+            if (user.value) {
+                flowState.value = "add_account"
+            } else {
+                flowState.value = "select_provider"
+            }
+        }, 200)
     }
 }
+
+onMounted(() => {
+    if (user.value) {
+        flowState.value = "add_account"
+    } else {
+        flowState.value = "select_provider"
+    }
+})
+
+onUnmounted(() => {
+    if (user.value) {
+        flowState.value = "add_account"
+    } else {
+        flowState.value = "select_provider"
+    }
+})
 </script>
 
 <template>
@@ -241,21 +298,18 @@ function handleOuterClick(event: any) {
                   </p>
                 </div>
   
-                <div class="mt-[20px]">
+                <div class="mt-[20px] flex flex-col gap-[12px]">
                   <div
                     v-for="walletProvider in supportedWalletProviders"
                     :key="walletProvider"
-                    class="mb-[12px]"
                   >
                     <button
                       class="flex items-center justify-between gap-5 w-full border relative px-[12px] py-[8px] shadow
                         rounded-[6px] bg-lightBg dark:bg-darkBg border-lightBorder dark:border-lightBorder/40
-                        hover:bg-hover_white dark:hover:bg-hover_black"
+                        hover:bg-hover_white/30 dark:hover:bg-hover_black/30 active:bg-hover_white/60 dark:active:bg-hover_black/60"
                       :disabled="selectProviderLoading"
                       @click="selectProvider(walletProvider)"
                     >
-                      <!-- TODO: Add this loading shine back once we enable it -->
-                      <!-- <div :class="selectedProvider === walletProvider && selectProviderLoading ? 'loading' : 'hidden'" /> -->
                       <img
                         :src="`/${walletProvider.toLowerCase()}.svg`"
                         :alt="`${walletProvider} logo`"
@@ -277,7 +331,7 @@ function handleOuterClick(event: any) {
                       </div> -->
                   </div>
                 </div>
-                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
+                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-red">
                   <span v-show="errorMessage">
                     {{ errorMessageText }}
                   </span>
@@ -303,53 +357,58 @@ function handleOuterClick(event: any) {
               <!-- SECTION: SELECT ADDRESS -->
               <section v-else-if="flowState === 'select_address'">
                 <div>
-                  <h1 class="mb-[15px]">
-                    Select Wallet
-                  </h1>
-                  <p class="">
-                    Select the wallet address you want to connect
+                  <div class="flex items-start gap-[12px]">
+                    <button
+                      v-show="walletProviderAddresses.length > 0"
+                      @click="flowState = 'select_provider'"
+                    >
+                      <ArrowLeftCircleIcon class="w-[16px] h-[16px]" />
+                    </button>
+                    <h1 class="card_title">
+                      Select Wallet
+                    </h1>
+                  </div>
+                  <p class="card_subtitle">
+                    Select the wallet address you want to connect with
                   </p>
                 </div>
   
-                <div class="mt-15 h-[240px] overflow-y-auto overflow-x-hidden">
-                  <!-- TODO: Add back once available -->
-                  <div
-                    v-if="walletProviderAddresses.length === 0"
-                    class="text-[16px] font-[500]"
-                  >
-                    <button
-                      class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
-                      @click="flowState = 'select_provider'"
-                    >
-                      Back to provider selection
-                    </button>
-                    We do not see any available addresses, please connect or create a wallet to your {{ selectedProvider }}
+                <div
+                  v-if="walletProviderAddresses.length === 0"
+                  class="mt-[30px] h-[310px] flex flex-col justify-between"
+                >
+                  <div class="card_title font-[400] text-red mb-[20px]">
+                    We do not see any available addresses, please connect or create a wallet to the selected provider
                   </div>
-  
-                  <!-- <button
-                    v-else
-                    class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
+                  <button
+                    class="primary_btn w-full flex items-center justify-center text-sm"
                     @click="flowState = 'select_provider'"
                   >
-                    back
-                  </button> -->
+                    <ArrowLeftCircleIcon class="w-[16px] h-[16px]" /> back
+                  </button>
+                </div>
   
+                <div class="h-[260px] overflow-y-auto flex flex-col gap-[12px] mt-[20px]">
                   <div
                     v-for="(act, pathIndex) in walletProviderAddresses"
                     :key="pathIndex"
-                    class="flex items-center gap-5"
+                    class="flex items-center gap-[12px]"
                   >
                     <div
                       v-if="checkIfAddressIsUsed(act)"
-                      class="tooltip_container text-white"
+                      class="tooltip_container"
                     >
-                      <div class="tooltip w-[260px]">
-                        This address is already connected!
+                      <ExclamationCircleIcon class="w-[24px] h-[24px] text-orange-400" />
+                      <div class="tooltip w-[200px]">
+                        This wallet is currently connect with this account
                       </div>
                     </div>
                     <button
-                      class="connect_wallet_btn"
+                      class="flex items-center justify-between gap-5 w-full border relative px-[12px] py-[8px] shadow
+                        rounded-[6px] bg-lightBg dark:bg-darkBg border-lightBorder dark:border-lightBorder/40
+                        hover:bg-hover_white/30 dark:hover:bg-hover_black/30 active:bg-hover_white/60 dark:active:bg-hover_black/60"
                       :disabled="checkIfAddressIsUsed(act)"
+                      :class="checkIfAddressIsUsed(act)? 'opacity-30' : ''"
                       @click="
                         selectedProvider === 'Ledger' || selectedProvider === 'Trezor' ?
                           selectAddress(trimAndLowercaseAddress(act.address), pathIndex) :
@@ -360,20 +419,19 @@ function handleOuterClick(event: any) {
                         {{ convertString(act.address) }}
                       </div>
                       <div>
-                        {{ formatEthersCasimir(parseFloat(act.balance)) }} ETH
+                        {{ (Number(parseFloat(act.balance)).toFixed(2)) }} ETH
                       </div>
                     </button>
                   </div>
                 </div>
   
-                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
-                  <span v-show="errorMessage">
-                    {{ errorMessageText }}
-                  </span>
+                <div class="h-15 w-full font-[500] mb-[5px] text-red h-[20px]">
+                  <small v-show="errorMessage">
+                    {{ errorMessageText }} 
+                  </small>
                 </div>
                 <div class="w-full">
                   <small
-                    v-show="flowState === 'select_provider'"
                     class="w-full text-[11.11px]"
                   >
                     Make sure you have the address that you want to connect active.
@@ -449,40 +507,39 @@ function handleOuterClick(event: any) {
                 class="w-full h-full"
               >
                 <div>
-                  <h1 class="mb-[15px]">
-                    Confirm Signage
+                  <h1 class="card_title">
+                    Confirm selection
                   </h1>
-                  <p>
+                  <p class="card_subtitle">
                     The current wallet you are trying to connect exists under another primary wallet or is a primary account.
                   </p>
-                  <br>
-                  <p>Would you like to create a new account with this address as the primary wallet address?</p>
+                  <p class="card_subtitle mt-[12px]">
+                    Connecting this address will create a new account, you can still access your previous account by
+                    connecting with said account primary address
+                  </p>
+                  <p class="card_subtitle mt-[30px] font-[500]">
+                    Would you like to create a new account with this address as the primary wallet address?
+                  </p>
                 </div>
   
-                <div class="mt-15 h-[220px] w-full flex items-center justify-center gap-5">
+                <div class="mt-15 mb-[5px] h-[165px] w-full flex flex-col items-center justify-end gap-[12px]">
                   <button
-                    class="action_button_cancel flex items-center justify-center gap-5 w-full"
+                    class="secondary_btn flex items-center w-full justify-center text-sm"
                     @click="flowState = 'select_address'"
                   >
-                    Back
+                    <ArrowLeftCircleIcon class="w-[16px] h-[16px]" /> Back
                   </button>
                   <button
-                    class="action_button w-full"
+                    class="primary_btn w-full flex items-center justify-center text-sm"
                     @click="handleConfirmCreateAccountWithExistingSecondary"
                   >
                     Create Account
                   </button>
                 </div>
-                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-decline">
+                <div class="h-15 w-full h-[20px] text-[11px] font-[500] mb-5 text-decline">
                   <span v-show="errorMessage">
                     Something went wrong, please try again later.
                   </span>
-                </div>
-                <div>
-                  <p>
-                    Note: Connecting this address will create a new account, you can still access your previous account by
-                    connecting with said account primary address
-                  </p>
                 </div>
               </section>
             </DialogPanel>

@@ -107,9 +107,6 @@ body caption{
   transition: padding 0.5s;
 }
 
-.nav_bar_container_inner img{
-  /* @apply h-[16px] w-[19.56px]; */
-}
 
 .pill_primary {
   @apply bg-black rounded-[999px] 

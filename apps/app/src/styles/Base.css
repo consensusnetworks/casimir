@@ -11,3 +11,37 @@
     dark:active:bg-white/75;    
     ;
 }
+
+.secondary_btn{
+    @apply rounded-[6px] px-[12px] py-[6px] flex items-center gap-[8px]
+    bg-gray_4 text-black shadow-md dark:bg-gray_5 dark:text-white
+    hover:bg-gray_4/60 active:bg-gray_4/80 dark:hover:bg-gray_5/60
+    dark:active:bg-gray_5/80;
+}
+
+
+.tooltip_container {
+  position: relative;
+}
+
+.tooltip_container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip {
+    position: absolute;
+    top: 110%;
+    border-radius: 3px;
+    background-color: rgba(49, 48, 54, 0.824);
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 14px;
+    padding: 6px 8px;
+    visibility: hidden;
+    white-space: normal;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    z-index: 5;
+  }

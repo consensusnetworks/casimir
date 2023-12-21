@@ -271,6 +271,29 @@ export default function useAuth() {
         // window.location.reload()
     }
 
+    async function loginWithSecondaryAddress(loginCredentials: LoginCredentials) {
+        const { address, provider } = loginCredentials
+        try {
+            const hardwareWallet = provider === "Ledger" || provider === "Trezor"
+            const browserWallet = browserProvidersList.includes(provider as ProviderString)
+            if (hardwareWallet) {
+                await loginWithProvider(loginCredentials as LoginCredentials)
+                await getUser()
+                return "Successfully created account and logged in"
+            } else if (browserWallet) {
+                const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
+                if (activeAddress === address) {
+                    await loginWithProvider({ provider: provider as ProviderString, address,currency: "ETH" })
+                    return "Successfully created account and logged in"
+                } else {
+                    return "Selected address is not active address in wallet"
+                }
+            }
+        } catch (err) {
+            return "Error in userAuthState"
+        }
+    }
+
 
     async function performLoginChecklist() {
         // perform checklist of items for the user
@@ -297,5 +320,6 @@ export default function useAuth() {
     return {
         login,
         logout,
+        loginWithSecondaryAddress
     }
 }

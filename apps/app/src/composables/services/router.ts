@@ -95,8 +95,6 @@ router.beforeEach(async (to, from, next) => {
     history.value.push(to.path)
     localStorage.setItem("navigationHistory", JSON.stringify(history.value))
 
-    console.log(history.value[history.value.length -1])
-
     const isFirstLoad = localStorage.getItem("newlyLoadedApp") === "true"
     const lastRoute = history.value[history.value.length -1]
     if (isFirstLoad && isOnboardingRoute(lastRoute)) {
