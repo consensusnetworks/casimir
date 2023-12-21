@@ -20,6 +20,11 @@ const newlyLoadedApp = ref(true)
 const newlyLoadedAppStorage = useStorage("newlyLoadedApp", newlyLoadedApp)
 
 
+// Retrieve the history from localStorage or create an empty array
+const history = ref<string[]>(JSON.parse(localStorage.getItem("navigationHistory")) || [])
+
+
+
 const routes = [
     { 
         path: "/onboarding", 
@@ -86,8 +91,15 @@ const router = createRouter({
 
 
 router.beforeEach(async (to, from, next) => {
-    const isFirstLoad = newlyLoadedAppStorage.value
-    if (isFirstLoad) {
+
+    history.value.push(to.path)
+    localStorage.setItem("navigationHistory", JSON.stringify(history.value))
+
+    console.log(history.value[history.value.length -1])
+
+    const isFirstLoad = localStorage.getItem("newlyLoadedApp") === "true"
+    const lastRoute = history.value[history.value.length -1]
+    if (isFirstLoad && isOnboardingRoute(lastRoute)) {
         // Redirect to loading page on first load
         if (to.path !== "/onboarding/loading-app") {
             next("/onboarding/loading-app")
@@ -96,7 +108,7 @@ router.beforeEach(async (to, from, next) => {
             newlyLoadedAppStorage.value = false
             const userExists = await checkUserSession()
             // TODO: get all user info if user exists
-            const skipWelcome = skipWelcomePageStorage.value
+            const skipWelcome = localStorage.getItem("skipWelcomePage") === "true"
             
             if (userExists) {
                 if (skipWelcome) {
@@ -111,7 +123,13 @@ router.beforeEach(async (to, from, next) => {
     } else {
         next()
     }
+
 })
+
+function isOnboardingRoute(route) {
+    // Add your logic to determine if a route is in the onboarding section
+    return route.startsWith("/onboarding/")
+}
 
 async function checkUserSession(): Promise<boolean> {
     try {

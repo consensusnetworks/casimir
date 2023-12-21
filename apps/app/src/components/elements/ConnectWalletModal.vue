@@ -77,6 +77,12 @@ async function selectAddress(address: string, pathIndex?: number): Promise<void>
     const response = await login(loginCredentials)
     if (response === "Successfully logged in" || response === "Successfully added account to user") {
         flowState.value = "success"
+        setTimeout(() => {
+            closeModal()
+            setTimeout(() => {
+                flowState.value = "select_provider"
+            }, 100)
+        }, 1000)
     } else if (response === "Address already exists on this account") {
         flowState.value = "select_address"
         errorMessage.value = true
@@ -92,6 +98,12 @@ async function selectAddress(address: string, pathIndex?: number): Promise<void>
         errorMessageText.value = "Address selected is not active."
     } else if (response === "Error in userAuthState") {
         flowState.value = "connection_failed"
+        setTimeout(() => {
+            closeModal()
+            setTimeout(() => {
+                flowState.value = "select_provider"
+            }, 100)
+        }, 1000)
     } else {
         errorMessage.value = true
         errorMessageText.value = "Something went wrong, please try again later."

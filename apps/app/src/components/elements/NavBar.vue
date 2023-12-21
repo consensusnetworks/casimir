@@ -69,6 +69,11 @@ const { logout } = useAuth()
 
 const showCopyForPrimary = ref(false)
 const showCopyForSecondary = ref(-1)
+
+const handleLogout = async() => {
+    await logout()
+    userMenu.value = false
+}
 </script>
 
 <template>
@@ -291,7 +296,7 @@ const showCopyForSecondary = ref(-1)
                    text-red dark:text-red hover:bg-light  
                    hover:bg-gray_4/60 dark:hover:bg-gray_5/60  border-t 
                   border-t-lightBorder dark:border-t-lightBorder/60"
-                    @click="logout"
+                    @click="handleLogout"
                   >
                     <ArrowRightOnRectangleIcon class="w-[20px] h-[20px]" />
                     <small>Disconnect Account</small>
