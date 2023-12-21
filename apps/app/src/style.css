@@ -101,7 +101,7 @@ body caption{
 
 .nav_bar_container_inner{
   @apply w-full h-full mx-auto flex 
-  items-center justify-between 1300s:px-[24px];
+  items-center justify-center 1300s:px-[24px];
   max-width: var(--max-app-width);
   min-width: var(--min-app-width);
   transition: padding 0.5s;

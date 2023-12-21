@@ -105,7 +105,7 @@ function copyTextToClipboard(text) {
         <Bars3Icon class="w-[28px] h-[32px]" />
       </button>
       <div
-        class="flex items-center gap-[24px] 700s:sr-only"
+        class="flex items-center gap-[24px] w-full 700s:sr-only"
       >
         <!-- TODO: On click of this it should check if it should take the user to welcome or overview page -->
         <router-link
@@ -127,12 +127,15 @@ function copyTextToClipboard(text) {
         </router-link>
 
         <!-- TODO: Make into a router link to pro app-->
-        <button class="pill_primary pill_primary_button">
+        <button
+          class="pill_primary pill_primary_button"
+          disabled
+        >
           <small>Pro</small>
           <ArrowTopRightOnSquareIcon class="pill_primary_icon" />
         </button>
       </div>
-
+      
       <!-- TODO: Make these route to actual pages and check if they are active -->
       <div class="flex items-center gap-[24px] w-full justify-center 700s:sr-only">
         <router-link
@@ -165,7 +168,7 @@ function copyTextToClipboard(text) {
         </router-link>
       </div>
 
-      <div class="flex items-center gap-[24px]">
+      <div class="flex items-center justify-end gap-[24px] w-full">
         <button @click="toggleDark()">
           <SunIcon
             v-if="isDark"
