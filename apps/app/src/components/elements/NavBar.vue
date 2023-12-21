@@ -33,6 +33,9 @@ import {
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import useAuth from "@/composables/services/auth"
 import useUser from "@/composables/services/user"
+import useFormat from "@/composables/services/format"
+
+const { convertString } = useFormat()
 
 const { toggleConnectWalletModal } = useConnectWalletModal()
 
@@ -69,10 +72,26 @@ const { logout } = useAuth()
 
 const showCopyForPrimary = ref(false)
 const showCopyForSecondary = ref(-1)
-
+const copySuccessful = ref("")
 const handleLogout = async() => {
     await logout()
     userMenu.value = false
+}
+
+function copyTextToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            copySuccessful.value = "copied"
+            setTimeout(() => {
+                copySuccessful.value = ""
+            }, 1000)
+        })
+        .catch(err => {
+            copySuccessful.value = "failed"
+            setTimeout(() => {
+                copySuccessful.value = ""
+            }, 1000)
+        })
 }
 </script>
 
@@ -168,13 +187,21 @@ const handleLogout = async() => {
                 @click="userMenu = true"
               >
                 <div
-                  v-show="user"
-                  class="flex items-center justify-between w-full"
+                  v-if="user"
+                  class="flex items-center align-middle justify-between w-full"
                 >
-                  <!-- TODO: Make this connect to the primary address of the user -->
                   <div class="flex items-center gap-[8px]">
-                    <div class="placeholder_avatar" />
-                    <small class="mt-[2px]">address</small>
+                    <div class="w-[20px] h-[20px]">
+                      <img
+                        :src="`/${user.walletProvider.toLowerCase()}.svg`"
+                        :alt="`/${user.walletProvider.toLowerCase()}.svg`"
+                        class="block w-full h-full max-w-full"
+                      >
+                    </div>
+
+                    <div class="card_title font-[400] mb-0">
+                      {{ convertString(user.address) }}
+                    </div>
                   </div>
 
                   <div>
@@ -252,43 +279,99 @@ const handleLogout = async() => {
                     <button
                       class="w-full mt-[8px] rounded-[3px] flex items-center
                       justify-between px-[8px] py-[6px] hover:bg-gray_4 dark:hover:bg-gray_5"
+                      @click="copyTextToClipboard(user.address)"
                       @mouseover="showCopyForPrimary = true"
                       @mouseleave="showCopyForPrimary = false"
                     >
                       <div class="flex items-center gap-[8px]">
-                        O
+                        <div class="w-[20px] h-[20px]">
+                          <img
+                            :src="`/${user.walletProvider.toLowerCase()}.svg`"
+                            :alt="`/${user.walletProvider.toLowerCase()}.svg`"
+                            class="block w-full h-full max-w-full"
+                          >
+                        </div>
 
-                        <p>Address</p>
+                        <div class="card_title font-[400] mb-0 text-gray_5">
+                          {{ convertString(user.address) }}
+                        </div>
                       </div>
 
-                      <Square2StackIcon
-                        v-show="showCopyForPrimary"
-                        class="w-[18px] h-[18px]"
-                      />
+                      <div 
+                        v-if="showCopyForPrimary && copySuccessful === ''"
+                      >
+                        <Square2StackIcon
+                          class="w-[18px] h-[18px] text-gray_3"
+                        />
+                      </div>
+
+                      <div
+                        v-else-if="showCopyForPrimary && copySuccessful === 'copied'"
+                        class="flex items-center text-[10px] text-green font-[600]"
+                      >
+                        Copied
+                      </div>
+
+                      <div
+                        v-else-if="showCopyForPrimary && copySuccessful === 'failed'"
+                        class="flex items-center text-[10px] text-red"
+                      >
+                        Failed
+                      </div>
                     </button>
                   </div>
-                  <div class="p-[8px] ">
+                  <div
+                    v-show="user.accounts.length > 1"
+                    class="p-[8px]"
+                  >
                     <caption class="text-gray_1 whitespace-nowrap font-[600]">
                       Secondary Wallet(s)
                     </caption>
                     <!-- TODO: v-for here, make sure the @mosueover items show the correct item based on idex -->
                     <button
+                      v-for="(account, index) in user.accounts"
+                      :key="index"
                       class="w-full mt-[8px] rounded-[3px] flex items-center
                       justify-between px-[8px] py-[6px] hover:bg-gray_4 dark:hover:bg-gray_5"
-                      @mouseover="showCopyForSecondary = 1"
+                      @click="copyTextToClipboard(account.address)"
+                      @mouseover="showCopyForSecondary = index"
                       @mouseleave="showCopyForSecondary = -1"
                     >
                       <div class="flex items-center gap-[8px]">
-                        O
+                        <div class="w-[20px] h-[20px]">
+                          <img
+                            :src="`/${account.walletProvider.toLowerCase()}.svg`"
+                            :alt="`/${account.walletProvider.toLowerCase()}.svg`"
+                            class="block w-full h-full max-w-full"
+                          >
+                        </div>
 
-                        <p>Address</p>
+                        <div class="card_title font-[400] mb-0">
+                          {{ convertString(account.address) }}
+                        </div>
                       </div>
 
-                      
-                      <Square2StackIcon
-                        v-show="showCopyForSecondary === 1"
-                        class="w-[18px] h-[18px]"
-                      />
+                      <div 
+                        v-if="showCopyForSecondary && index === ''"
+                      >
+                        <Square2StackIcon
+                          class="w-[18px] h-[18px] text-gray_3"
+                        />
+                      </div>
+
+                      <div
+                        v-else-if="showCopyForSecondary && index === 'copied'"
+                        class="flex items-center text-[10px] text-green font-[600]"
+                      >
+                        Copied
+                      </div>
+
+                      <div
+                        v-else-if="showCopyForSecondary && index === 'failed'"
+                        class="flex items-center text-[10px] text-red"
+                      >
+                        Failed
+                      </div>
                     </button>
                   </div>
                   <button

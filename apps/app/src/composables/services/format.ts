@@ -1,12 +1,12 @@
 export default function useFormat() {
     function convertString(inputString: string) {
-        if (inputString.length && inputString.length <= 4) {
+        if (inputString.length && inputString.length <= 3) {
             return inputString
         }
       
-        const start = inputString.substring(0, 4)
-        const end = inputString.substring(inputString.length - 4)
-        const middle = ".".repeat(4)
+        const start = inputString.substring(0, 3)
+        const end = inputString.substring(inputString.length - 3)
+        const middle = ".".repeat(3)
       
         return start + middle + end
     }

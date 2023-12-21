@@ -108,7 +108,7 @@ body caption{
 }
 
 .nav_bar_container_inner img{
-  @apply h-[16px] w-[19.56px];
+  /* @apply h-[16px] w-[19.56px]; */
 }
 
 .pill_primary {
@@ -176,6 +176,11 @@ body caption{
 }
 .nav_menu_links_icons{
   @apply w-[20px] h-[20px];
+}
+
+.nav_bar_avatar_size{
+  width: 20px;
+  height: 20px;
 }
 
 .nav_menu_links_active{

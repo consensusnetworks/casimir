@@ -28,17 +28,16 @@ const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnectV2()
 
-// type UserAuthFlowState = 
-//   "select_provider"
-//   | "select_address" 
-//   | "loading" 
-//   | "success" 
-//   | "add_account" 
-//   | "confirm_signage_with_existing_secondary" 
-//   | "connection_failed"
+type UserAuthFlowState = 
+  "select_provider"
+  | "select_address" 
+  | "loading" 
+  | "success" 
+  | "add_account" 
+  | "confirm_signage_with_existing_secondary" 
+  | "connection_failed"
 
-// eslint-disable-next-line no-undef
-const flowState = ref("select_provider")
+const flowState = ref<UserAuthFlowState>("select_provider")
 
 const errorMessage = ref(false)
 const errorMessageText = ref("Something went wrong, please try again later.")
@@ -271,10 +270,6 @@ function handleOuterClick(event: any) {
                           v-show="Math.random() < 0.5"
                           class="tooltip_container text-white"
                       >
-                          <vue-feather
-                          type="alert-circle"
-                          class="text-primary/40 hover:text-primary/75 h-[20px] w-[20px] mb-5"
-                          />
                           <div class="tooltip w-[260px]">
                           You currently do not have the extension for this wallet provider connected, click the button
                           to take you to the wallet provider extension page.
@@ -326,10 +321,6 @@ function handleOuterClick(event: any) {
                       class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
                       @click="flowState = 'select_provider'"
                     >
-                      <vue-feather
-                        type="arrow-left-circle"
-                        class="w-[20px] h-[20px]"
-                      />
                       Back to provider selection
                     </button>
                     We do not see any available addresses, please connect or create a wallet to your {{ selectedProvider }}
@@ -340,10 +331,6 @@ function handleOuterClick(event: any) {
                     class="w-full text-[14px] flex items-center gap-5 text-primary mb-10 hover:text-primary/60"
                     @click="flowState = 'select_provider'"
                   >
-                    <vue-feather
-                      type="arrow-left-circle"
-                      class="w-[14px] h-[14px] mb-2"
-                    />
                     back
                   </button> -->
   
@@ -356,10 +343,6 @@ function handleOuterClick(event: any) {
                       v-if="checkIfAddressIsUsed(act)"
                       class="tooltip_container text-white"
                     >
-                      <vue-feather
-                        type="alert-circle"
-                        class="text-warning/40 hover:text-warning/75 h-[20px] w-[20px] mb-5"
-                      />
                       <div class="tooltip w-[260px]">
                         This address is already connected!
                       </div>
@@ -481,10 +464,6 @@ function handleOuterClick(event: any) {
                     class="action_button_cancel flex items-center justify-center gap-5 w-full"
                     @click="flowState = 'select_address'"
                   >
-                    <!-- <vue-feather
-                      type="arrow-left-circle"
-                      class="icon w-[16px] h-min"
-                    /> -->
                     Back
                   </button>
                   <button
