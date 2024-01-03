@@ -2,7 +2,7 @@ import * as cdk from "aws-cdk-lib"
 import * as assertions from "aws-cdk-lib/assertions"
 import { Config } from "../src/providers/config"
 import { AnalyticsStack } from "../src/providers/analytics"
-import { Schema, eventSchema, actionSchema } from "@casimir/data"
+import { Schema, eventSchema, } from "@casimir/data"
 
 test("Analytics stack created", () => {
     const config = new Config()
@@ -30,17 +30,8 @@ test("Analytics stack created", () => {
         expect(columnName).toEqual(name)
     }
 
-    const actionTable = Object.keys(resource).filter(key => key.includes("ActionTable"))[0]
-    const actionColumns = resource[actionTable].Properties.TableInput.StorageDescriptor.Columns
-    const actionGlueSchema = new Schema(actionSchema).getGlueColumns()
-
-
-    for (const column of actionColumns) {
-        const { Name: name, Type: type } = column
-        const columnName = Object.keys(actionSchema.properties).filter(key => key === name)[0]
-        const columnType = actionGlueSchema.filter(key => key.name === name)[0].type.inputString
-
-        expect(columnType).toEqual(type)
-        expect(columnName).toEqual(name)
-    }
+    const workgroup = analyticsTemplate.findResources("AWS::Athena::WorkGroup")
+    const outputBucket = Object.keys(analyticsTemplate.findResources("AWS::S3::Bucket")).filter(key => key.includes("OutputBucket"))[0]
+    const workgroupRef = workgroup[Object.keys(workgroup)[0]].Properties.WorkGroupConfiguration.ResultConfiguration.OutputLocation["Fn::Join"][1][1]["Ref"]
+    expect(workgroupRef).toEqual(outputBucket)
 })

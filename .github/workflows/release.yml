@@ -14,10 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the repo
+      - name: Checkout the repo with submodules
         uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
 
       - name: Get the tag name
         run: |
@@ -30,18 +35,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # - name: Install action dependencies
+      #   run: |
+      #     curl -sSf https://atlasgo.sh | sh
+
       - name: Install and build all package dependencies
         run: npm ci
-        env:
-          PUBLIC_STAGE: ${{ env.STAGE }}
 
-      - name: Deploy cdk infrastructure
+      - name: Deploy CDK infrastructure
         run: npm run deploy:cdk
 
       # - name: Migrate users database
       #   run: npm run migrations:users
 
-      - name: Check out develop
+      - name: Checkout develop
         uses: actions/checkout@v3
         with:
           ref: develop
@@ -52,7 +59,7 @@ jobs:
           git fetch origin master:master
           git reset --hard master
           
-      - name: Create Pull Request
+      - name: Create a pull request
         uses: peter-evans/create-pull-request@v3
         with:
           base: develop

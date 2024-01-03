@@ -14,10 +14,15 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
+      - name: Checkout the repo with submodules
         uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -28,8 +33,6 @@ jobs:
 
       - name: Install and build all package dependencies
         run: npm ci
-        env:
-          PUBLIC_STAGE: ${{ env.STAGE }}
 
       - name: Test cdk deployment
         run: npm run test:cdk

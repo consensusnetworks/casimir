@@ -32,7 +32,7 @@ export class EthersTrezorSigner extends ethers.Signer {
     }
 
     async getAddress(): Promise<string> {
-        const { payload } = await this.eth.ethereumGetAddress({ path: this.path })
+        const { payload } = await this.eth.ethereumGetAddress({ path: this.path, showOnTrezor: false })
         const { address } = payload as Address
         return ethers.utils.getAddress(address)
     }
@@ -40,29 +40,30 @@ export class EthersTrezorSigner extends ethers.Signer {
     async getAddresses(): Promise<Array<CryptoAddress>> {
         const trezorAddresses = []
         const bundle = []
-        for (let i = 0; i < 5; i++) {
-            // TODO: Figure out how to access Goerli derivation paths
-            // m/coin_type'/account_index'/external_chain_index'/address_index/change_index
-            // const path = `m/44'/60'/${i}'/0/0` // Mainnet
-            // const path = `m/44'/1'/${i}'/0/0` // Ropsten
-            const path = `m/44'/60'/${i}'/0/0` // Goerli?
+        for (let i = 0; i < 2; i++) {
+            const path = `m/44'/60'/0'/0/${i}`
             bundle.push({ path, showOnTrezor: false })
         }
         const { payload } = await this.eth.ethereumGetAddress({ bundle }) as any
-        
+        if (payload.error) {
+            if (payload.code === "Transport_Missing") {
+                throw new Error("Trezor Suite is not open")
+            } else if (payload.error === "session not found") {
+                throw new Error("There was an error connecting to Trezor. Please try again.")
+            } else {
+                throw new Error(`Error from Trezor: ${payload.error}`)
+            }
+        }
+    
         for (let i = 0; i < payload.length; i++) {
             const { address } = payload[i]
-            // TODO: Replace with our own provider depending on environment
             const provider = new ethers.providers.JsonRpcProvider("https://goerli.infura.io/v3/4e8acb4e58bb4cb9978ac4a22f3326a7")
             const modifiedAddress = address.toLowerCase().trim()
             const balance = await provider.getBalance(modifiedAddress)
             const ethBalance = ethers.utils.formatEther(balance)
-            // if (parseFloat(ethBalance) > 0) trezorAddresses.push({ address, balance: ethBalance, index: i.toString() }) // TODO: Uncomment this line; it is currently commented out for testing
-            trezorAddresses.push(
-                { address, balance: ethBalance, pathIndex: i.toString() }
-            ) // TODO: Remove this line; it is currently for testing
+            trezorAddresses.push({ address, balance: ethBalance, pathIndex: i.toString() })
         }
-        return trezorAddresses.length ? trezorAddresses : [] 
+        return trezorAddresses.length ? trezorAddresses : []
     }
 
     async signMessage(message: ethers.utils.Bytes | string): Promise<string> {

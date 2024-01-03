@@ -46,7 +46,6 @@ router.post("/add-sub-account", verifySession(), async (req: SessionRequest, res
         const userId = id.toString()
         const userSessionId = req.session?.getUserId()
         const validatedUserId = validateUserId(userSessionId, userId)
-        console.log("validatedUserId :>> ", validatedUserId)
         if (!validatedUserId) {
             res.setHeader("Content-Type", "application/json")
             res.status(200)

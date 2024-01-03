@@ -16,9 +16,9 @@ void async function () {
     await run("npm run docgen --workspace @casimir/docs")
     await run("npm run build --workspace @casimir/docs")
     await run("npm run build --workspace @casimir/redirect")
-    await run("npm run build --workspace @casimir/landing")
+    await run("npm run build --workspace @casimir/www")
     await run("npm run build --workspace @casimir/users")
-    await run("npm run build --workspace @casimir/web")
+    await run("npm run build --workspace @casimir/mvp")
 
     console.log("🚀 Testing CDK app")
     await run("npm run test --workspace @casimir/cdk")

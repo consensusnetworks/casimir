@@ -51,7 +51,7 @@ async function run() {
         const handler = handlers[event.event as string]
         if (!handler) throw new Error(`No handler found for event ${event.event}`)
         await handler({ args })
-        if (process.env.USE_LOGS === "true") {
+        if (process.env.USE_LOGS === "true" && !config.dryRun) {
             // Todo check if this possibly misses events
             updateStartBlock("block.log", event.blockNumber + 1)
         }
@@ -59,10 +59,10 @@ async function run() {
 }
 
 run().catch(error => {
-    if (process.env.USE_LOGS === "true") {
+    if (process.env.USE_LOGS === "true" && !config.dryRun) {
         updateErrorLog("error.log", (error as Error).message)
     } else {
         console.log(error)
-    }    
+    }
     process.exit(1)
 })
