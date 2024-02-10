@@ -290,7 +290,7 @@ onUnmounted(() => {
               <!-- SECTION: SELECT PROVIDER  or  ADD ACCOUNT -->
               <section v-if="flowState === 'select_provider' || flowState === 'add_account'">
                 <div>
-                  <h1 class="card_title">
+                  <h1 class="card_title font-[500] tracking-tight">
                     {{ flowState === 'select_provider'? 'Connect Wallet' : 'Add Wallet' }}
                   </h1>
                   <p class="card_subtitle">
@@ -364,7 +364,7 @@ onUnmounted(() => {
                     >
                       <ArrowLeftCircleIcon class="w-[16px] h-[16px]" />
                     </button>
-                    <h1 class="card_title">
+                    <h1 class="card_title font-[500] tracking-tight">
                       Select Wallet
                     </h1>
                   </div>
@@ -377,7 +377,7 @@ onUnmounted(() => {
                   v-if="walletProviderAddresses.length === 0"
                   class="mt-[30px] h-[310px] flex flex-col justify-between"
                 >
-                  <div class="card_title font-[400] text-red mb-[20px]">
+                  <div class="card_title font-[500] tracking-tight font-[400] text-red mb-[20px]">
                     We do not see any available addresses, please connect or create a wallet to the selected provider
                   </div>
                   <button
@@ -451,7 +451,7 @@ onUnmounted(() => {
                   
                   <div class="w-full text-center">
                     <small
-                      class="w-full card_title"
+                      class="w-full card_title font-[500] tracking-tight"
                     >
                       Waiting on signature
                     </small>
@@ -471,7 +471,7 @@ onUnmounted(() => {
                   
                   <div class="w-full text-center">
                     <small
-                      class="w-full card_title"
+                      class="w-full card_title font-[500] tracking-tight"
                     >
                       <span class="text-green">Wallet Connected!</span>
                     </small>
@@ -491,7 +491,7 @@ onUnmounted(() => {
                   
                   <div class="w-full text-center">
                     <small
-                      class="w-full card_title"
+                      class="w-full card_title font-[500] tracking-tight"
                     >
                       <span class="text-red">
                         Something went wrong, try again later
@@ -507,7 +507,7 @@ onUnmounted(() => {
                 class="w-full h-full"
               >
                 <div>
-                  <h1 class="card_title">
+                  <h1 class="card_title font-[500] tracking-tight">
                     Confirm selection
                   </h1>
                   <p class="card_subtitle">

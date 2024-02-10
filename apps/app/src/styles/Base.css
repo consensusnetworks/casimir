@@ -9,16 +9,20 @@
     text-white dark:text-black bg-black hover:bg-black/80
     active:bg-black/75 dark:bg-white  dark:hover:bg-white/80
     dark:active:bg-white/75;    
-    ;
 }
 
 .secondary_btn{
-    @apply rounded-[6px] px-[12px] py-[6px] flex items-center gap-[8px]
+    @apply rounded-[6px] px-[12px] py-[6px] flex items-center justify-center gap-[8px]
     bg-gray_4 text-black shadow-md dark:bg-gray_5 dark:text-white
     hover:bg-gray_4/60 active:bg-gray_4/80 dark:hover:bg-gray_5/60
     dark:active:bg-gray_5/80;
 }
 
+.warning_btn{
+    @apply rounded-[6px] px-[12px] py-[6px] flex items-center gap-[8px]
+    text-white dark:text-white bg-red hover:bg-red/80
+    active:bg-red/75  
+}
 
 .tooltip_container {
   position: relative;

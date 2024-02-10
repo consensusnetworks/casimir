@@ -182,7 +182,7 @@ export default function useAuth() {
                 const { data: { sameAddress, walletProvider } } = await checkIfPrimaryUserExists(provider as ProviderString, address)
                 if (sameAddress) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
-                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
+                    if (router.currentRoute.value.path === "/") router.push("/")
                     return "Successfully logged in"
                 }
 
@@ -201,12 +201,12 @@ export default function useAuth() {
                 if (provider === "WalletConnect") {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
-                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
+                    if (router.currentRoute.value.path === "/") router.push("/")
                     return "Successfully logged in"
                 } else if (hardwareWallet) {
                     await loginWithProvider(loginCredentials as LoginCredentials)
                     await getUser()
-                    if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
+                    if (router.currentRoute.value.path === "/") router.push("/")
                     return "Successfully logged in"
                 } else if (browserWallet) {
                     const activeAddress = await detectActiveWalletAddress(provider as ProviderString)
@@ -216,7 +216,7 @@ export default function useAuth() {
                             address,
                             currency: "ETH",
                         })
-                        if (router.currentRoute.value.path === "/onboarding/welcome") router.push("/")
+                        if (router.currentRoute.value.path === "/") router.push("/")
                         return "Successfully logged in"
                     } else {
                         return "Selected address is not active address in wallet"
@@ -263,7 +263,7 @@ export default function useAuth() {
             const promises = [disconnectWalletConnect(), Session.signOut()]
             await Promise.all(promises)
             setUser(undefined)
-            router.push("/onboarding/welcome")
+            router.push("/")
         } catch (error) {
             console.log("Error logging out user :>> ", error)
         }

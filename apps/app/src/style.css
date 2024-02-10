@@ -95,7 +95,7 @@ body caption{
 
 .nav_bar_container{
   @apply w-full sticky top-0 left-0 border-b 
-  border-b-lightBorder dark:border-b-darkBorder;
+  border-b-lightBorder dark:border-b-darkBorder bg-white/60 dark:bg-black/60 backdrop-blur-sm;
   height: var(--navbar-height)
 }
 
@@ -210,11 +210,11 @@ body caption{
 }
 
 .card_title{
-  @apply mb-[6px] text-black dark:text-white;
+  @apply mb-[6px] text-black dark:text-white tracking-tight;
   font-family: Inter;
   font-size: 14px;
   font-style: normal;
-  font-weight: 600;
+  font-weight: 500;
   line-height: normal;
 }
 .shawdow{
