@@ -55,6 +55,7 @@ export default {
         screens: {
             "1300s": { "min": "0px", "max": "1300px" },
             "700s": { "min": "0px", "max": "700px" },
+            "500s": { "min": "0px", "max": "500px" },
         },
     },
     plugins: [],
