@@ -93,6 +93,12 @@ const props = defineProps({
         class="w-full h-full"
       />
     </div>
+    <div 
+      v-else-if="props.toast.type === 'loading'"
+      class="w-full h-full"
+    >
+      <Loading :show-text="false" />
+    </div>
   </div>
 </template>
 

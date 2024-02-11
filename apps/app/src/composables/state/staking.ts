@@ -10,6 +10,7 @@ import useToasts from "@/composables/state/toasts"
 const {
     addToast,
     updateToast,
+    removeToast
 } = useToasts()
 
 
@@ -99,6 +100,9 @@ export default function useStakingState() {
                     loading: false
                 }
                 updateToast(toastContent)
+                setTimeout(() => {
+                    removeToast(toastContent.id)
+                }, 3000)
             }, 3000)
         }, 3000)
 

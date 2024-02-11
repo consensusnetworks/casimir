@@ -16,6 +16,8 @@ import StakeCard from "./components/StakeCard.vue"
     <div class="w-full mt-[24px] border h-[540px]">
       active stakes
     </div>
+
+    <!-- TODO: add tearms and services card and button -->
   </div>
 </template>
 
