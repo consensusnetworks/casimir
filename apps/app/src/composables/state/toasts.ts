@@ -8,6 +8,7 @@ interface Toast {
   title: string;
   subtitle: string;
   timed: boolean;
+  loading: boolean;
 }
 
 const initializeComposable = ref(false)
@@ -23,7 +24,17 @@ export default function useToasts() {
                 if (index !== -1) {
                     toasts.value.splice(index, 1)
                 }
-            }, 3000)
+            }, 3100)
+        }
+    }
+    const findToastById = (toastId: string) => {
+        return toasts.value.find((toast) => toast.id === toastId)
+    }
+
+    const updateToast = (t: Toast) => {
+        const toast = findToastById(t.id)
+        if (toast) {
+            Object.assign(toast, t)
         }
     }
 
@@ -51,7 +62,8 @@ export default function useToasts() {
                         iconUrl: "/goerli.svg",
                         title: "Your are on Goerli Testnet",
                         subtitle: "Estimated time to mainnet is 12 days",
-                        timed: true
+                        timed: true,
+                        loading: false
                     })
                 }
             }, 800)
@@ -66,5 +78,6 @@ export default function useToasts() {
         toasts: readonly(toasts),
         addToast,
         removeToast,
+        updateToast
     }
 }

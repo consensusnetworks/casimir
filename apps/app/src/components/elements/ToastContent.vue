@@ -5,6 +5,7 @@ import {
     CheckCircleIcon,
 } from "@heroicons/vue/24/outline"
 import useToasts from "@/composables/state/toasts"
+import Loading from "@/components/elements/Loading.vue"
 const { removeToast } = useToasts()
 
 // eslint-disable-next-line no-undef
@@ -47,6 +48,12 @@ const props = defineProps({
           <XCircleIcon 
             class="w-full h-full"
           />
+        </div>
+        <div 
+          v-else-if="props.toast.type === 'loading'"
+          class="w-full h-full"
+        >
+          <Loading :show-text="false" />
         </div>
       </div>
       <div>

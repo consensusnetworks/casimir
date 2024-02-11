@@ -185,6 +185,7 @@ function copyTextToClipboard(text) {
                         title: "Address Copied",
                         subtitle: "Copied Address " + convertString(text),
                         timed: true,
+                        loading: false
                     }
                 )
             }, 1000)
@@ -198,6 +199,7 @@ function copyTextToClipboard(text) {
                         title: "Failed to Copy Address",
                         subtitle: "Something went wrong, please try again later",
                         timed: true,
+                        loading: false
                     }
                 )
             }, 1000)
@@ -208,7 +210,7 @@ function copyTextToClipboard(text) {
 <template>
   <div class="card w-full h-full shadow py-[24px] flex flex-col gap-[24px] relative">
     <div class="flex items-start justify-between px-[24px] flex-wrap gap-[12px]">
-      <div class="m">
+      <div class="">
         <h1 class="card_title">
           Wallets Connected
         </h1>
@@ -219,7 +221,7 @@ function copyTextToClipboard(text) {
 
       <div>
         <button
-          class="secondary_btn w-[122px] 800s:sr-only"
+          class="secondary_btn w-[122px] 600s:sr-only"
           @click="toggleConnectWalletModal"
         >
           <caption class=" whitespace-nowrap font-[500] tracking-wide mt-[2px]">
@@ -408,6 +410,6 @@ function copyTextToClipboard(text) {
 
 <style>
 .gradient {
-    background-image: linear-gradient(to right, rgba(113, 113, 122, 0.45) 0%, rgba(113, 113, 122, 0.85) 50%, rgba(113, 113, 122, 0.45) 100%);
+    background-image: linear-gradient(to right, rgba(113, 113, 122, 0.45) 0%,rgba(113, 113, 122, 0.75) 25%, rgba(113, 113, 122, 1) 50%,rgba(113, 113, 122, .75) 75%, rgba(113, 113, 122, 0.45) 100%);
 }
 </style>

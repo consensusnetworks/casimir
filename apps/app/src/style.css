@@ -240,7 +240,7 @@ body caption{
   max-height: calc(100% - var(--navbar-height) - 48px);
 
   @media screen and (min-width: 1275px) {
-    right: calc((100% - 1275px) / 2 + 24px);
+    right: calc((100% - 1275px) / 2 + 6px);
   }
 
   @media screen and (max-width: 1275px) {
@@ -252,7 +252,7 @@ body caption{
   @apply fixed bottom-0 right-0 flex flex-col
   items-end pb-[24px] z-[10];
   @media screen and (min-width: 1275px) {
-    right: calc((100% - 1275px) / 2 + 24px);
+    right: calc((100% - 1275px) / 2 + 6px);
   }
 
   @media screen and (max-width: 1275px) {

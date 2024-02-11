@@ -210,7 +210,6 @@ function copyTextToClipboard(text) {
                 class="absolute right-0 mt-2 origin-top-right shadow-lg dark:shadow-sm dark:shadow-white/30
                 ring-1 ring-black/5 focus:outline-none w-full card"
               >
-                <!-- TODO: Connect this to open connect wallet modal-->
                 <button
                   v-if="!user"
                   class="h-[40px] px-[8px] flex items-center gap-[8px] w-full
@@ -222,7 +221,6 @@ function copyTextToClipboard(text) {
                   <small>Connect Wallet</small>
                 </button>
 
-                <!-- TODO: Connect this to open connect wallet modal, sign out, and copy addresses-->
                 <div v-else>
                   <button
                     class="h-[40px] px-[8px] flex items-center gap-[8px] w-full
@@ -234,13 +232,11 @@ function copyTextToClipboard(text) {
                     <PlusCircleIcon class="w-[20px] h-[20px]" />
                     <small>Add Wallet</small>
                   </button>
-                  <!-- TODO: Make these condidtional on if the user has secondary accoutns -->
                   <div class="p-[8px] ">
                     <caption class="text-gray_1 whitespace-nowrap font-[600]">
                       Primary Wallet
                     </caption>
 
-                    <!-- TODO: Make a copy method -->
                     <button
                       class="w-full mt-[8px] rounded-[3px] flex items-center
                       justify-between px-[8px] py-[6px] hover:bg-gray_4 dark:hover:bg-gray_5"

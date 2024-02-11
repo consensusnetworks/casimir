@@ -5,7 +5,7 @@
 
 
 .primary_btn{
-    @apply rounded-[6px] px-[12px] py-[6px] flex items-center gap-[8px]
+    @apply rounded-[6px] px-[12px] py-[6px] flex items-center justify-center gap-[8px]
     text-white dark:text-black bg-black hover:bg-black/80
     active:bg-black/75 dark:bg-white  dark:hover:bg-white/80
     dark:active:bg-white/75;    
@@ -48,4 +48,40 @@
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
     z-index: 5;
+  }
+
+  .input_container{
+    @apply w-full rounded-[5px]
+    py-[6px] px-[12px] mt-[6px] relative flex items-center justify-between;
+  }
+
+  .input_container_border{
+    @apply border border-lightBorder dark:border-darkBorder;
+  }
+
+  .input_container input{
+    @apply outline-none w-full;
+  }
+
+  .input_selector{
+    @apply absolute top-[120%] left-0 bg-[#FFF] dark:bg-black 
+    border border-lightBorder dark:border-lightBorder/40
+    rounded-[6px] w-full px-[12px] py-[8px] shadow z-[10]
+    max-h-[250px] overflow-auto;
+  }
+
+  .switch_container {
+    @apply relative inline-flex h-[20px] w-[36px] shrink-0 cursor-pointer rounded-full border-2 
+    border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2
+     focus-visible:ring-white/75;
+  }
+
+  .switch_ball{
+    @apply pointer-events-none inline-block h-[16px] w-[16px] transform rounded-full 
+    bg-white shadow-lg ring-0 transition duration-200 ease-in-out dark:bg-black;
+  }
+
+  .checkbox_button {
+    @apply w-[16px] h-[16px] rounded-[6px] border border-black dark:border-white
+    flex items-center justify-center;
   }

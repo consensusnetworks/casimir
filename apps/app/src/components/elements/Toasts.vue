@@ -24,16 +24,17 @@ const toastExists = (t) => {
       <div
         v-for="i in toasts"
         :key="i"
-        class="toast relative"
+        class="toast relative overflow-hidden"
       >
         <ToastContent
           :toast="i"
         />
+        <!-- TODO: Add loading animaiton -->
         <div
           v-if="i.timed"
           class="absolute bottom-0 left-0 w-full h-[4px]"
         >
-          <div class="expand bg-black h-full" />
+          <div class="expand bg-black dark:bg-white h-full" />
         </div>
       </div>
     </transition-group>
