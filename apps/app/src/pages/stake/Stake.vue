@@ -1,6 +1,7 @@
 <script setup>
 import ConnectWallet from "./components/ConnectedWallets.vue"
 import StakeCard from "./components/StakeCard.vue"
+import ActiveStakes from "./components/ActiveStakes.vue"
 </script>
 
 <template>
@@ -13,8 +14,8 @@ import StakeCard from "./components/StakeCard.vue"
         <StakeCard />
       </div>
     </div>
-    <div class="w-full mt-[24px] border h-[540px]">
-      active stakes
+    <div class="w-full mt-[24px] h-[540px]">
+      <ActiveStakes />
     </div>
 
     <!-- TODO: add tearms and services card and button -->

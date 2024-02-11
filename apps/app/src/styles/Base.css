@@ -26,6 +26,7 @@
 
 .tooltip_container {
   position: relative;
+  cursor: pointer;
 }
 
 .tooltip_container:hover .tooltip {
@@ -82,6 +83,6 @@
   }
 
   .checkbox_button {
-    @apply w-[16px] h-[16px] rounded-[6px] border border-black dark:border-white
+    @apply w-[16px] h-[16px] rounded-[4px] border border-black dark:border-white
     flex items-center justify-center;
   }

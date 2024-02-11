@@ -43,36 +43,33 @@ export default function useToasts() {
         toasts.value = updatedToasts
     }
 
-    onMounted(() => {
-        if (!initializeComposable.value) {
-            initializeComposable.value = true 
-            toasts.value = []
+    // TODO: check if there needs to be an alert that they are test net or main net
+    // onMounted(() => {
+    //     if (!initializeComposable.value) {
+    //         initializeComposable.value = true 
+    //         toasts.value = []
 
-            const showCurrentNetwork = ref(false)
-            const showCurrentNetworkStorage = useStorage(
-                "showCurrentNetwork",
-                showCurrentNetwork
-            )
+    //         const showCurrentNetwork = ref(false)
+    //         const showCurrentNetworkStorage = useStorage(
+    //             "showCurrentNetwork",
+    //             showCurrentNetwork
+    //         )
 
-            setTimeout(() => {
-                if (!showCurrentNetworkStorage.value) {
-                    addToast({
-                        id: "test_net",
-                        type: "info",
-                        iconUrl: "/goerli.svg",
-                        title: "Your are on Goerli Testnet",
-                        subtitle: "Estimated time to mainnet is 12 days",
-                        timed: true,
-                        loading: false
-                    })
-                }
-            }, 800)
-        }
-    })
-
-    onUnmounted(() => {
-    // Clean-up logic if needed
-    })
+    //         setTimeout(() => {
+    //             if (!showCurrentNetworkStorage.value) {
+    //                 addToast({
+    //                     id: "test_net",
+    //                     type: "info",
+    //                     iconUrl: "/goerli.svg",
+    //                     title: "Your are on Goerli Testnet",
+    //                     subtitle: "Estimated time to mainnet is 12 days",
+    //                     timed: true,
+    //                     loading: false
+    //                 })
+    //             }
+    //         }, 800)
+    //     }
+    // })
 
     return {
         toasts: readonly(toasts),

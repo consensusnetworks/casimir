@@ -20,6 +20,8 @@ const stakingWalletAddress = ref(null as null | string)
 const stakingAmount = ref(null as null | number)
 const eigenLayerSelection = ref(false as boolean)
 
+const withdrawAmount = ref(null as null | number)
+
 const acceptTerms = ref(false)
   
 export default function useStakingState() {
@@ -56,6 +58,10 @@ export default function useStakingState() {
         acceptTerms.value = !acceptTerms.value
     }
 
+    const setWithdrawAmount = (amount: number) => {
+        withdrawAmount.value = amount
+    }
+
     const getRandomToastId = (length: number) => {
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         let result = ""
@@ -65,6 +71,7 @@ export default function useStakingState() {
         return result
     }
 
+    // TODO: hande stake and withdraw functions
     const handleStake = () => {
         let toastContent ={
             id: getRandomToastId(16),
@@ -111,15 +118,64 @@ export default function useStakingState() {
         // submit stake
     }
 
+    const handleWithdraw = () => {
+        let toastContent ={
+            id: getRandomToastId(16),
+            type: "loading",
+            iconUrl: "",
+            title: "Withdrawing Stake",
+            subtitle: "Processing stake withdraw request",
+            timed: false,
+            loading: true
+        }
+        addToast(toastContent)
+
+        setTimeout(() => {
+            toastContent ={
+                id: toastContent.id,
+                type: "loading",
+                iconUrl: "",
+                title: "Confirming Withdraw",
+                subtitle: "Confirming stake withdraw from pool",
+                timed: false,
+                loading: true
+            }
+            updateToast(toastContent)
+
+            setTimeout(() => {
+                toastContent ={
+                    id: toastContent.id,
+                    type: "success",
+                    iconUrl: "",
+                    title: "Stake Withdraw Complete",
+                    subtitle: "Stake withdraw is finalized and  no errors",
+                    timed: false,
+                    loading: false
+                }
+                updateToast(toastContent)
+                setTimeout(() => {
+                    removeToast(toastContent.id)
+                }, 3000)
+            }, 3000)
+        }, 3000)
+
+        // Add toast accordingly
+        // handle stake here
+        // submit stake
+    }
+
     return {
         stakingWalletAddress: readonly(stakingWalletAddress),
         stakingAmount: readonly(stakingAmount),
         eigenLayerSelection: readonly(eigenLayerSelection),
         acceptTerms: readonly(acceptTerms),
+        withdrawAmount: readonly(withdrawAmount),
         selectWallet,
         setAmountToStake,
         toggleEigenlayerSelection,
         toggleTerms,
-        handleStake
+        handleStake,
+        setWithdrawAmount,
+        handleWithdraw
     }
 }
