@@ -41,7 +41,7 @@ const columns = [
 const tableHeaders = ref(columns)
 
 
-useStorage("chosenActiveHeaders", tableHeaders)
+useStorage("chosenActiveHeaders", tableHeaders.value)
 const showArrowsIndex = ref(-1)
 
 const toggleColumnShowItem = (item) =>{
@@ -54,8 +54,7 @@ const toggleColumnShowItem = (item) =>{
         title: col.title,
         show: col.show.value,
         value: col.value
-    }))
-  
+    }))  
 }
 
 
@@ -218,6 +217,11 @@ const handleWithdrawAction = () => {
     handleWithdraw()
     closeOpenActiveStakeOptions()
 
+}
+
+const findSwitchHeaderValue = (switchItem) => {
+    const index = tableHeaders.value.findIndex(item => item.title == switchItem.title)
+    return tableHeaders.value[index].show
 }
 </script>
 
@@ -447,10 +451,9 @@ const handleWithdrawAction = () => {
                     @mouseleave="showArrowsIndex = -1"
                   >
                     {{ item.title }}
-
                     <div class="flex items-center gap-[12px] text-[12px]">
                       <Switch
-                        :class="columns[index].show.value ? 'bg-black dark:bg-white' : ' bg-gray_1 dark:bg-gray_6'"
+                        :class="findSwitchHeaderValue(item)? 'bg-black dark:bg-white' : ' bg-gray_1 dark:bg-gray_6'"
                         class="switch_container"
                         @click="toggleColumnShowItem(item)"
                       >
