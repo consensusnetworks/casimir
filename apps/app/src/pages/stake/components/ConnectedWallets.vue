@@ -3,7 +3,11 @@ import { ref } from "vue"
 import useUser from "@/composables/services/user"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import useFormat from "@/composables/services/format"
-// TODO: Add toasts
+import useToasts from "@/composables/state/toasts"
+
+const {
+    addToast,
+} = useToasts()
 
 const { convertString } = useFormat()
 import { 
@@ -171,18 +175,31 @@ const goToLastPage = () => {
 }
 
 function copyTextToClipboard(text) {
-    // TODO: write up a toast for copy method
     navigator.clipboard.writeText(text)
         .then(() => {
-            // copySuccessful.value = "copied"
             setTimeout(() => {
-                // copySuccessful.value = ""
+                addToast(
+                    {
+                        id: "copy_address_" + text,
+                        type: "success",
+                        title: "Address Copied",
+                        subtitle: "Copied Address " + convertString(text),
+                        timed: true,
+                    }
+                )
             }, 1000)
         })
         .catch(err => {
-            // copySuccessful.value = "failed"
             setTimeout(() => {
-                // copySuccessful.value = ""
+                addToast(
+                    {
+                        id: "copy_address_" + text,
+                        type: "failed",
+                        title: "Failed to Copy Address",
+                        subtitle: "Something went wrong, please try again later",
+                        timed: true,
+                    }
+                )
             }, 1000)
         })
 }
@@ -325,7 +342,6 @@ function copyTextToClipboard(text) {
                 Remove Wallet
               </caption>
             </button>
-            <!-- TODO: make a copy method -->
             <button
               class="secondary_btn whitespace-nowrap"
               @click="copyTextToClipboard(wallet.address)"
@@ -348,32 +364,32 @@ function copyTextToClipboard(text) {
         </div>
         <div class="flex items-center gap-[5px] text-[#71717a]">
           <button
-            class="border border-[#e4e4e7] rounded-[6px] p-[8px] 
+            class="border border-[#e4e4e7] rounded-[6px] p-[4px] 
             hover:bg-[#F4F4F5] cursor-pointer"
             @click="goToFirstPage"
           >
-            <ChevronDoubleLeftIcon class="h-[16px] w-[16px]" />
+            <ChevronDoubleLeftIcon class="h-[14px] w-[14px]" />
           </button>
           <button
-            class="border border-[#e4e4e7] rounded-[6px] p-[8px] 
+            class="border border-[#e4e4e7] rounded-[6px] p-[4px] 
             hover:bg-[#F4F4F5] cursor-pointer"
             @click="goToPreviousPage"
           >
-            <ChevronLeftIcon class="h-[16px] w-[16px]" />
+            <ChevronLeftIcon class="h-[14px] w-[14px]" />
           </button>
           <button
-            class="border border-[#e4e4e7] rounded-[6px] p-[8px] 
+            class="border border-[#e4e4e7] rounded-[6px] p-[4px] 
             hover:bg-[#F4F4F5] cursor-pointer"
             @click="goToNextPage"
           >
-            <ChevronRightIcon class="h-[16px] w-[16px]" />
+            <ChevronRightIcon class="h-[14px] w-[14px]" />
           </button>
           <button
-            class="border border-[#e4e4e7] rounded-[6px] p-[8px] 
+            class="border border-[#e4e4e7] rounded-[6px] p-[4px] 
             hover:bg-[#F4F4F5] cursor-pointer"
             @click="goToLastPage"
           >
-            <ChevronDoubleRightIcon class="h-[16px] w-[16px]" />
+            <ChevronDoubleRightIcon class="h-[14px] w-[14px]" />
           </button>
         </div>
       </div>

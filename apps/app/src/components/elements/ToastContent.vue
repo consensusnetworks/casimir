@@ -23,7 +23,7 @@ const props = defineProps({
 <template>
   <div
     v-if="!props.mini && props.toast"
-    class="flex items-start justify-between gap-[30px]"
+    class="flex items-start justify-between gap-[30px] relative"
   >
     <div class="flex items-start gap-[12px]">
       <div class="w-[38px] h-[38px] rounded-[999px] overflow-hidden">

@@ -19,16 +19,22 @@ const toastExists = (t) => {
     <transition-group
       name="toast_vertical"
       tag="div"
-      class="overflow-hidden pb-[12px]"
+      class="overflow-hidden pb-[12px] "
     >
       <div
         v-for="i in toasts"
         :key="i"
-        class="toast"
+        class="toast relative"
       >
         <ToastContent
           :toast="i"
         />
+        <div
+          v-if="i.timed"
+          class="absolute bottom-0 left-0 w-full h-[4px]"
+        >
+          <div class="expand bg-black h-full" />
+        </div>
       </div>
     </transition-group>
   </div>
@@ -134,5 +140,19 @@ const toastExists = (t) => {
 
 .mini_toast_expand-leave, .mini_toast_expand-leave-to{
   animation: slide_right 0.8s ease-out;
+}
+
+.expand{ 
+  width: 0; 
+  animation: expand 3s ease-in forwards;
+}
+
+@keyframes expand {
+  0% {
+    width: 0%;
+  }
+  100%{
+    width: 100%;
+  }
 }
 </style>

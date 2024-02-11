@@ -7,6 +7,7 @@ interface Toast {
   iconUrl: string;
   title: string;
   subtitle: string;
+  timed: boolean;
 }
 
 const initializeComposable = ref(false)
@@ -16,6 +17,14 @@ const toasts = ref([] as Toast[])
 export default function useToasts() {
     const addToast = (t: Toast) => {
         toasts.value.push(t)
+        if (t.timed) {
+            setTimeout(() => {
+                const index = toasts.value.indexOf(t)
+                if (index !== -1) {
+                    toasts.value.splice(index, 1)
+                }
+            }, 3000)
+        }
     }
 
     const removeToast = (toastId: string) => {
@@ -36,13 +45,14 @@ export default function useToasts() {
 
             setTimeout(() => {
                 if (!showCurrentNetworkStorage.value) {
-                    toasts.value.push({
+                    addToast({
                         id: "test_net",
                         type: "info",
                         iconUrl: "/goerli.svg",
                         title: "Your are on Goerli Testnet",
                         subtitle: "Estimated time to mainnet is 12 days",
-                    } as Toast)
+                        timed: true
+                    })
                 }
             }, 800)
         }
