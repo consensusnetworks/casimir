@@ -28,6 +28,7 @@ const  openTermsAndCondiditons = () => {
 
 <template>
   <div>
+    <!-- TODO: add loader while checking for user -->
     <div class="flex items-start gap-[24px] h-[510px] 900s:flex-wrap-reverse 900s:h-[1044px]">
       <div class="w-9/12 h-full 900s:w-full 900s:h-[510px]">
         <ConnectWallet />
