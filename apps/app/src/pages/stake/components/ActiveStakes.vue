@@ -262,7 +262,7 @@ const handleWithdrawAction = () => {
           <tr
             v-for="stake in activeStakingItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)"
             :key="stake"
-            class="hover:bg-gray_4 cursor-pointer whitespace-nowrap"
+            class="hover:bg-gray_4 dark:hover:bg-gray_6 cursor-pointer whitespace-nowrap"
             @click="openOpenActiveStakeOptions(), selectedStake = stake"
           >
             <td

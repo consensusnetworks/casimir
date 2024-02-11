@@ -3,15 +3,7 @@
 </script>
 
 <template>
-  <div class="">
-    <h5 class="title">
-      Terms Of Service
-    </h5>
-    <hr class="my-[5px]">
-    <p class="body_text">
-      Copyright Consensus Networks, Inc. 2023
-      17 U.S.C. §§ 101-810
-    </p>
+  <div class="text-left">
     <h6 class="subtitle my-[5px]">
       A. Eligibility
     </h6>
