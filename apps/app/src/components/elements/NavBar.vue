@@ -288,7 +288,6 @@ function copyTextToClipboard(text) {
                     <caption class="text-gray_1 whitespace-nowrap font-[600]">
                       Secondary Wallet(s)
                     </caption>
-                    <!-- TODO: v-for here, make sure the @mosueover items show the correct item based on idex -->
                     <button
                       v-for="(account, index) in user.accounts"
                       :key="index"

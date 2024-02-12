@@ -329,7 +329,7 @@ onUnmounted(() => {
                       </div> -->
                   </div>
                 </div>
-                <div class="h-15 w-full text-[11px] font-[500] mb-5 text-red">
+                <div class="h-15 w-full text-[11px] flex items-center font-[500] mb-5 text-red">
                   <span v-show="errorMessage">
                     {{ errorMessageText }}
                   </span>

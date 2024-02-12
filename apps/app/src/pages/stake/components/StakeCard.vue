@@ -140,8 +140,6 @@ const handleStakingAction = () => {
           :class="stakingWalletAddress ? 'text-black' : 'text-grey_4'"
           @click="openSelectWalletinput = !openSelectWalletinput"
         >
-          <!-- TODO: add balance here -->
-
           <div
             v-if="stakingWalletAddress"
             class="tooltip_container"

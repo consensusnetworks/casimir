@@ -1,5 +1,4 @@
 <script setup>
-// TODO: Remake this into the new style
 </script>
 
 <template>
