@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from "vue"
+import { onMounted, onUnmounted, readonly, ref } from "vue"
 import * as Session from "supertokens-web-js/recipe/session"
 import useEnvironment from "@/composables/services/environment"
 import useEthers from "@/composables/services/ethers"
@@ -25,9 +25,7 @@ const { setUser, user } = useUser()
 const { disconnectWalletConnect, loginWithWalletConnectV2 } = useWalletConnect()
 const { detectActiveWalletAddress } = useWallets()
 
-const initializedAuthComposable = ref(false)
-const loadingSessionLogin = ref(false)
-const loadingSessionLoginError = ref(false)
+const loadingSession = ref(true)
 
 const initializeComposable = ref(false)
 
@@ -304,12 +302,15 @@ export default function useAuth() {
 
     // -----------------------------------------
     onMounted(async () => {
+
         if (!initializeComposable.value) {
+            loadingSession.value = true
             initializeComposable.value = true 
             const { user } = await (await fetch(`${usersUrl}/user`)).json()
             if (user) {
                 setUser(user)
             }
+            loadingSession.value = false
         }
     })
 
@@ -318,6 +319,7 @@ export default function useAuth() {
     })
 
     return {
+        loadingSession: readonly(loadingSession),
         login,
         logout,
         loginWithSecondaryAddress

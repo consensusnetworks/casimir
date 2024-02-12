@@ -63,7 +63,7 @@ const calculateFontSize = () => {
       justify-center text-black dark:text-white dynamic_text"
       :style="{ fontSize: `${calculateFontSize()}vw` }"
     >
-      {{ loadingText }}{{ dots }}
+      <h6>{{ loadingText }}{{ dots }}</h6>
     </div>
   </div>
 </template>
@@ -88,5 +88,6 @@ const calculateFontSize = () => {
     white-space: nowrap;
     overflow: hidden; 
     text-overflow: ellipsis;
+    font-size: 10.2px;
 }
 </style>
