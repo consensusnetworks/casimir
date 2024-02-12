@@ -2,6 +2,11 @@ import { readonly, ref, watch } from "vue"
 import { Account, ProviderString, UserWithAccountsAndOperators } from "@casimir/types"
 import useEnvironment from "@/composables/services/environment"
 import { ethers } from "ethers"
+import useToasts from "@/composables/state/toasts"
+
+const {
+    addToast
+} = useToasts()
 
 const { usersUrl, batchProvider } = useEnvironment()
 const user = ref<UserWithAccountsAndOperators | undefined>(undefined)
@@ -20,6 +25,47 @@ export default function useUser() {
         const { accounts } = user.value as UserWithAccountsAndOperators
         const target = accounts.find((account: Account) => account.walletProvider === provider && account.address === address)
         return target?.pathIndex
+    }
+
+    async function removeAccount(account: Account,) {
+        const userId = user?.value?.id
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ 
+                id: userId,
+                address: account.address,
+                currency: account.currency,
+                ownerAddress: user?.value?.address,
+                walletProvider: account.walletProvider 
+            }),
+        }
+        const result = await fetch(`${usersUrl}/user/remove-account`,options)
+        console.log("result :>> ", result)
+        if (result) {
+            // addToast(
+            //     {
+            //         id: `remove_sub_account_${account.}`,
+            //         type: "info",
+            //         iconUrl: "/goerli.svg",
+            //         title: "Your are on Goerli Testnet",
+            //         subtitle: "Estimated time to mainnet is 12 days",
+            //         timed: true,
+            //         loading: false
+            //     }
+            // )
+        }
+        // if (!result.error) {
+        //     setSelectedAddress(result.data.address)
+        //     result.data.accounts.forEach((account: Account) => {
+        //         if (account.address === selectedAddress.value) {
+        //             setSelectedProvider(account.walletProvider as ProviderString)
+        //             setSelectedCurrency(account.currency as Currency)
+        //         }
+        //     })
+        // }
     }
 
     function setUser(newUserValue: UserWithAccountsAndOperators | undefined) {
@@ -66,5 +112,7 @@ export default function useUser() {
         getPathIndex,
         setUser,
         updateUserAgreement,
+        setUserAccountBalances,
+        removeAccount
     }
 }

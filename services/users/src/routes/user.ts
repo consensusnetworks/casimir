@@ -160,7 +160,7 @@ router.get("/check-secondary-address/:address", async (req: express.Request, res
     }
 })
 
-router.post("/remove-sub-account", verifySession(), async (req: SessionRequest, res: express.Response) => {
+router.post("/remove-account", verifySession(), async (req: SessionRequest, res: express.Response) => {
     try {
         console.log("REMOVING ACCOUNT!")
         const { address, currency, id, ownerAddress, walletProvider } = req.body

@@ -41,7 +41,6 @@ const { getEthersTrezorAddresses } = useTrezor()
 const { user } = useUser()
 const { detectActiveNetwork, switchEthersNetwork } = useWallets()
 const { connectWalletConnectV2 } = useWalletConnect()
-// const { installedWallets, detectInstalledWalletProviders } = useWallets()
 
 // eslint-disable-next-line no-undef
 const props = defineProps({

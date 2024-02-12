@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue"
+import { ref, watch } from "vue"
 import useUser from "@/composables/services/user"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import useFormat from "@/composables/services/format"
@@ -9,7 +9,14 @@ const {
     addToast,
 } = useToasts()
 
-const { convertString } = useFormat()
+const { 
+    convertString,
+    formatDecimalString,
+    formatEthersCasimir,
+    formatEthersCasimirStaking,
+    parseEthersCasimir,
+    trimAndLowercaseAddress, 
+} = useFormat()
 import { 
     DocumentDuplicateIcon,
     MinusIcon,
@@ -32,121 +39,17 @@ const convertStringLong = (str) => {
 }
 
 const { toggleConnectWalletModal } = useConnectWalletModal()
-const { user } = useUser()
+const { user, removeAccount } = useUser()
 
-// TODO: make this fetch from the user's accounts instead of mocked
-const userSecondaryAccounts = ref([
-    { 
-        "id": 1, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 2, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 3, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 4, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 5, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 6, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 7, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 8, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-    { 
-        "id": 9, 
-        "address": "0x3bb9954a6ccc41b7179faf0cf5da4a3a6977a850", 
-        "balance": null, 
-        "currency": "ETH", 
-        "createdAt": "2024-02-10T20:47:03.625", 
-        "pathIndex": null, 
-        "updatedAt": null, 
-        "userId": 1, 
-        "walletProvider": "MetaMask", 
-        "operators": [] 
-    },
-]
-)
+const userSecondaryAccounts = ref(user?.value?.accounts?.filter((item) => {
+    if (item.address != user.value.address) return true
+}))
 
+watch(user.value, () => {
+    userSecondaryAccounts.value  = user?.value?.accounts?.filter((item) => {
+        if (item.address != user.value.address) return true
+    })
+})
 // primary || index number for secondary accounts
 const currentSecondaryWallets = ref([0 , 3])
 const showWalletBanner = ref(-1)
@@ -268,7 +171,7 @@ function copyTextToClipboard(text) {
 
           <div>
             <h6 class="630s:text-[12px] whitespace-nowrap">
-              Balance ETH | $ USD
+              {{ formatEthersCasimir(user.accounts[user.accounts.findIndex(item => item.address == user.address)].balance) }} ETH
             </h6>
           </div>
         </div>
@@ -296,10 +199,13 @@ function copyTextToClipboard(text) {
       </caption>
 
       
-      <div class="flex flex-col gap-[12px]">
+      <div
+        v-if="user.accounts.length > 1"
+        class="flex flex-col gap-[12px]"
+      >
         <div
-          v-for="wallet in userSecondaryAccounts.slice(currentSecondaryWallets[0], currentSecondaryWallets[1] + 1)"
-          :key="wallet.id"
+          v-for="(wallet, index) in userSecondaryAccounts.slice(currentSecondaryWallets[0], currentSecondaryWallets[1] + 1)"
+          :key="index"
           class="w-full relative py-[6px]"
           @mouseenter="showWalletBanner = wallet.id"
           @mouseleave="showWalletBanner = -1"
@@ -329,7 +235,7 @@ function copyTextToClipboard(text) {
 
             <div>
               <h6 class="630s:text-[12px] whitespace-nowrap">
-                Balance ETH | $ USD
+                {{ formatEthersCasimir(wallet.balance ) }} ETH
               </h6>
             </div>
           </div>
@@ -337,8 +243,10 @@ function copyTextToClipboard(text) {
             v-if="showWalletBanner == wallet.id"
             class="absolute top-0 left-0 w-full h-full gradient flex items-center justify-center gap-[12px]"
           >
-            <!-- TODO: connect with remove method -->
-            <button class="warning_btn whitespace-nowrap">
+            <button
+              class="warning_btn whitespace-nowrap"
+              @click="removeAccount(wallet)"
+            >
               <MinusIcon class="w-[14px] h-[14px]" />
               <caption class="font-[500]">
                 Remove Wallet

@@ -21,9 +21,9 @@ const { usersUrl } = useEnvironment()
 const { browserProvidersList, loginWithEthers } = useEthers()
 // const { loginWithLedger } = useLedger()
 // const { loginWithTrezor } = useTrezor()
-const { setUser, user } = useUser()
+const { setUser, user, setUserAccountBalances } = useUser()
 const { disconnectWalletConnect, loginWithWalletConnectV2 } = useWalletConnect()
-const { detectActiveWalletAddress } = useWallets()
+const { detectActiveWalletAddress, detectInstalledWalletProviders } = useWallets()
 
 const loadingSession = ref(true)
 
@@ -167,7 +167,6 @@ export default function useAuth() {
                     const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
                     // If yes, alert user that it already exists as a secondary address on another account and ask if they want to add it as a secondary to this account
                     if (accountsIfSecondaryAddress.length) {
-                        console.log("accountsIfSecondaryAddress :>> ", accountsIfSecondaryAddress)
                         return "Address already exists as a secondary address on another account"
                     } else {
                         // If no, addAccountToUser
@@ -186,7 +185,6 @@ export default function useAuth() {
 
                 // Then check if address is being used as a secondary account by another user
                 const { data: accountsIfSecondaryAddress } = await checkIfSecondaryAddress(address)
-                console.log("accountsIfSecondaryAddress :>> ", accountsIfSecondaryAddress)
                 if (accountsIfSecondaryAddress.length) return "Address already exists as a secondary address on another account"
 
                 // Handle user interaction (do they want to sign in with another account?)
@@ -293,11 +291,8 @@ export default function useAuth() {
     }
 
 
-    async function performLoginChecklist() {
-        // perform checklist of items for the user
-        // Methods will be imported from the proper composables
-        // 1. get user (update user)
-        // 2 get all other analytics and such after
+    function performLoginChecklist() {
+        detectInstalledWalletProviders()
     }
 
     // -----------------------------------------
@@ -307,8 +302,11 @@ export default function useAuth() {
             loadingSession.value = true
             initializeComposable.value = true 
             const { user } = await (await fetch(`${usersUrl}/user`)).json()
+            performLoginChecklist()
             if (user) {
                 setUser(user)
+                await setUserAccountBalances()
+                // get user active stakes
             }
             loadingSession.value = false
         }
@@ -322,6 +320,6 @@ export default function useAuth() {
         loadingSession: readonly(loadingSession),
         login,
         logout,
-        loginWithSecondaryAddress
+        loginWithSecondaryAddress,
     }
 }

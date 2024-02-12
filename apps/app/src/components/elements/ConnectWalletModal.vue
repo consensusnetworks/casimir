@@ -76,7 +76,6 @@ async function selectAddress(address: string, pathIndex?: number): Promise<void>
       pathIndex !== undefined ? 
           { provider: selectedProvider.value as ProviderString, address, currency: "ETH", pathIndex } : 
           { provider: selectedProvider.value as ProviderString, address, currency: "ETH" }
-    console.log("loginCredentials :>> ", loginCredentials)
     const response = await login(loginCredentials)
     if (response === "Successfully logged in" || response === "Successfully added account to user") {
         flowState.value = "success"
@@ -120,21 +119,20 @@ async function selectProvider(provider: ProviderString): Promise<void> {
         selectProviderLoading.value = true
     
         // Hard Goerli Check
-        // TODO: Make this dynamic
-        if (provider !== "WalletConnect") {
-            const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
-            if (activeNetwork !== 5) {
-                await switchEthersNetwork(selectedProvider.value, "0x5")
-                return window.location.reload()
-            }
-        }
+        // TODO: Re-enable and make this dynamic
+        // if (provider !== "WalletConnect") {
+        //     const activeNetwork = await detectActiveNetwork(selectedProvider.value as ProviderString)
+        //     if (activeNetwork !== 5) {
+        //         await switchEthersNetwork(selectedProvider.value, "0x5")
+        //         return window.location.reload()
+        //     }
+        // }
 
         if (provider === "WalletConnect") {
             // TODO: @@cali1 - pass in the network id dynamically
             walletProviderAddresses.value = await connectWalletConnectV2(requiredNetwork) as CryptoAddress[]
         } else if (browserProvidersList.includes(provider)) {
             walletProviderAddresses.value = await getEthersAddressesWithBalances(provider) as CryptoAddress[]
-            console.log("walletProviderAddresses.value :>> ", walletProviderAddresses.value)
         } else if (provider === "Ledger") {
             // walletProviderAddresses.value = await getEthersLedgerAddresses() as CryptoAddress[]
         } else if (provider === "Trezor") {

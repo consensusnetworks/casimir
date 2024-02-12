@@ -205,7 +205,7 @@ body caption{
 .connect_wallet_card{
   @apply bg-[#FFF] dark:bg-black 
   border border-lightBorder dark:border-lightBorder/40
-  rounded-[6px] overflow-hidden p-[24px] max-w-[300px] w-full h-[440px] text-left;
+  rounded-[6px] overflow-hidden p-[24px] max-w-[300px] w-full h-[450px] text-left;
   box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.06), 0px 4px 6px -1px rgba(0, 0, 0, 0.10);
 }
 

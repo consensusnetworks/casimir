@@ -29,7 +29,7 @@ const { openConnectWalletModal } = useConnectWalletModal()
       class="overflow-hidden opacity-50"
       style="height: calc(100vh - 300px);"
     >
-      <Loading />
+      <Loading :show-text="false" />
     </div>
 
     <ConnectWalletModal v-show="openConnectWalletModal" />

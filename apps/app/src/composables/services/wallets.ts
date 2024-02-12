@@ -41,7 +41,7 @@ export default function useWallets() {
         }
     }
 
-    async function detectInstalledWalletProviders() {
+    function detectInstalledWalletProviders() {
         const ethereum = (window as any).ethereum
         if (ethereum) {
             // MetaMask, CoinbaseWallet, TrustWallet
@@ -66,7 +66,6 @@ export default function useWallets() {
             } else if (ethereum.isMetaMask) installedWallets.value.push("MetaMask") // Just MetaMask
             else if (ethereum.isCoinbaseWallet) installedWallets.value.push("CoinbaseWallet") // Just CoinbaseWallet
             else if (ethereum.isTrust) installedWallets.value.push("TrustWallet") // Just TrustWallet
-            // console.log('installedWallets.value :>> ', installedWallets.value)
         } else {
             console.log("No ethereum browser provider found")
         }
@@ -100,15 +99,3 @@ export default function useWallets() {
         switchEthersNetwork
     }
 }
-
-// async function addEthersNetwork (providerString: ProviderString, network: any) {
-//     const provider = getBrowserProvider(providerString)
-//     try {
-//       await provider.request({
-//         method: 'wallet_addEthereumChain',
-//         params: [network]
-//       })
-//     } catch(error: any) {
-//       console.log(`Error occurred while adding network ${network.chainName}, Message: ${error.message} Code: ${error.code}`)
-//     }
-//   }

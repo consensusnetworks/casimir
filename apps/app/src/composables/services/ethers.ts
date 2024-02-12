@@ -48,16 +48,15 @@ export default function useEthers() {
             const { ethereum } = window
             const isInstalled = installedWallets.value.includes(providerString)
             if (providerString === "CoinbaseWallet") {
+                if (!isInstalled) return window.open("https://www.coinbase.com/wallet/downloads", "_blank")
                 if (!ethereum.providerMap && isInstalled) return alert("TrustWallet or another wallet may be interfering with CoinbaseWallet. Please disable other wallets and try again.")
                 if (ethereum?.providerMap) return ethereum.providerMap.get(providerString)
-                else window.open("https://www.coinbase.com/wallet/downloads", "_blank")
             } else if (providerString === "MetaMask") {
+                if (!isInstalled) return window.open("https://metamask.io/download.html", "_blank")
                 if (ethereum.providerMap && ethereum.providerMap.get("MetaMask")) {
                     return ethereum?.providerMap?.get(providerString) || undefined
                 } else if (ethereum.isMetaMask) {
                     return ethereum
-                } else {
-                    window.open("https://metamask.io/download.html", "_blank")
                 }
             } else if (providerString === "BraveWallet") {
                 return getBraveWallet()
