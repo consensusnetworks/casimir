@@ -246,112 +246,114 @@ const findSwitchHeaderValue = (switchItem) => {
         <AdjustmentsVerticalIcon class="w-[20px] h-[20px]" />
       </button>
     </div>
-    <div class="w-full border border-lightBorder dark:border-darkBorder rounded-[6px] overflow-x-auto">
-      <table class="w-full overflow-x-auto">
-        <thead>
-          <tr class="border-b border-b-lightBorder dark:border-b-darkBorder">
-            <th
-              v-for="item in tableHeaders"
-              v-show="item.show"
-              :key="item.value"
-              class="py-[8px] text-left px-[8px] whitespace-nowrap"
+    <div class="w-full h-full">
+      <div class="w-full border border-lightBorder dark:border-darkBorder rounded-[6px] overflow-x-auto">
+        <table class="w-full overflow-x-auto">
+          <thead>
+            <tr class="border-b border-b-lightBorder dark:border-b-darkBorder">
+              <th
+                v-for="item in tableHeaders"
+                v-show="item.show"
+                :key="item.value"
+                class="py-[8px] text-left px-[8px] whitespace-nowrap"
+              >
+                <small class="font-[300]">
+                  {{ item.title }}
+                </small>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="w-full">
+            <tr
+              v-for="stake in activeStakingItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)"
+              :key="stake"
+              class="hover:bg-gray_4 dark:hover:bg-gray_6 cursor-pointer whitespace-nowrap"
+              @click="openOpenActiveStakeOptions(), selectedStake = stake"
             >
-              <small class="font-[300]">
-                {{ item.title }}
-              </small>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="w-full">
-          <tr
-            v-for="stake in activeStakingItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)"
-            :key="stake"
-            class="hover:bg-gray_4 dark:hover:bg-gray_6 cursor-pointer whitespace-nowrap"
-            @click="openOpenActiveStakeOptions(), selectedStake = stake"
-          >
-            <td
-              v-for="(item, index) in tableHeaders"
-              v-show="item.show"
-              :key="index"
-              class="border-b py-[8px] border-b-lightBorder dark:border-b-darkBorder"
-            >
-              <div
-                v-if="item.value === 'address'"
-                class="px-[8px] flex items-center gap-[12px]"
+              <td
+                v-for="(item, index) in tableHeaders"
+                v-show="item.show"
+                :key="index"
+                class="border-b py-[8px] border-b-lightBorder dark:border-b-darkBorder"
               >
                 <div
-                  v-if="!getWalletProviderByAddress(stake[item.value])"
-                  class="placeholder_avatar"
-                />
-                <div 
-                  v-else
-                  class="w-[20px] h-[20px]"
+                  v-if="item.value === 'address'"
+                  class="px-[8px] flex items-center gap-[12px]"
                 >
-                  <img
-                    :src="getWalletProviderByAddress(stake[item.value])"
-                    alt=""
+                  <div
+                    v-if="!getWalletProviderByAddress(stake[item.value])"
+                    class="placeholder_avatar"
+                  />
+                  <div 
+                    v-else
                     class="w-[20px] h-[20px]"
                   >
+                    <img
+                      :src="getWalletProviderByAddress(stake[item.value])"
+                      alt=""
+                      class="w-[20px] h-[20px]"
+                    >
+                  </div>
+                  <small>
+                    {{ convertString(stake[item.value]) }}
+                  </small>
                 </div>
-                <small>
-                  {{ convertString(stake[item.value]) }}
-                </small>
-              </div>
 
-              <div
-                v-if="item.value === 'amount'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>
-                  {{ stake[item.value] }} ETH
-                </small>
-              </div>
+                <div
+                  v-if="item.value === 'amount'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>
+                    {{ stake[item.value] }} ETH
+                  </small>
+                </div>
 
-              <div
-                v-if="item.value === 'rewards'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>
-                  {{ stake[item.value] }} ETH
-                </small>
-              </div>
+                <div
+                  v-if="item.value === 'rewards'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>
+                    {{ stake[item.value] }} ETH
+                  </small>
+                </div>
 
-              <div
-                v-if="item.value === 'eigenlayer'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>
-                  {{ stake[item.value]? 'Enabled' : 'Disabled' }}
-                </small>
-              </div>
+                <div
+                  v-if="item.value === 'eigenlayer'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>
+                    {{ stake[item.value]? 'Enabled' : 'Disabled' }}
+                  </small>
+                </div>
 
-              <div
-                v-if="item.value === 'timestamp'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>{{ formatTimestamp(stake[item.value]) }}</small>
-              </div>
+                <div
+                  v-if="item.value === 'timestamp'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>{{ formatTimestamp(stake[item.value]) }}</small>
+                </div>
 
 
-              <div
-                v-if="item.value === 'age'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>{{ stake[item.value] }}</small>
-              </div>
+                <div
+                  v-if="item.value === 'age'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>{{ stake[item.value] }}</small>
+                </div>
 
 
-              <!-- TODO: adjust status ui based on possible status options -->
-              <div
-                v-if="item.value === 'status'"
-                class="px-[8px] flex items-center gap-[12px]"
-              >
-                <small>{{ stake[item.value] }}</small>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <!-- TODO: adjust status ui based on possible status options -->
+                <div
+                  v-if="item.value === 'status'"
+                  class="px-[8px] flex items-center gap-[12px]"
+                >
+                  <small>{{ stake[item.value] }}</small>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
 
