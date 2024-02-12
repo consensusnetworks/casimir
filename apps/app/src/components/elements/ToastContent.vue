@@ -28,7 +28,6 @@ const props = defineProps({
   >
     <div class="flex items-start gap-[12px]">
       <div class="w-[38px] h-[38px] rounded-[999px] overflow-hidden">
-        <!-- TODO: Figure out a way to do the loading -->
         <img
           v-if="props.toast.type === 'info'"
           :src="props.toast.iconUrl"
