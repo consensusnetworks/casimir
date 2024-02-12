@@ -49,7 +49,7 @@
     opacity: 0;
     transition: opacity 0.4s ease-in-out;
     z-index: 5;
-  }
+}
 
   .input_container{
     @apply w-full rounded-[5px]
@@ -85,4 +85,34 @@
   .checkbox_button {
     @apply w-[16px] h-[16px] rounded-[4px] border border-black dark:border-white
     flex items-center justify-center;
+  }
+
+
+  .tooltip_container_left {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .tooltip_container_left:hover .tooltip_left {
+      visibility: visible;
+      opacity: 1;
+  }
+  
+  .tooltip_left {
+      position: absolute;
+      right: 105%;
+      top: 50%;
+      border-radius: 3px;
+      background-color: rgba(49, 48, 54, 0.824);
+      color: rgb(255, 255, 255);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 14px;
+      padding: 6px 8px;
+      visibility: hidden;
+      white-space: normal;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+      z-index: 5;
+      transform: translateY(-50%);
   }

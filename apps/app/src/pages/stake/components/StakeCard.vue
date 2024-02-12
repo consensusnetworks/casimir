@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue"
+import { ref, watch, computed } from "vue"
 import useStakingState from "@/composables/state/staking"
 import useUser from "@/composables/services/user"
 import useFormat from "@/composables/services/format"
@@ -12,7 +12,15 @@ import {
 } from "@heroicons/vue/24/outline"
 
 const { user } = useUser()
-const { convertString } = useFormat()
+const { convertString, formatEthersCasimir, formatDecimalString } = useFormat()
+
+const userSecondaryAccounts = computed(() =>{
+    let secondaryAccounts = []
+    user?.value?.accounts?.map((item) => {
+        if (item.address != user.value.address) secondaryAccounts.push(item)
+    })
+    return secondaryAccounts
+})
 
 const isDark = useDark()
 
@@ -133,8 +141,18 @@ const handleStakingAction = () => {
           @click="openSelectWalletinput = !openSelectWalletinput"
         >
           <!-- TODO: add balance here -->
-          <small>{{ stakingWalletAddress ? convertString(stakingWalletAddress) + ` (${'balance'})` : 'Select wallet' }}</small>
-        
+
+          <div
+            v-if="stakingWalletAddress"
+            class="tooltip_container"
+          >
+            {{ convertString(stakingWalletAddress) }} 
+            ({{ formatEthersCasimir(formatDecimalString(user?.accounts[user?.accounts.findIndex(item => item.address == stakingWalletAddress)].balance)) }}) ETH
+            <div class="tooltip whitespace-nowrap">
+              <small>{{ user?.accounts[user?.accounts.findIndex(item => item.address == stakingWalletAddress)].balance }}</small>
+            </div>
+          </div>
+          <small v-else>Select wallet</small>
           <img
             :src="isDark? '/expand_icon_light.svg':'/expand_icon_dark.svg'"
             alt="Expand Icon"
@@ -146,7 +164,6 @@ const handleStakingAction = () => {
           id="input_selector"
           class="input_selector"
         >
-          <!-- TODO: Add balance here for all of the wallets -->
           <div class="p-[8px] ">
             <caption
               v-if="user"
@@ -175,8 +192,11 @@ const handleStakingAction = () => {
                 </div>
               </div>
 
-              <div>
-                balance
+              <div class="tooltip_container_left">
+                {{ formatEthersCasimir(formatDecimalString(user?.accounts[user.accounts.findIndex(item => item.address == user.address)]?.balance)) }} ETH
+                <div class="tooltip_left w-[100px] truncate whitespace-nowrap">
+                  {{ user?.accounts[user.accounts.findIndex(item => item.address == user.address)]?.balance }}
+                </div>
               </div>
             </button>
 
@@ -194,12 +214,11 @@ const handleStakingAction = () => {
             <caption class="text-gray_1 whitespace-nowrap font-[600]">
               Secondary Wallet(s)
             </caption>
-            <!-- TODO: check with @Chris if the first one is always the primary wallet -->
             <button
-              v-for="(account, index) in user.accounts.slice(1, user.accounts.length -1)"
+              v-for="(account, index) in userSecondaryAccounts"
               :key="index"
               class="w-full mt-[8px] rounded-[3px] flex items-center
-                      justify-between px-[8px] py-[6px] hover:bg-gray_4 dark:hover:bg-gray_5"
+                      justify-between px-[8px] py-[6px] hover:bg-gray_4 dark:hover:bg-gray_5 overflow-hidden"
               @click="selectWallet(account.address), openSelectWalletinput = false"
             >
               <div class="flex items-center gap-[8px]">
@@ -215,8 +234,11 @@ const handleStakingAction = () => {
                   {{ convertString(account.address) }}
                 </div>
               </div>
-              <div>
-                balance
+              <div class="tooltip_container_left">
+                {{ formatEthersCasimir(formatDecimalString(account.balance)) }} ETH
+                <div class="tooltip_left w-[100px] truncate whitespace-nowrap">
+                  {{ account.balance }}
+                </div>
               </div>
             </button>
           </div>

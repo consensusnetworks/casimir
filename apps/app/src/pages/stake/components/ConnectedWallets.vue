@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue"
+import { ref, computed } from "vue"
 import useUser from "@/composables/services/user"
 import useConnectWalletModal from "@/composables/state/connectWalletModal"
 import useFormat from "@/composables/services/format"
@@ -11,11 +11,7 @@ const {
 
 const { 
     convertString,
-    formatDecimalString,
     formatEthersCasimir,
-    formatEthersCasimirStaking,
-    parseEthersCasimir,
-    trimAndLowercaseAddress, 
 } = useFormat()
 import { 
     DocumentDuplicateIcon,
@@ -41,15 +37,14 @@ const convertStringLong = (str) => {
 const { toggleConnectWalletModal } = useConnectWalletModal()
 const { user, removeAccount } = useUser()
 
-const userSecondaryAccounts = ref(user?.value?.accounts?.filter((item) => {
-    if (item.address != user.value.address) return true
-}))
-
-watch(user.value, () => {
-    userSecondaryAccounts.value  = user?.value?.accounts?.filter((item) => {
-        if (item.address != user.value.address) return true
+const userSecondaryAccounts = computed(() =>{
+    let secondaryAccounts = []
+    user?.value?.accounts?.map((item) => {
+        if (item.address != user.value.address) secondaryAccounts.push(item)
     })
+    return secondaryAccounts
 })
+
 // primary || index number for secondary accounts
 const currentSecondaryWallets = ref([0 , 3])
 const showWalletBanner = ref(-1)
@@ -198,13 +193,78 @@ function copyTextToClipboard(text) {
         Secondary Wallet(s)
       </caption>
 
-      
       <div
-        v-if="user.accounts.length > 1"
+        v-if="user.accounts.length > 4"
         class="flex flex-col gap-[12px]"
       >
         <div
-          v-for="(wallet, index) in userSecondaryAccounts.slice(currentSecondaryWallets[0], currentSecondaryWallets[1] + 1)"
+          v-for="(wallet, index) in userSecondaryAccounts.slice(currentSecondaryWallets[0], currentSecondaryWallets[1] + 1 )"
+          :key="index"
+          class="w-full relative py-[6px]"
+          @mouseenter="showWalletBanner = wallet.id"
+          @mouseleave="showWalletBanner = -1"
+        >
+          <div class="flex items-center justify-between gap-[8px] px-[36px]">
+            <div class="flex items-center gap-[12px]">
+              <div class="w-[36px] h-[36px] 400s:sr-only">
+                <img
+                  :src="`/${wallet.walletProvider.toLowerCase()}.svg`"
+                  :alt="`/${wallet.walletProvider.toLowerCase()}.svg`"
+                  class="block w-full h-full max-w-full"
+                >
+              </div>
+
+              <div class="card_title font-[400] mb-0 text-gray_5">
+                <small class="font-[500]">
+                  {{ wallet.walletProvider }} {{ wallet.id }}
+                </small><br>
+                <caption class="whitespace-nowrap font-[400] not-sr-only 630s:sr-only">
+                  {{ convertStringLong(wallet.address) }}
+                </caption>
+                <caption class="whitespace-nowrap font-[400] sr-only 630s:not-sr-only">
+                  {{ convertString(wallet.address) }}
+                </caption>
+              </div>
+            </div>
+
+            <div>
+              <h6 class="630s:text-[12px] whitespace-nowrap">
+                {{ formatEthersCasimir(wallet.balance ) }} ETH
+              </h6>
+            </div>
+          </div>
+          <div
+            v-if="showWalletBanner == wallet.id"
+            class="absolute top-0 left-0 w-full h-full gradient flex items-center justify-center gap-[12px]"
+          >
+            <button
+              class="warning_btn whitespace-nowrap"
+              @click="removeAccount(wallet)"
+            >
+              <MinusIcon class="w-[14px] h-[14px]" />
+              <caption class="font-[500]">
+                Remove Wallet
+              </caption>
+            </button>
+            <button
+              class="secondary_btn whitespace-nowrap"
+              @click="copyTextToClipboard(wallet.address)"
+            >
+              <DocumentDuplicateIcon class="w-[14px] h-[14px]" />
+              <caption class="font-[500]">
+                Copy Address
+              </caption>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-else
+        class="flex flex-col gap-[12px]"
+      >
+        <div
+          v-for="(wallet, index) in userSecondaryAccounts"
           :key="index"
           class="w-full relative py-[6px]"
           @mouseenter="showWalletBanner = wallet.id"
@@ -270,7 +330,7 @@ function copyTextToClipboard(text) {
         class="flex items-center justify-between 600s:justify-end gap-[15px] px-[36px] absolute bottom-0 w-full pb-[12px]"
       >
         <div class="text-[#71717a] text-[12px] font-[400] 630s:sr-only">
-          Secondary Wallets ( {{ (currentSecondaryWallets[0] + 1 ) + ' to ' + (currentSecondaryWallets[1] + 1) }} ) of {{ userSecondaryAccounts.length }}
+          Secondary Wallets ( {{ (currentSecondaryWallets[0] + 1 ) + ' to ' + (currentSecondaryWallets[1] + 1) }} ) of {{ userSecondaryAccounts?.length }}
         </div>
         <div class="flex items-center gap-[5px] text-[#71717a]">
           <button
